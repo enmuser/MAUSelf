@@ -8,11 +8,12 @@ import torch
 import torch.utils.data as data
 
 def load_mnist(root):
-    path = os.path.join(root, 'train-images-idx3-ubyte.gz')
-    with gzip.open(path, 'rb') as f:
+    path = os.path.join(root, 'train-images.idx3-ubyte')
+    with open(path, 'rb') as f:
         mnist = np.frombuffer(f.read(), np.uint8, offset=16)
         mnist = mnist.reshape(-1, 28, 28)
     return mnist
+
 
 
 def load_fixed_set(root, is_train):
