@@ -25,7 +25,7 @@ class RNN(nn.Module):
             in_channel = num_hidden[i - 1]
             cell_list.append(
                 MAUCell(in_channel, num_hidden[i], height, width, configs.filter_size,
-                        configs.stride, self.tau, self.cell_mode)
+                        configs.stride, self.tau, self.cell_mode,self.num_layers)
             )
         self.cell_list = nn.ModuleList(cell_list)
 
@@ -133,14 +133,14 @@ class RNN(nn.Module):
                     zeros = torch.zeros([batch_size, self.num_hidden[i], height, width]).to(self.configs.device)
                     T_t.append(zeros)
             S_t = frames_feature
-            for i in range(self.num_layers):
-                t_att = T_pre[i][-self.tau:]
-                t_att = torch.stack(t_att, dim=0)
-                s_att = S_pre[i][-self.tau:]
-                s_att = torch.stack(s_att, dim=0)
-                S_pre[i].append(S_t)
-                T_t[i], S_t = self.cell_list[i](T_t[i], S_t, t_att, s_att)
-                T_pre[i].append(T_t[i])
+            for index in range(self.num_layers):
+                t_att = T_pre[index][-self.tau:]  #
+                t_att = torch.stack(t_att, dim=0)  # 5 * 16 * 64 * 16 * 16
+                s_att = S_pre[index][-self.tau:]
+                s_att = torch.stack(s_att, dim=0)  # 5 * 16 * 64 * 16 * 16
+                S_pre[index].append(S_t)
+                T_t[index], S_t = self.cell_list[index](T_t[index], S_t, t_att, s_att, index, T_pre, S_pre)
+                T_pre[index].append(T_t[index])
             out = S_t
             # out = self.merge(torch.cat([T_t[-1], S_t], dim=1))
             frames_feature_decoded = []
