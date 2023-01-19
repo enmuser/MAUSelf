@@ -25,7 +25,7 @@ def load_fixed_set(root, is_train):
 
 
 class MovingMNIST(data.Dataset):
-    def __init__(self, root, is_train, n_frames, num_objects,
+    def __init__(self, root, is_train, n_frames, num_objects, in_channel,
                  transform=None):
         '''
         param num_objects: a list of number of possible objects.
@@ -46,6 +46,7 @@ class MovingMNIST(data.Dataset):
         self.num_objects = num_objects
         self.n_frames = n_frames
         self.transform = transform
+        self.channel = in_channel
         self.image_size_ = 64
         self.digit_size_ = 28
         self.step_length_ = 0.1
@@ -113,6 +114,8 @@ class MovingMNIST(data.Dataset):
         r = 1
         w = int(64 / r)
         images = images.reshape((length, w, r, w, r)).transpose(0, 2, 4, 1, 3).reshape((length, r * r, w, w))
+        if self.channel == 3:
+            images = np.repeat(images, 3, axis=1)
         output = torch.from_numpy(images / 255.0).contiguous().float()
         return output
 
