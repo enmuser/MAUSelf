@@ -160,6 +160,8 @@ class RNN(nn.Module):
                 S_pre[i].append(S_t)
                 T_t[i], S_t = self.cell_list[i](T_t[i], S_t, t_att, s_att)
                 T_pre[i].append(T_t[i])
+                S_pre[i].remove(S_pre[i][0])
+                T_pre[i].remove(T_pre[i][0])
             out = S_t
             # out = self.merge(torch.cat([T_t[-1], S_t], dim=1))
             frames_feature_decoded = []
