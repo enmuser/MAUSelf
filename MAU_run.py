@@ -82,6 +82,7 @@ def train_wrapper(model):
                                                         dataset=args.dataset,
                                                         data_test_path=args.data_val_path,
                                                         batch_size=args.batch_size,
+                                                        in_channel=args.img_channel,
                                                         is_training=True,
                                                         is_shuffle=True)
     val_input_handle = datasets_factory.data_provider(configs=args,
@@ -89,6 +90,7 @@ def train_wrapper(model):
                                                       dataset=args.dataset,
                                                       data_test_path=args.data_val_path,
                                                       batch_size=args.batch_size,
+                                                      in_channel=args.img_channel,
                                                       is_training=False,
                                                       is_shuffle=False)
     eta = args.sampling_start_value
@@ -122,6 +124,7 @@ def test_wrapper(model):
                                                        dataset=args.dataset,
                                                        data_test_path=args.data_test_path,
                                                        batch_size=args.batch_size,
+                                                       in_channel=args.img_channel,
                                                        is_training=False,
                                                        is_shuffle=False)
 
