@@ -94,13 +94,13 @@ class MAUCell(nn.Module):
         conv_s_lower_level_list.append(dcgan_upconv(512,256))
         conv_s_lower_level_list.append(dcgan_upconv(256,128))
         self.conv_s_lower = nn.ModuleList(conv_s_lower_level_list)
-        t_conv_lstm_list = []
-        t_conv_lstm_list.append(ConvLSTM(input_size=512,hidden_size=[256, 256, 256],kernel_size=[(3,3),(3,3),(3,3)],output_size=256,num_layers=3,device=self.device))
-        t_conv_lstm_list.append(ConvLSTM(input_size=256,hidden_size=[128, 128, 128],kernel_size=[(3,3),(3,3),(3,3)],output_size=128,num_layers=3,device=self.device))
+         t_conv_lstm_list = []
+        t_conv_lstm_list.append(ConvLSTM(input_size=512,hidden_size=[256],kernel_size=[(3,3)],output_size=256,num_layers=1,device=self.device))
+        t_conv_lstm_list.append(ConvLSTM(input_size=256,hidden_size=[128],kernel_size=[(3,3)],output_size=128,num_layers=1,device=self.device))
         self.t_conv_lstm = nn.ModuleList(t_conv_lstm_list)
         s_conv_lstm_list = []
-        s_conv_lstm_list.append(ConvLSTM(input_size=512,hidden_size=[256, 256, 256],kernel_size=[(3,3),(3,3),(3,3)],output_size=256,num_layers=3,device=self.device))
-        s_conv_lstm_list.append(ConvLSTM(input_size=256,hidden_size=[128, 128, 128],kernel_size=[(3,3),(3,3),(3,3)],output_size=128,num_layers=3,device=self.device))
+        s_conv_lstm_list.append(ConvLSTM(input_size=512,hidden_size=[256],kernel_size=[(3,3)],output_size=256,num_layers=1,device=self.device))
+        s_conv_lstm_list.append(ConvLSTM(input_size=256,hidden_size=[128],kernel_size=[(3,3)],output_size=128,num_layers=1,device=self.device))
         self.s_conv_lstm = nn.ModuleList(s_conv_lstm_list)
         self.softmax = nn.Softmax(dim=0)
 
