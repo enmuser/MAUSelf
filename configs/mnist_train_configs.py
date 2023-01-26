@@ -23,7 +23,7 @@ def configs():
     parser.add_argument('--dataset', type=str, default='mnist')
     parser.add_argument('--num_workers', type=int, default=2)
     parser.add_argument('--num_hidden', type=int, default=64)
-    parser.add_argument('--num_layers', type=int, default=2)
+    parser.add_argument('--num_layers', type=int, default=3)
     parser.add_argument('--num_heads', type=int, default=4)
     parser.add_argument('--filter_size', type=int, default=(5, 5))
     parser.add_argument('--stride', type=int, default=1)

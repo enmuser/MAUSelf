@@ -94,14 +94,6 @@ class MAUCell(nn.Module):
         conv_s_lower_level_list.append(dcgan_upconv(512,256))
         conv_s_lower_level_list.append(dcgan_upconv(256,128))
         self.conv_s_lower = nn.ModuleList(conv_s_lower_level_list)
-        t_conv_lstm_list = []
-        t_conv_lstm_list.append(ConvLSTM(input_size=512,hidden_size=[256, 256, 256],kernel_size=[(3,3),(3,3),(3,3)],output_size=256,num_layers=3,device=self.device))
-        t_conv_lstm_list.append(ConvLSTM(input_size=256,hidden_size=[128, 128, 128],kernel_size=[(3,3),(3,3),(3,3)],output_size=128,num_layers=3,device=self.device))
-        self.t_conv_lstm = nn.ModuleList(t_conv_lstm_list)
-        s_conv_lstm_list = []
-        s_conv_lstm_list.append(ConvLSTM(input_size=512,hidden_size=[256, 256, 256],kernel_size=[(3,3),(3,3),(3,3)],output_size=256,num_layers=3,device=self.device))
-        s_conv_lstm_list.append(ConvLSTM(input_size=256,hidden_size=[128, 128, 128],kernel_size=[(3,3),(3,3),(3,3)],output_size=128,num_layers=3,device=self.device))
-        self.s_conv_lstm = nn.ModuleList(s_conv_lstm_list)
         self.softmax = nn.Softmax(dim=0)
 
     def forward(self, T_t, S_t, t_att, s_att):
@@ -116,15 +108,6 @@ class MAUCell(nn.Module):
             for i in range(self.tau):
                 current_t_att.append(t_att[i][index])
             current_t_att = torch.stack(current_t_att, dim=0)
-            if index != 2:
-                T_new_pre = T_new_return[len(T_new_return)-1]
-                T_new_pre = self.conv_t_lower[len(T_new_return)-1](T_new_pre)
-                T_t[index] = torch.cat([T_t[index], T_new_pre], dim=1)
-                T_t[index] = self.t_conv_lstm[len(T_new_return)-1](T_t[index])
-                S_new_pre = S_new_return[len(S_new_return)-1]
-                S_new_pre = self.conv_s_lower[len(S_new_return)-1](S_new_pre)
-                S_t[index] = torch.cat([S_t[index], S_new_pre], dim=1)
-                S_t[index] = self.s_conv_lstm[len(T_new_return)-1](S_t[index])
             # 一次空间特征卷积操作
             s_next = self.conv_s_next[index](S_t[index])
             # 一次时间特征卷积操作
@@ -167,6 +150,13 @@ class MAUCell(nn.Module):
                 S_new = S_new + S_t[index]
             T_new_return.append(T_new)
             S_new_return.append(S_new)
+        for i in range(0, 2):
+            T_new_return_tmp = self.conv_t_lower[i](T_new_return[i])
+            TT_gate = torch.sigmoid(T_new_return[i + 1])
+            T_new_return[i + 1] = T_new_return[i + 1] * TT_gate + (1-TT_gate) * T_new_return_tmp
+            S_new_return_tmp = self.conv_s_lower[i](S_new_return[i])
+            SS_gate = torch.sigmoid(S_new_return[i + 1])
+            S_new_return[i + 1] = S_new_return[i + 1] * SS_gate + (1 - SS_gate) * S_new_return_tmp
         T_new_return.reverse()
         S_new_return.reverse()
         return T_new_return, S_new_return
