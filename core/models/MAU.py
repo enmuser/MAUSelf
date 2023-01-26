@@ -187,7 +187,7 @@ class RNN(nn.Module):
                 # 相对应的 (1 - mask_true[:, time_diff]) 大概率为 1
                 # x_gen = 16 * 1 * 64 * 64 预测的下一帧
                 # (1 - mask_true[:, time_diff]) * x_gen = 16 * 1 * 64 * 64
-                net = x_gen
+                net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
             # frames_feature = 16 * 1 * 64 * 64
             frames_feature_input = net
             frames_feature_encoded = []
