@@ -3,7 +3,7 @@ import torch.nn as nn
 import math
 
 from core.models.ConvLSTM import ConvLSTM
-from core.models.DCGAN_Conv import dcgan_upconv
+from core.models.DCGAN_Conv import dcgan_upconv, dcgan_conv
 
 
 class MAUCell(nn.Module):
@@ -94,6 +94,16 @@ class MAUCell(nn.Module):
         conv_s_lower_level_list.append(dcgan_upconv(512,256))
         conv_s_lower_level_list.append(dcgan_upconv(256,128))
         self.conv_s_lower = nn.ModuleList(conv_s_lower_level_list)
+
+        conv_t_upper_level_list = []
+        conv_t_upper_level_list.append(dcgan_conv(256, 512))
+        conv_t_upper_level_list.append(dcgan_conv(128, 256))
+        self.conv_t_upper = nn.ModuleList(conv_t_upper_level_list)
+        conv_s_upper_level_list = []
+        conv_s_upper_level_list.append(dcgan_conv(256, 512))
+        conv_s_upper_level_list.append(dcgan_conv(128, 256))
+        self.conv_s_upper = nn.ModuleList(conv_s_upper_level_list)
+
         self.softmax = nn.Softmax(dim=0)
 
     def forward(self, T_t, S_t, t_att, s_att):
@@ -151,12 +161,19 @@ class MAUCell(nn.Module):
             T_new_return.append(T_new)
             S_new_return.append(S_new)
         for i in range(0, 2):
-            T_new_return_tmp = self.conv_t_lower[i](T_new_return[i])
-            TT_gate = torch.sigmoid(T_new_return[i + 1])
-            T_new_return[i + 1] = T_new_return[i + 1] * TT_gate + (1-TT_gate) * T_new_return_tmp
-            S_new_return_tmp = self.conv_s_lower[i](S_new_return[i])
-            SS_gate = torch.sigmoid(S_new_return[i + 1])
-            S_new_return[i + 1] = S_new_return[i + 1] * SS_gate + (1 - SS_gate) * S_new_return_tmp
+            T_new_return_lower = self.conv_t_lower[i](T_new_return[i])
+            TT_gate_lower = torch.sigmoid(T_new_return[i + 1])
+            T_new_return[i + 1] = T_new_return[i + 1] * TT_gate_lower + (1 - TT_gate_lower) * T_new_return_lower
+            S_new_return_lower = self.conv_s_lower[i](S_new_return[i])
+            SS_gate_lower = torch.sigmoid(S_new_return[i + 1])
+            S_new_return[i + 1] = S_new_return[i + 1] * SS_gate_lower + (1 - SS_gate_lower) * S_new_return_lower
+        for i in reversed(range(1, 3)):
+            T_new_return_upper = self.conv_t_upper[i - 1](T_new_return[i])
+            TT_gate_upper = torch.sigmoid(T_new_return[i - 1])
+            T_new_return[i - 1] = T_new_return[i - 1] * TT_gate_upper + (1 - TT_gate_upper) * T_new_return_upper
+            S_new_return_upper = self.conv_s_upper[i - 1](S_new_return[i])
+            SS_gate_upper = torch.sigmoid(S_new_return[i - 1])
+            S_new_return[i - 1] = S_new_return[i - 1] * SS_gate_upper + (1 - SS_gate_upper) * S_new_return_upper
         T_new_return.reverse()
         S_new_return.reverse()
         return T_new_return, S_new_return
