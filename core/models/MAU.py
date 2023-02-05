@@ -114,8 +114,8 @@ class RNN(nn.Module):
             decoders.append(decoder)
         self.decoders = nn.ModuleList(decoders)
 
-        self.ex_encoders = enc_dec_models.encoder(dim=512, nf=64, nc=3)
-        self.ex_decoders = enc_dec_models.decoder(dim=512, nf=64, nc=3)
+        self.ex_encoders = enc_dec_models.encoder(dim=512, nf=64, nc=configs.img_channel)
+        self.ex_decoders = enc_dec_models.decoder(dim=512, nf=64, nc=configs.img_channel)
 
         # channel => 64 -> 1
         self.srcnn = nn.Sequential(
