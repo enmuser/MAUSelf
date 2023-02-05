@@ -17,7 +17,7 @@ class MAUCell(nn.Module):
         self.padding = (filter_size[0] // 2, filter_size[1] // 2)
         self.cell_mode = cell_mode
         # d = 64 * 16 * 16 = 16384
-        self.d = num_hidden * height * width
+        self.d = [128 * 16 * 16, 256 * 8 * 8, 512 * 4 * 4]
         # tau = 5
         self.tau = tau
         self.states = ['residual', 'normal']
@@ -117,7 +117,7 @@ class MAUCell(nn.Module):
             for i in range(self.tau):
                 # tau = τ = 5
                 # qi的计算 当前空间特征卷积操作的结果 与 历史前τ个进行Hadamard乘积
-                weights_list.append((s_att[i][index] * s_next).sum(dim=(1, 2, 3)) / math.sqrt(self.d))
+                weights_list.append((s_att[i][index] * s_next).sum(dim=(1, 2, 3)) / math.sqrt(self.d[index]))
             weights_list = torch.stack(weights_list, dim=0)
             weights_list = torch.reshape(weights_list, (*weights_list.shape, 1, 1, 1))
             weights_list = self.softmax(weights_list)
