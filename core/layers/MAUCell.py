@@ -94,6 +94,16 @@ class MAUCell(nn.Module):
         conv_s_lower_level_list.append(dcgan_upconv(512,256))
         conv_s_lower_level_list.append(dcgan_upconv(256,128))
         self.conv_s_lower = nn.ModuleList(conv_s_lower_level_list)
+
+        conv_t_1x1_list = []
+        conv_t_1x1_list.append(nn.Sequential(nn.Conv2d(256, 256, 1)))
+        conv_t_1x1_list.append(nn.Sequential(nn.Conv2d(128, 128, 1)))
+        self.conv_t_1x1 = nn.ModuleList(conv_t_1x1_list)
+
+        conv_s_1x1_list = []
+        conv_s_1x1_list.append(nn.Sequential(nn.Conv2d(256, 256, 1)))
+        conv_s_1x1_list.append(nn.Sequential(nn.Conv2d(128, 128, 1)))
+        self.conv_s_1x1 = nn.ModuleList(conv_s_1x1_list)
         self.softmax = nn.Softmax(dim=0)
 
     def forward(self, T_t, S_t, t_att, s_att):
@@ -154,9 +164,11 @@ class MAUCell(nn.Module):
             T_new_return_tmp = self.conv_t_lower[i](T_new_return[i])
             TT_gate = torch.sigmoid(T_new_return[i + 1])
             T_new_return[i + 1] = T_new_return[i + 1] * TT_gate + (1-TT_gate) * T_new_return_tmp
+            T_new_return[i + 1] = self.conv_t_1x1[i](T_new_return[i + 1])
             S_new_return_tmp = self.conv_s_lower[i](S_new_return[i])
             SS_gate = torch.sigmoid(S_new_return[i + 1])
             S_new_return[i + 1] = S_new_return[i + 1] * SS_gate + (1 - SS_gate) * S_new_return_tmp
+            S_new_return[i + 1] = self.conv_s_1x1[i](S_new_return[i + 1])
         T_new_return.reverse()
         S_new_return.reverse()
         return T_new_return, S_new_return
