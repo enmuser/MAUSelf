@@ -35,6 +35,29 @@ class MAUCell(nn.Module):
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
+
+        self.conv_t_2 = nn.Sequential(
+            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([3 * num_hidden, height, width])
+        )
+        self.conv_t_next_2 = nn.Sequential(
+            nn.Conv2d(in_channel, num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([num_hidden, height, width])
+        )
+        self.conv_s_2 = nn.Sequential(
+            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([3 * num_hidden, height, width])
+        )
+        self.conv_s_next_2 = nn.Sequential(
+            nn.Conv2d(num_hidden, num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([num_hidden, height, width])
+        )
+
+
         self.softmax = nn.Softmax(dim=0)
 
     def forward(self, T_t, S_t, t_att, s_att):
@@ -60,4 +83,30 @@ class MAUCell(nn.Module):
         S_new = S_gate * s_s + (1 - S_gate) * t_s
         if self.cell_mode == 'residual':
             S_new = S_new + S_t
+
+        s_next_2 = self.conv_s_next_2(S_t)
+        t_next_2 = self.conv_t_next_2(T_t)
+        weights_list_2 = []
+        for i in range(self.tau):
+            weights_list_2.append((s_att[i] * s_next_2).sum(dim=(1, 2, 3)) / math.sqrt(self.d))
+        weights_list_2 = torch.stack(weights_list_2, dim=0)
+        weights_list_2 = torch.reshape(weights_list_2, (*weights_list_2.shape, 1, 1, 1))
+        weights_list_2 = self.softmax(weights_list_2)
+        T_trend_2 = t_att * weights_list_2
+        T_trend_2 = T_trend_2.sum(dim=0)
+        t_att_gate_2 = torch.sigmoid(t_next_2)
+        T_fusion_2 = T_t * t_att_gate_2 + (1 - t_att_gate_2) * T_trend_2
+        T_concat_2 = self.conv_t_2(T_fusion_2)
+        S_concat_2 = self.conv_s_2(S_t)
+        t_g_2, t_t_2, t_s_2 = torch.split(T_concat_2, self.num_hidden, dim=1)
+        s_g_2, s_t_2, s_s_2 = torch.split(S_concat_2, self.num_hidden, dim=1)
+        T_gate_2 = torch.sigmoid(t_g_2)
+        S_gate_2 = torch.sigmoid(s_g_2)
+        T_new_2 = T_gate_2 * t_t_2 + (1 - T_gate_2) * s_t_2
+        S_new_2 = S_gate_2 * s_s_2 + (1 - S_gate_2) * t_s_2
+        # if self.cell_mode == 'residual':
+        #     S_new = S_new + S_t
+        T_new = T_new + T_new_2
+        S_new = S_new + S_new_2
+
         return T_new, S_new
