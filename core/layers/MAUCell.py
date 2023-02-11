@@ -16,64 +16,64 @@ class MAUCell(nn.Module):
         if not self.cell_mode in self.states:
             raise AssertionError
         self.conv_t = nn.Sequential(
-            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=7, stride=1, padding=3,
                       ),
             nn.LayerNorm([3 * num_hidden, height, width])
         )
         self.conv_t_next = nn.Sequential(
-            nn.Conv2d(in_channel, num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(in_channel, num_hidden, kernel_size=7, stride=1, padding=3,
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
         self.conv_s = nn.Sequential(
-            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=7, stride=1, padding=3,
                       ),
             nn.LayerNorm([3 * num_hidden, height, width])
         )
         self.conv_s_next = nn.Sequential(
-            nn.Conv2d(num_hidden, num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(num_hidden, num_hidden, kernel_size=7, stride=1, padding=3,
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
 
         self.conv_t_2 = nn.Sequential(
-            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=5, stride=1, padding=2,
                       ),
             nn.LayerNorm([3 * num_hidden, height, width])
         )
         self.conv_t_next_2 = nn.Sequential(
-            nn.Conv2d(in_channel, num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(in_channel, num_hidden, kernel_size=5, stride=1, padding=2,
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
         self.conv_s_2 = nn.Sequential(
-            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=5, stride=1, padding=2,
                       ),
             nn.LayerNorm([3 * num_hidden, height, width])
         )
         self.conv_s_next_2 = nn.Sequential(
-            nn.Conv2d(num_hidden, num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(num_hidden, num_hidden, kernel_size=5, stride=1, padding=2,
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
 
         self.conv_t_3 = nn.Sequential(
-            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=3, stride=1, padding=1,
                       ),
             nn.LayerNorm([3 * num_hidden, height, width])
         )
         self.conv_t_next_3 = nn.Sequential(
-            nn.Conv2d(in_channel, num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(in_channel, num_hidden, kernel_size=3, stride=1, padding=1,
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
         self.conv_s_3 = nn.Sequential(
-            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=3, stride=1, padding=1,
                       ),
             nn.LayerNorm([3 * num_hidden, height, width])
         )
         self.conv_s_next_3 = nn.Sequential(
-            nn.Conv2d(num_hidden, num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(num_hidden, num_hidden, kernel_size=3, stride=1, padding=1,
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
