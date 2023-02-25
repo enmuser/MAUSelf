@@ -1,7 +1,6 @@
 import torch
 import torch.nn as nn
 from core.layers.MAUCell import MAUCell
-import core.models.DCGAN_Conv as enc_dec_models
 import math
 
 
@@ -35,7 +34,7 @@ class RNN(nn.Module):
             # filter_size = (5,5), stride = 1,tau = 5,cell_mode = normal
             cell_list.append(
                 MAUCell(in_channel, num_hidden[i], height, width, configs.filter_size,
-                        configs.stride, self.tau, self.cell_mode, configs.device)
+                        configs.stride, self.tau, self.cell_mode)
             )
         self.cell_list = nn.ModuleList(cell_list)
 
@@ -114,9 +113,6 @@ class RNN(nn.Module):
             decoders.append(decoder)
         self.decoders = nn.ModuleList(decoders)
 
-        self.ex_encoders = enc_dec_models.encoder(dim=512, nf=64, nc=configs.img_channel)
-        self.ex_decoders = enc_dec_models.decoder(dim=512, nf=64, nc=configs.img_channel)
-
         # channel => 64 -> 1
         self.srcnn = nn.Sequential(
             nn.Conv2d(self.num_hidden[-1], self.frame_channel, kernel_size=1, stride=1, padding=0)
@@ -146,7 +142,8 @@ class RNN(nn.Module):
         x_gen = None
         # num_layers = 0, 1, 2, 3
         for layer_idx in range(self.num_layers):
-
+            tmp_t = []
+            tmp_s = []
             if layer_idx == 0:
                 # in_channel = 64
                 in_channel = self.num_hidden[layer_idx]
@@ -154,22 +151,11 @@ class RNN(nn.Module):
                 # in_channel = 64
                 in_channel = self.num_hidden[layer_idx - 1]
             # tau= 5 : 0, 1, 2, 3, 4
-            tmp_t_all = []
-            tmp_s_all = []
             for i in range(self.tau):
-                tmp_t = []
-                tmp_s = []
-                tmp_t.append(torch.zeros([batch_size, in_channel * 2, height, width]).to(self.configs.device))# 16 * 64 * 16 * 16
-                tmp_s.append(torch.zeros([batch_size, in_channel * 2, height, width]).to(self.configs.device))# 16 * 64 * 16 * 16
-                tmp_t.append(torch.zeros([batch_size, in_channel * 4, height // 2, width // 2]).to(self.configs.device))  # 16 * 64 * 16 * 16
-                tmp_s.append(torch.zeros([batch_size, in_channel * 4, height // 2, width // 2]).to(self.configs.device))  # 16 * 64 * 16 * 16
-                tmp_t.append(torch.zeros([batch_size, in_channel * 8, height // 4, width // 4]).to(self.configs.device))  # 16 * 64 * 16 * 16
-                tmp_s.append(torch.zeros([batch_size, in_channel * 8, height // 4, width // 4]).to(self.configs.device))
-                tmp_t_all.append(tmp_t)# 16 * 64 * 16 * 16
-                tmp_s_all.append(tmp_s)
-            T_pre.append(tmp_t_all) # 4 * 5 * 16 * 64 * 16 * 16
-            S_pre.append(tmp_s_all) # 4 * 5 * 16 * 64 * 16 * 16
-
+                tmp_t.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))# 16 * 64 * 16 * 16
+                tmp_s.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))# 16 * 64 * 16 * 16
+            T_pre.append(tmp_t) # 4 * 5 * 16 * 64 * 16 * 16
+            S_pre.append(tmp_s) # 4 * 5 * 16 * 64 * 16 * 16
         # total_length = 20,  0,1,2,3,......,16,17,18
         for t in range(self.configs.total_length - 1):
             # input_length = 10
@@ -189,64 +175,42 @@ class RNN(nn.Module):
                 # (1 - mask_true[:, time_diff]) * x_gen = 16 * 1 * 64 * 64
                 net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
             # frames_feature = 16 * 1 * 64 * 64
-            frames_feature_input = net
+            frames_feature = net
             frames_feature_encoded = []
-            frames_feature_input = self.ex_encoders(frames_feature_input)
-            frames_feature = self._get_input_feats(*frames_feature_input)
-            frames_feature_residual = self._get_residual_feats(*frames_feature_input)
-            # for i in range(len(self.encoders)):
-            #     # 1. 16 * 1 * 64 * 64 -> 16 * 64 * 64 * 64 => frames_feature_encoded
-            #     # 2. 16 * 64 * 64 * 64 -> 16 * 64 * 32 * 32 => frames_feature_encoded
-            #     # 3. 16 * 64 * 32 * 32 -> 16 * 64 * 16 * 16 => frames_feature_encoded
-            #     frames_feature = self.encoders[i](frames_feature)
-            #     frames_feature_encoded.append(frames_feature)
+            for i in range(len(self.encoders)):
+                # 1. 16 * 1 * 64 * 64 -> 16 * 64 * 64 * 64 => frames_feature_encoded
+                # 2. 16 * 64 * 64 * 64 -> 16 * 64 * 32 * 32 => frames_feature_encoded
+                # 3. 16 * 64 * 32 * 32 -> 16 * 64 * 16 * 16 => frames_feature_encoded
+                frames_feature = self.encoders[i](frames_feature)
+                frames_feature_encoded.append(frames_feature)
             if t == 0:
                 # num_layers = 4
                 # 0, 1, 2, 3
-                # zeros = []
                 for i in range(self.num_layers):
-                    zeros = []
-                    zeros.append(torch.zeros([batch_size, self.num_hidden[i] * 2, height, width]).to(self.configs.device))
-                    zeros.append(torch.zeros([batch_size, self.num_hidden[i] * 4, height // 2, width // 2]).to(self.configs.device))# 16 * 64 * 16 * 16
-                    zeros.append(torch.zeros([batch_size, self.num_hidden[i] * 8, height // 4, width // 4]).to(self.configs.device))
+                    zeros = torch.zeros([batch_size, self.num_hidden[i], height, width]).to(self.configs.device) # 16 * 64 * 16 * 16
                     T_t.append(zeros)# 4 * 16 * 64 * 16 * 16
             S_t = frames_feature # 16 * 64 * 16 * 16
             # num_layers = 4
             # 0, 1, 2, 3
             for i in range(self.num_layers):
                 t_att = T_pre[i][-self.tau:] #
-                #t_att = torch.stack(t_att, dim=0) # 5 * 16 * 64 * 16 * 16
+                t_att = torch.stack(t_att, dim=0) # 5 * 16 * 64 * 16 * 16
                 s_att = S_pre[i][-self.tau:]
-                #s_att = torch.stack(s_att, dim=0) # 5 * 16 * 64 * 16 * 16
+                s_att = torch.stack(s_att, dim=0) # 5 * 16 * 64 * 16 * 16
                 S_pre[i].append(S_t)
                 T_t[i], S_t = self.cell_list[i](T_t[i], S_t, t_att, s_att)
                 T_pre[i].append(T_t[i])
-                S_pre[i].remove(S_pre[i][0])
-                T_pre[i].remove(T_pre[i][0])
             out = S_t
             # out = self.merge(torch.cat([T_t[-1], S_t], dim=1))
             frames_feature_decoded = []
-            # for i in range(len(self.decoders)):
-            #     # 1. 16 * 64 * 16 * 16 -> 16 * 64 * 32 * 32
-            #     # 2. 16 * 64 * 32 * 32 -> 16 * 64 * 64 * 64
-            #     out = self.decoders[i](out)
-            #     if self.configs.model_mode == 'recall':
-            #         out = out + frames_feature_encoded[-2 - i]
-            dec_inputs = self._get_decoder_inputs(out, frames_feature_residual)  # [16 * 512 * 4 * 4,[16 * 64 * 32 * 32, 16 * 128 * 16 * 16, 16 * 256 * 8 * 8]]
-            pred_output, dec_skips = self.ex_decoders(dec_inputs)
-            # x_gen = self.srcnn(pred_output) # 16 * 64 * 64 * 64 => # 16 * 1 * 64 * 64
-            x_gen = pred_output
+            for i in range(len(self.decoders)):
+                # 1. 16 * 64 * 16 * 16 -> 16 * 64 * 32 * 32
+                # 2. 16 * 64 * 32 * 32 -> 16 * 64 * 64 * 64
+                out = self.decoders[i](out)
+                if self.configs.model_mode == 'recall':
+                    out = out + frames_feature_encoded[-2 - i]
+
+            x_gen = self.srcnn(out) # 16 * 64 * 64 * 64 => # 16 * 1 * 64 * 64
             next_frames.append(x_gen)
         next_frames = torch.stack(next_frames, dim=0).permute(1, 0, 2, 3, 4).contiguous()
         return next_frames # 16 * 19 * 1 * 64 * 64
-
-    def _get_input_feats(self, enc_outs, enc_skips):
-        return [*enc_skips[1:], enc_outs]
-
-    def _get_decoder_inputs(self, pred_feats, residuals): # residuals输入的特征=[16 * 64 * 32 * 32, 16 * 128 * 16 * 16, 16 * 256 * 8 * 8, 16 * 512 * 4 * 4]
-        dec_input_feats = [residuals[0]] # dec_input_feats = [16 * 64 * 32 * 32]
-        for i, feat in enumerate(pred_feats):
-            dec_input_feats.append(torch.add(feat, residuals[i+1])) # dec_input_feats = [16 * 64 * 32 * 32, 16 * 128 * 16 * 16, 16 * 256 * 8 * 8, 16 * 512 * 4 * 4]
-        return [dec_input_feats[-1], dec_input_feats[:-1]] #
-    def _get_residual_feats(self, enc_outs, enc_skips):
-        return [*enc_skips, enc_outs] #
