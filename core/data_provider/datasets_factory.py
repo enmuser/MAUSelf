@@ -1,10 +1,10 @@
-from torchvision import transforms
 from torch.utils.data import DataLoader
 from core.data_provider.vp.dataset_wrapper import VPDatasetWrapper
 
 from core.data_provider.caltech_pedestrian import CaltechPedestrianDataset
 from core.data_provider.mm import MovingMNIST
-from core.data_provider import CustomMovingMNIST, KTH, SynpickMoving
+from core.data_provider import CustomMovingMNIST, KTH, SynpickMoving,TaxiBJDataset
+
 
 
 def data_provider(dataset, configs, data_train_path, data_test_path, batch_size, split,
@@ -52,12 +52,13 @@ def data_provider(dataset, configs, data_train_path, data_test_path, batch_size,
         #     dataset = val_data
         dataset_class = CaltechPedestrianDataset(
                 split=split,
-                data_root_path=root
+                data_root_path=root,
+            img_size=(128,160)
            )
         split_tmp = split
         if split == "val":
             split_tmp = "train"
-        datasetTotal = VPDatasetWrapper(dataset_class,split=split_tmp,data_root_path=root)
+        datasetTotal = VPDatasetWrapper(dataset_class,split=split_tmp,data_root_path=root,img_size=(128,160))
         datasetTotal.set_seq_len(configs.input_length,configs.pred_length,1)
         if split == "train":
             dataset = datasetTotal.train_data
@@ -65,6 +66,13 @@ def data_provider(dataset, configs, data_train_path, data_test_path, batch_size,
             dataset = datasetTotal.val_data
         elif split == "test":
             dataset = datasetTotal.test_data
+    elif configs.dataset == 'taxibj':
+        if split == "train":
+            dataset = TaxiBJDataset("train",data_root_path=root)
+        elif split == "val":
+            dataset = TaxiBJDataset("validation",data_root_path=root)
+        elif split == "test":
+            dataset = TaxiBJDataset("test",data_root_path=root)
     return DataLoader(dataset,
                       pin_memory=True,
                       batch_size=batch_size,

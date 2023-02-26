@@ -1,6 +1,7 @@
 import os.path
 import cv2
 import numpy as np
+from matplotlib import pyplot as plt
 from skimage.metrics import structural_similarity as compare_ssim
 from core.utils import preprocess
 import torch
@@ -121,11 +122,23 @@ def test(model, test_input_handle, configs, itr):
                 shape = t1.shape
                 # shape[1] = 1
                 if not shape[1] == 3:
-                    # new_shape = (16,3,64,64)
-                    new_shape = (shape[0], 3, *shape[2:])
-                    # 将tensor按照某一维度扩展
-                    t1.expand(new_shape)
-                    t2.expand(new_shape)
+                    if shape[1] == 1:
+                        # new_shape = (16,3,64,64)
+                        new_shape = (shape[0], 3, *shape[2:])
+                        # 将tensor按照某一维度扩展
+                        t1.expand(new_shape)
+                        t2.expand(new_shape)
+                    elif shape[1] == 2:
+                        # new_shape = (16,3,64,64)
+                        new_shape = (shape[0], 1, *shape[2:])
+                        add_channel = np.zeros(new_shape)
+                        add_channel = torch.FloatTensor(add_channel).to(configs.device)
+                        t1 = torch.concat([t1,add_channel],axis=1)
+                        t2 = torch.concat([t2,add_channel], axis=1)
+                        # 将tensor按照某一维度扩展
+                        #t1.expand(new_shape)
+                        #t2.expand(new_shape)
+
                 d = loss_fn.forward(t1, t2)
                 lpips_score = d.mean()
                 lpips_score = lpips_score.detach().cpu().numpy() * 100
@@ -199,10 +212,20 @@ def test(model, test_input_handle, configs, itr):
                 img[res_height:, (configs.input_length + i) * res_width:(configs.input_length + i + 1) * res_width,:] \
                     = img_out[0, -output_length + i, :]
             # 将小于0的变成0, 将大于1的变成1
-            img = np.maximum(img, 0)
-            img = np.minimum(img, 1)
-            # 写出对比图片
-            cv2.imwrite(file_name, (img * 255).astype(np.uint8))
+            if configs.img_channel == 2:
+                # add_image = np.zeros((2 * res_height,
+                #          configs.total_length * res_width,1))
+                # img = np.concatenate([img,add_image],axis=2)
+                img_total = img[:,:,0] + img[:,:,1]
+                name_svg = str(batch_id) + '.svg'
+                # file_name = results/mau/1.png
+                file_name_svg = os.path.join(res_path, name_svg)
+                plt.imsave(file_name_svg, img_total.reshape(img_total.shape[0], img_total.shape[1]), vmin=0, vmax=1.0)
+            else:
+                img = np.maximum(img, 0)
+                img = np.minimum(img, 1)
+                # 写出对比图片
+                cv2.imwrite(file_name, (img * 255).astype(np.uint8))
             batch_id = batch_id + 1
     f.close()
     # results/mau/data.txt
