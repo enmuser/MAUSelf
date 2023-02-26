@@ -9,7 +9,7 @@ def configs():
 
     parser.add_argument('--data_train_path', type=str, default='')
     parser.add_argument('--data_val_path', type=str, default='')
-    parser.add_argument('--data_test_path', type=str, default='/kaggle/input/taxibj_dataset/')
+    parser.add_argument('--data_test_path', type=str, default='/kaggle/input/taxibjdataset/')
     parser.add_argument('--input_length', type=int, default=4)
     parser.add_argument('--real_length', type=int, default=8)
     parser.add_argument('--total_length', type=int, default=8)
