@@ -52,12 +52,13 @@ def data_provider(dataset, configs, data_train_path, data_test_path, batch_size,
         #     dataset = val_data
         dataset_class = CaltechPedestrianDataset(
                 split=split,
-                data_root_path=root
+                data_root_path=root,
+            img_size=(128, 160)
            )
         split_tmp = split
         if split == "val":
             split_tmp = "train"
-        datasetTotal = VPDatasetWrapper(dataset_class,split=split_tmp,data_root_path=root)
+        datasetTotal = VPDatasetWrapper(dataset_class,split=split_tmp,data_root_path=root,img_size=(128,160))
         datasetTotal.set_seq_len(configs.input_length,configs.pred_length,1)
         if split == "train":
             dataset = datasetTotal.train_data
