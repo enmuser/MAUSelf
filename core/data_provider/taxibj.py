@@ -21,11 +21,11 @@ class TaxiBJDataset(Dataset):
         数据集 0-1 归一化，按照测试集最小值 0， 最大值 1292
         """
         if dataset == "train":
-            self.dataset_dir = Path(data_root_path + r"\train")
+            self.dataset_dir = Path(data_root_path + r"train")
         elif dataset == "validation":
-            self.dataset_dir = Path(data_root_path + r"\validation")
+            self.dataset_dir = Path(data_root_path + r"validation")
         elif dataset == "test":
-            self.dataset_dir = Path(data_root_path + r"\test")
+            self.dataset_dir = Path(data_root_path + r"test")
         else:
             raise FileNotFoundError(f"\nthe dataset {dataset} in Moving MNIST doesn't exist.\n")
 
