@@ -4,6 +4,7 @@ import os
 
 import cv2
 import torch
+import torchvision.transforms
 from tqdm import tqdm
 
 from core.data_provider.vp import VPDataset, VPData
@@ -33,8 +34,8 @@ class CaltechPedestrianDataset(VPDataset):
 
     train_to_val_ratio = 0.9
 
-    def __init__(self, split,data_root_path, **dataset_kwargs):
-        super(CaltechPedestrianDataset, self).__init__(split,data_root_path, **dataset_kwargs)
+    def __init__(self, split,data_root_path, json_path,**dataset_kwargs):
+        super(CaltechPedestrianDataset, self).__init__(split,data_root_path,json_path, **dataset_kwargs)
         self.NON_CONFIG_VARS.extend(["sequences", "sequences_with_frame_index",
                                      "AVAILABLE_CAMERAS"])
         self.DEFAULT_DATA_DIR = data_root_path
@@ -43,6 +44,7 @@ class CaltechPedestrianDataset(VPDataset):
         set_from_kwarg(self, dataset_kwargs, "train_val_seed")
 
         self.data_dir = data_root_path
+        self.data_dir_json = json_path
 
         frame_count_path = os.path.join(self.DEFAULT_DATA_DIR,"frame_counts.json")
         if not os.path.exists(frame_count_path):
@@ -65,16 +67,16 @@ class CaltechPedestrianDataset(VPDataset):
                 json.dump(sequences_with_frame_counts, frame_count_file)
 
         # get sequence filepaths and slice accordingly
-        with open(os.path.join(self.data_dir, "frame_counts.json"), "r") as frame_counts_file:
+        with open(os.path.join(self.data_dir_json, "frame_counts.json"), "r") as frame_counts_file:
             sequences = json.load(frame_counts_file).items()
 
         if self.split == "test":
-            sequences = [(fp, frames) for (fp, frames) in sequences if fp.split("/")[-2] in self.TEST_SETS]
+            sequences = [(fp, frames) for (fp, frames) in sequences if fp.split("\\")[-2] in self.TEST_SETS]
             if len(sequences) < 1:
                 raise ValueError(f"Dataset {self.NAME}: didn't find enough test sequences "
                                  f"-> can't use dataset")
         else:
-            sequences = [(fp, frames) for (fp, frames) in sequences if fp.split("/")[-2] in self.TRAIN_VAL_SETS]
+            sequences = [(fp, frames) for (fp, frames) in sequences if fp.split("\\")[-2] in self.TRAIN_VAL_SETS]
             if len(sequences) < 2:
                 raise ValueError(f"Dataset {self.NAME}: didn't find enough train/val sequences "
                                  f"-> can't use dataset")
