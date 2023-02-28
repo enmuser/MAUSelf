@@ -1,5 +1,5 @@
 import sys
-from typing import List, Union
+from .typing import List, Union
 from datetime import datetime
 import subprocess
 import inspect
