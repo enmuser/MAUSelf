@@ -2,6 +2,8 @@ import torch
 import torch.nn as nn
 import math
 
+from core.models.simvp_modules import GASubBlock
+
 
 class MAUCell(nn.Module):
     def __init__(self, in_channel, num_hidden, height, width, filter_size, stride, tau, cell_mode):
@@ -35,6 +37,8 @@ class MAUCell(nn.Module):
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
+        self.block = GASubBlock(num_hidden, kernel_size=21, mlp_ratio=8.0, drop=0.0, drop_path=0.0, act_layer=nn.GELU)
+
         self.softmax = nn.Softmax(dim=0)
 
     def forward(self, T_t, S_t, t_att, s_att):
@@ -43,6 +47,8 @@ class MAUCell(nn.Module):
         weights_list = []
         for i in range(self.tau):
             weights_list.append((s_att[i] * s_next).sum(dim=(1, 2, 3)) / math.sqrt(self.d))
+        for i in range(self.tau):
+            S_t = S_t + self.block(s_att[i])
         weights_list = torch.stack(weights_list, dim=0)
         weights_list = torch.reshape(weights_list, (*weights_list.shape, 1, 1, 1))
         weights_list = self.softmax(weights_list)
