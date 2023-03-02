@@ -56,21 +56,6 @@ class AttentionModule(nn.Module):      # Large Kernel Attention
         self.conv_spatial = nn.Conv2d(dim, dim, dd_k, stride=1, padding=dd_p, groups=dim, dilation=dilation)
         self.conv1 = nn.Conv2d(dim, 2*dim, 1)
 
-        reduction = 16
-        self.reduction = max(dim // reduction, 4)
-        self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.fc = nn.Sequential(
-            nn.Linear(dim, dim // self.reduction, bias=False), # reduction
-            nn.ReLU(True),
-            nn.Linear(dim // self.reduction, dim, bias=False), # expansion
-            nn.Sigmoid()
-        )
-
-        # GATE
-        self.conv2_0 = nn.Conv2d(dim, dim, d_k, padding=d_p, groups=dim)
-        self.conv2_spatial = nn.Conv2d(dim, dim, dd_k, stride=1, padding=dd_p, groups=dim, dilation=dilation)
-        self.conv2_1 = nn.Conv2d(dim, dim, 1)
-
     def forward(self, x):
         u = x.clone()
         attn = self.conv0(x)           # depth-wise conv
