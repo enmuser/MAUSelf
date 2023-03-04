@@ -37,7 +37,7 @@ class MAUCell(nn.Module):
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
-        self.block = GASubBlock(num_hidden, kernel_size=21, mlp_ratio=8.0, drop=0.0, drop_path=0.0, act_layer=nn.GELU)
+        self.block = GASubBlock(num_hidden, kernel_size=21, mlp_ratio=4.0, drop=0.0, drop_path=0.0, act_layer=nn.GELU)
 
         self.softmax = nn.Softmax(dim=0)
 

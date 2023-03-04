@@ -103,13 +103,13 @@ class GASubBlock(nn.Module):
         self.attn = SpatialAttention(dim, kernel_size)
         self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
 
-        #self.norm2 = nn.BatchNorm2d(dim)
-        #mlp_hidden_dim = int(dim * mlp_ratio)
-        #self.mlp = Mlp(in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop)
+        self.norm2 = nn.BatchNorm2d(dim)
+        mlp_hidden_dim = int(dim * mlp_ratio)
+        self.mlp = Mlp(in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop)
 
         layer_scale_init_value = 1e-2
         self.layer_scale_1 = nn.Parameter(layer_scale_init_value * torch.ones((dim)), requires_grad=True)
-        #self.layer_scale_2 = nn.Parameter(layer_scale_init_value * torch.ones((dim)), requires_grad=True)
+        self.layer_scale_2 = nn.Parameter(layer_scale_init_value * torch.ones((dim)), requires_grad=True)
 
         self.apply(self._init_weights)
 
@@ -130,5 +130,5 @@ class GASubBlock(nn.Module):
 
     def forward(self, x):
         x = x + self.drop_path(self.layer_scale_1.unsqueeze(-1).unsqueeze(-1) * self.attn(self.norm1(x)))
-        #x = x + self.drop_path(self.layer_scale_2.unsqueeze(-1).unsqueeze(-1) * self.mlp(self.norm2(x)))
+        x = x + self.drop_path(self.layer_scale_2.unsqueeze(-1).unsqueeze(-1) * self.mlp(self.norm2(x)))
         return x
