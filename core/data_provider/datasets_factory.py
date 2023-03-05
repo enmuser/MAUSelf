@@ -31,7 +31,7 @@ def data_provider(dataset, configs, data_train_path, data_test_path, batch_size,
                 data_root_path=root,
                 num_frames=30,
                 num_channels=3,
-                img_size=64
+                img_size=configs.img_height
             )
     elif configs.dataset == 'synpick':
         dataset = SynpickMoving(
