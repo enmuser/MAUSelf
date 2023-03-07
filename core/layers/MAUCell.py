@@ -78,43 +78,43 @@ class MAUCell(nn.Module):
             nn.LayerNorm([num_hidden, height, width])
         )
 
-        self.conv_t_lower_t_1 = nn.Sequential(
+        self.conv_t_lower_1 = nn.Sequential(
             nn.Conv2d(in_channel, num_hidden, kernel_size=5, stride=1, padding=2,
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
-        self.conv_t_lower_t_2 = nn.Sequential(
+        self.conv_t_lower_2 = nn.Sequential(
             nn.Conv2d(in_channel, num_hidden, kernel_size=5, stride=1, padding=2,
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
-        self.conv_t_lower_s_1 = nn.Sequential(
+        self.conv_s_lower_1 = nn.Sequential(
             nn.Conv2d(in_channel, num_hidden, kernel_size=5, stride=1, padding=2,
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
-        self.conv_t_lower_s_2 = nn.Sequential(
+        self.conv_s_lower_2 = nn.Sequential(
             nn.Conv2d(in_channel, num_hidden, kernel_size=5, stride=1, padding=2,
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
 
-        self.conv_t_upper_t_1 = nn.Sequential(
+        self.conv_t_upper_1 = nn.Sequential(
             nn.Conv2d(in_channel, num_hidden, kernel_size=5, stride=1, padding=2,
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
-        self.conv_t_upper_t_2 = nn.Sequential(
+        self.conv_t_upper_2 = nn.Sequential(
             nn.Conv2d(in_channel, num_hidden, kernel_size=5, stride=1, padding=2,
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
-        self.conv_t_upper_s_1 = nn.Sequential(
+        self.conv_s_upper_1 = nn.Sequential(
             nn.Conv2d(in_channel, num_hidden, kernel_size=5, stride=1, padding=2,
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
-        self.conv_t_upper_s_2 = nn.Sequential(
+        self.conv_s_upper_2 = nn.Sequential(
             nn.Conv2d(in_channel, num_hidden, kernel_size=5, stride=1, padding=2,
                       ),
             nn.LayerNorm([num_hidden, height, width])
@@ -192,17 +192,17 @@ class MAUCell(nn.Module):
         # T_new_2_gate = torch.sigmoid(T_new_2)
         # T_new_3_gate = torch.sigmoid(T_new_3)
 
-        T_new_3_upper = self.conv_t_upper_t_1(T_new_3)
+        T_new_3_upper = self.conv_t_upper_1(T_new_3)
         T_new_2_gate = torch.sigmoid(T_new_2)
         T_new_2 = T_new_2 * T_new_2_gate + (1 - T_new_2_gate) * T_new_3_upper
-        T_new_2_upper = self.conv_t_upper_t_2(T_new_2)
+        T_new_2_upper = self.conv_t_upper_2(T_new_2)
         T_new_gate = torch.sigmoid(T_new)
         T_new = T_new * T_new_gate + (1 - T_new_gate) * T_new_2_upper
 
-        T_new_lower = self.conv_t_lower_t_1(T_new)
+        T_new_lower = self.conv_t_lower_1(T_new)
         T_new_2_gate = torch.sigmoid(T_new_2)
         T_new_2 = T_new_2 * T_new_2_gate + (1 - T_new_2_gate) * T_new_lower
-        T_new_2_lower = self.conv_t_lower_t_2(T_new_2)
+        T_new_2_lower = self.conv_t_lower_2(T_new_2)
         T_new_3_gate = torch.sigmoid(T_new_3)
         T_new_return = T_new_3 * T_new_3_gate + (1 - T_new_3_gate) * T_new_2_lower
 
@@ -215,17 +215,17 @@ class MAUCell(nn.Module):
         # S_new_2 = S_new_2 * S_new_2_gate + S_new * (1 - S_new_2_gate)
         # S_new_return = S_new_3 * S_new_3_gate + S_new_2 * (1 - S_new_3_gate)
 
-        S_new_3_upper = self.conv_s_upper_s_1(S_new_3)
+        S_new_3_upper = self.conv_s_upper_1(S_new_3)
         S_new_2_gate = torch.sigmoid(S_new_2)
         S_new_2 = S_new_2 * S_new_2_gate + (1 - S_new_2_gate) * S_new_3_upper
-        S_new_2_upper = self.conv_s_upper_s_2(S_new_2)
+        S_new_2_upper = self.conv_s_upper_2(S_new_2)
         S_new_gate = torch.sigmoid(S_new)
         S_new = S_new * S_new_gate + (1 - S_new_gate) * S_new_2_upper
 
-        S_new_lower = self.conv_s_lower_s_1(S_new)
+        S_new_lower = self.conv_s_lower_1(S_new)
         S_new_2_gate = torch.sigmoid(S_new_2)
         S_new_2 = S_new_2 * S_new_2_gate + (1 - S_new_2_gate) * S_new_lower
-        S_new_2_lower = self.conv_s_lower_s_2(S_new_2)
+        S_new_2_lower = self.conv_s_lower_2(S_new_2)
         S_new_3_gate = torch.sigmoid(S_new_3)
         S_new_return = T_new_3 * S_new_3_gate + (1 - S_new_3_gate) * S_new_2_lower
 
