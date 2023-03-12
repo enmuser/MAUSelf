@@ -21,7 +21,7 @@ def configs():
     parser.add_argument('--alpha', type=float, default=1)
     parser.add_argument('--model_name', type=str, default='mau')
     parser.add_argument('--dataset', type=str, default='taxibj')
-    parser.add_argument('--num_workers', type=int, default=2)
+    parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--num_hidden', type=int, default=64)
     parser.add_argument('--num_layers', type=int, default=3)
     parser.add_argument('--num_heads', type=int, default=4)
