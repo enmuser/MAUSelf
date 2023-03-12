@@ -88,6 +88,7 @@ class KTH(SequenceDataset):
         self.generate_hmaps = [HeatmapGenerator((img_size, img_size), self.NUM_HMAP_CHANNELS[i], 1) for i in range(2)]
 
         print('current kth image size ', img_size)
+        print('current kth image channel ', num_channels)
         if img_size == 128:
             self._change_file_sequences()
         # list of valid (cls, vid_idx, seq_idx) tuples
