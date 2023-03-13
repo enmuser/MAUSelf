@@ -2,6 +2,8 @@ import os
 import torch
 import torch.nn as nn
 from torch.optim import Adam
+
+from core.data_provider.losses import KLLoss
 from core.models import MAU
 # from core.models import STAU
 # from core.models import AAU
@@ -39,7 +41,9 @@ class Model(object):
         self.scheduler = lr_scheduler.ExponentialLR(self.optimizer, gamma=configs.lr_decay)
 
         self.MSE_criterion = nn.MSELoss()
+        self.kl_loss = KLLoss()
         self.L1_loss = nn.L1Loss()
+        self.beta = 10
 
     def save(self, itr):
         stats = {'net_param': self.network.state_dict()}
@@ -58,17 +62,45 @@ class Model(object):
         frames_tensor = torch.FloatTensor(frames).to(self.configs.device)
         mask_tensor = torch.FloatTensor(mask).to(self.configs.device)
 
-        next_frames = self.network(frames_tensor, mask_tensor)
+        next_frames, out_dict = self.network(frames_tensor, mask_tensor)
         ground_truth = frames_tensor
 
         batch_size = next_frames.shape[0]
 
         self.optimizer.zero_grad()
+
+        kl_loss = self.kl_loss(
+            mu1=out_dict["mu_post"], logvar1=out_dict["logvar_post"],
+            mu2=out_dict["mu_prior"], logvar2=out_dict["logvar_prior"]
+        )
+
         loss_l1 = self.L1_loss(next_frames,
                                ground_truth[:, 1:])
         loss_l2 = self.MSE_criterion(next_frames,
                                      ground_truth[:, 1:])
-        loss_gen = loss_l2
+        if kl_loss.item() > 100000000:
+            self.beta = 0.000000001
+        elif kl_loss.item() > 10000000:
+            self.beta = 0.00000001
+        elif kl_loss.item() > 1000000:
+            self.beta = 0.0000001
+        elif kl_loss.item() > 100000:
+            self.beta = 0.000001
+        elif kl_loss.item() > 10000:
+            self.beta = 0.00001
+        elif kl_loss.item() > 1000:
+            self.beta = 0.0001
+        elif kl_loss.item() > 100:
+            self.beta = 0.001
+        elif kl_loss.item() > 10:
+            self.beta = 0.01
+        elif kl_loss.item() > 1:
+            self.beta = 0.1
+        elif kl_loss.item() > 0.5:
+            self.beta = 1
+
+        loss_gen = loss_l2 + self.beta * kl_loss
+        print("loss_gen: ", loss_gen)
         loss_gen.backward()
         self.optimizer.step()
 
@@ -84,5 +116,5 @@ class Model(object):
         self.network.eval()
         frames_tensor = torch.FloatTensor(frames).to(self.configs.device)
         mask_tensor = torch.FloatTensor(mask).to(self.configs.device)
-        next_frames = self.network(frames_tensor, mask_tensor)
+        next_frames, out_dict = self.network(frames_tensor, mask_tensor)
         return next_frames.detach().cpu().numpy()
