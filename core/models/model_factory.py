@@ -43,7 +43,7 @@ class Model(object):
         self.MSE_criterion = nn.MSELoss()
         self.kl_loss = KLLoss()
         self.L1_loss = nn.L1Loss()
-        self.beta = 10
+        self.beta = 1000
 
     def save(self, itr):
         stats = {'net_param': self.network.state_dict()}
@@ -98,6 +98,11 @@ class Model(object):
             self.beta = 0.1
         elif kl_loss.item() > 0.5:
             self.beta = 1
+
+        print("loss_l2: ", loss_l2)
+        print("current beta: ", self.beta)
+        print("kl_loss: ", kl_loss)
+        print("beta * kl_loss: ", self.beta * kl_loss)
 
         loss_gen = loss_l2 + self.beta * kl_loss
         print("loss_gen: ", loss_gen)
