@@ -78,32 +78,42 @@ class Model(object):
                                ground_truth[:, 1:])
         loss_l2 = self.MSE_criterion(next_frames,
                                      ground_truth[:, 1:])
-        if kl_loss.item() > 100000000:
-            self.beta = 0.000000001
+        if kl_loss.item() > 1000000000:
+            self.beta = 0.00000000001
+        elif kl_loss.item() > 100000000:
+            self.beta = 0.0000000001
         elif kl_loss.item() > 10000000:
-            self.beta = 0.00000001
+            self.beta = 0.000000001
         elif kl_loss.item() > 1000000:
-            self.beta = 0.0000001
+            self.beta = 0.00000001
         elif kl_loss.item() > 100000:
-            self.beta = 0.000001
+            self.beta = 0.0000001
         elif kl_loss.item() > 10000:
-            self.beta = 0.00001
+            self.beta = 0.000001
         elif kl_loss.item() > 1000:
-            self.beta = 0.0001
+            self.beta = 0.00001
         elif kl_loss.item() > 100:
-            self.beta = 0.001
+            self.beta = 0.0001
         elif kl_loss.item() > 10:
-            self.beta = 0.01
+            self.beta = 0.001
         elif kl_loss.item() > 1:
-            self.beta = 0.1
-        elif kl_loss.item() > 0.5:
+            self.beta = 0.01
+        elif kl_loss.item() > 0.01:
             self.beta = 1
-
-        print("loss_l2: ", loss_l2)
+        elif kl_loss.item() > 0.001:
+            self.beta = 1
+        elif kl_loss.item() > 0.0001:
+            self.beta = 10
+        elif kl_loss.item() > 0.00001:
+            self.beta = 100
+        elif kl_loss.item() > 0.000001:
+            self.beta = 1000
+        else:
+            self.beta = 1000
+        print("kl_loss.item : ", kl_loss.item())
         print("current beta: ", self.beta)
-        print("kl_loss: ", kl_loss)
+        print("loss_l2: ", loss_l2)
         print("beta * kl_loss: ", self.beta * kl_loss)
-
         loss_gen = loss_l2 + self.beta * kl_loss
         print("loss_gen: ", loss_gen)
         loss_gen.backward()
