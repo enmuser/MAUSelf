@@ -29,7 +29,7 @@ def configs():
     parser.add_argument('--stride', type=int, default=1)
     parser.add_argument('--time', type=int, default=2)
     parser.add_argument('--time_stride', type=int, default=1)
-    parser.add_argument('--tau', type=int, default=7)
+    parser.add_argument('--tau', type=int, default=5)
     parser.add_argument('--is_training', type=str, default='True')
     parser.add_argument('--cell_mode', type=str, default='normal')
     parser.add_argument('--model_mode', type=str, default='normal')
