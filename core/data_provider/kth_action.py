@@ -86,6 +86,10 @@ class KTH(SequenceDataset):
         # 0: pose-keypoints' heatmap; 1: upper-torso keypoint heatmap
         self.generate_hmaps = [HeatmapGenerator((img_size, img_size), self.NUM_HMAP_CHANNELS[i], 1) for i in range(2)]
 
+        print('current kth image size ', img_size)
+        print('current kth image channel ', num_channels)
+        if img_size == 128:
+            self._change_file_sequences()
         # list of valid (cls, vid_idx, seq_idx) tuples
         if KTH.ALL_IDX is None:
             KTH.IDX_TO_CLS_VID_SEQ = self._find_valid_sequences()
@@ -112,6 +116,19 @@ class KTH(SequenceDataset):
                     if self._is_valid_sequence(seq, cls):
                         idx_to_cls_vid_seq.append((cls, vid_idx, seq_idx))
         return idx_to_cls_vid_seq
+
+    def _change_file_sequences(self):
+        for cls, cls_data in self.data.items():
+            for vid_idx, vid in enumerate(cls_data):
+                vid_seq = vid[b'files']
+                temArr = []
+                for seq_idx, seq in enumerate(vid_seq):
+                    curArr = []
+                    for item in seq:
+                        item = item.decode("utf-8").replace('64x64', '128x128').encode("utf-8")
+                        curArr.append(item)
+                    temArr.append(curArr)
+                vid[b'files'] = temArr
 
     def __getitem__(self, i):
         """ Sampling sequence from the dataset """

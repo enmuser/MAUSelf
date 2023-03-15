@@ -27,12 +27,12 @@ def data_provider(dataset, configs, data_train_path, data_test_path, batch_size,
         #                       n_frames=20,
         #                       num_objects=[2])
         dataset = KTH(
-                split=split,
-                data_root_path=root,
-                num_frames=30,
-                num_channels=3,
-                img_size=64
-            )
+            split=split,
+            data_root_path=root,
+            num_frames=30,
+            num_channels=configs.img_channel,
+            img_size=configs.img_height
+        )
     elif configs.dataset == 'synpick':
         dataset = SynpickMoving(
             split=split,
