@@ -206,11 +206,11 @@ class RNN(nn.Module):
         for t in range(self.configs.total_length - 1):
             if t >= self.configs.input_length:
                 diff_frame = frames[:, t+1] - frames[:, t-2]
-                for i in range(len(self.diff_encoders)):
-                    diff_frame = self.diff_encoders[i](diff_frame)
-                diff_mu_post, diff_logvar_post = torch.chunk(diff_frame, chunks=2, dim=1)
-                out_dict["mu_post"].append(diff_mu_post)
-                out_dict["logvar_post"].append(diff_logvar_post)
+                # for i in range(len(self.diff_encoders)):
+                #     diff_frame = self.diff_encoders[i](diff_frame)
+                # diff_mu_post, diff_logvar_post = torch.chunk(diff_frame, chunks=2, dim=1)
+                out_dict["mu_post"].append(diff_frame)
+                out_dict["logvar_post"].append(diff_frame)
             if t < self.configs.input_length:
                 net = frames[:, t]
             else:
@@ -246,11 +246,11 @@ class RNN(nn.Module):
             x_gen = self.srcnn(out)
             if t >= self.configs.input_length:
                 pred_diff_frame = x_gen - next_frames[-3]
-                for i in range(len(self.pred_diff_encoders)):
-                    pred_diff_frame = self.pred_diff_encoders[i](pred_diff_frame)
-                diff_mu_prior, logvar_prior = torch.chunk(pred_diff_frame, chunks=2, dim=1)
-                out_dict["mu_prior"].append(diff_mu_prior)
-                out_dict["logvar_prior"].append(logvar_prior)
+                # for i in range(len(self.pred_diff_encoders)):
+                #     pred_diff_frame = self.pred_diff_encoders[i](pred_diff_frame)
+                # diff_mu_prior, logvar_prior = torch.chunk(pred_diff_frame, chunks=2, dim=1)
+                out_dict["mu_prior"].append(pred_diff_frame)
+                out_dict["logvar_prior"].append(pred_diff_frame)
             next_frames.append(x_gen)
         next_frames = torch.stack(next_frames, dim=0).permute(1, 0, 2, 3, 4).contiguous()
         return next_frames, out_dict

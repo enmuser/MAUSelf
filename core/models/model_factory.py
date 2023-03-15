@@ -43,7 +43,7 @@ class Model(object):
         self.MSE_criterion = nn.MSELoss()
         self.kl_loss = KLLoss()
         self.L1_loss = nn.L1Loss()
-        self.beta = 1000
+        self.beta = 0.00001
 
     def save(self, itr):
         stats = {'net_param': self.network.state_dict()}
@@ -78,10 +78,6 @@ class Model(object):
                                ground_truth[:, 1:])
         loss_l2 = self.MSE_criterion(next_frames,
                                      ground_truth[:, 1:])
-        if kl_loss.item() > 1:
-            self.beta = 0
-        else:
-            self.beta = 1
         print("kl_loss.item : ", kl_loss.item())
         print("current beta: ", self.beta)
         print("loss_l2: ", loss_l2)
