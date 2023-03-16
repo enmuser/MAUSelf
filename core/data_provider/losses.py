@@ -4,6 +4,8 @@ Loss functions and seeting up loss function
 """
 import torch
 import torch.nn.functional as F
+from torch import nn
+
 
 class KLLoss():
     """ Kullback-Leibler loss """
@@ -34,9 +36,10 @@ class KLLoss():
         # else:
         #     loss = torch.tensor(0.)
         loss = 0
+        self.MSE_criterion = nn.MSELoss()
         for m1, lv1, m2, lv2 in zip(mu1, logvar1, mu2, logvar2):
-            kl = F.kl_div(m1.softmax(dim=-1).log(), m2.softmax(dim=-1), reduction='sum')
-            loss += kl
+            loss_l2 = self.MSE_criterion(m1, m2)
+            loss += loss_l2
         return loss
 
     def _kl_loss(self, mu1, logvar1, mu2, logvar2):
