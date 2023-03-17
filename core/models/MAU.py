@@ -205,7 +205,7 @@ class RNN(nn.Module):
                     "mu_prior": deepcopy(empty_lists), "logvar_prior": deepcopy(empty_lists)}
         for t in range(self.configs.total_length - 1):
             if t >= self.configs.input_length:
-                diff_frame = frames[:, t+1] - frames[:, t-2]
+                diff_frame = frames[:, t+1] - frames[:, 10]
                 # for i in range(len(self.diff_encoders)):
                 #     diff_frame = self.diff_encoders[i](diff_frame)
                 # diff_mu_post, diff_logvar_post = torch.chunk(diff_frame, chunks=2, dim=1)
@@ -245,7 +245,7 @@ class RNN(nn.Module):
 
             x_gen = self.srcnn(out)
             if t >= self.configs.input_length:
-                pred_diff_frame = x_gen - next_frames[-3]
+                pred_diff_frame = x_gen - next_frames[9]
                 # for i in range(len(self.pred_diff_encoders)):
                 #     pred_diff_frame = self.pred_diff_encoders[i](pred_diff_frame)
                 # diff_mu_prior, logvar_prior = torch.chunk(pred_diff_frame, chunks=2, dim=1)
