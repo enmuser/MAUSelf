@@ -1,4 +1,6 @@
 import os
+from copy import deepcopy
+
 import torch
 import torch.nn as nn
 from torch.optim import Adam
@@ -62,16 +64,39 @@ class Model(object):
         frames_tensor = torch.FloatTensor(frames).to(self.configs.device)
         mask_tensor = torch.FloatTensor(mask).to(self.configs.device)
 
-        next_frames, out_dict = self.network(frames_tensor, mask_tensor)
+        next_frames = self.network(frames_tensor, mask_tensor)
         ground_truth = frames_tensor
 
         batch_size = next_frames.shape[0]
 
         self.optimizer.zero_grad()
 
+        empty_lists = []
+
+        out_dict = {"slow_self": deepcopy(empty_lists), "slow_pre": deepcopy(empty_lists),
+                    "middle_self": deepcopy(empty_lists), "middle_pre": deepcopy(empty_lists),
+                    "fast_self": deepcopy(empty_lists), "fast_pre": deepcopy(empty_lists)}
+
+        for slow in range(11, 20):
+            slow_diff_frame = ground_truth[:, slow] - ground_truth[:, slow - 1]
+            slow_diff_frame_pre = next_frames[:, slow - 1] - next_frames[:, slow - 2]
+            out_dict["slow_self"].append(slow_diff_frame)
+            out_dict["slow_pre"].append(slow_diff_frame_pre)
+        for middle in range(12, 20, 2):
+            middle_diff_frame = ground_truth[:, middle] - ground_truth[:, middle - 2]
+            middle_diff_frame_pre = next_frames[:, middle - 1] - next_frames[:, middle - 3]
+            out_dict["middle_self"].append(middle_diff_frame)
+            out_dict["middle_pre"].append(middle_diff_frame_pre)
+        for fast in range(13, 20, 3):
+            fast_diff_frame = ground_truth[:, fast] - ground_truth[:, fast - 3]
+            fast_diff_frame_pre = next_frames[:, fast - 1] - next_frames[:, fast - 4]
+            out_dict["fast_self"].append(fast_diff_frame)
+            out_dict["fast_pre"].append(fast_diff_frame_pre)
+
         kl_loss = self.kl_loss(
-            mu1=out_dict["mu_post"], logvar1=out_dict["logvar_post"],
-            mu2=out_dict["mu_prior"], logvar2=out_dict["logvar_prior"]
+            slow=out_dict["slow_self"], slow_pre=out_dict["slow_pre"],
+            middle=out_dict["middle_self"], middle_pre=out_dict["middle_pre"],
+            fast=out_dict["fast_self"], fast_pre=out_dict["fast_pre"]
         )
 
         loss_l1 = self.L1_loss(next_frames,
@@ -97,5 +122,5 @@ class Model(object):
         self.network.eval()
         frames_tensor = torch.FloatTensor(frames).to(self.configs.device)
         mask_tensor = torch.FloatTensor(mask).to(self.configs.device)
-        next_frames, out_dict = self.network(frames_tensor, mask_tensor)
+        next_frames = self.network(frames_tensor, mask_tensor)
         return next_frames.detach().cpu().numpy()

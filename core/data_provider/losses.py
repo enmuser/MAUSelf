@@ -8,7 +8,7 @@ import torch.nn.functional as F
 class KLLoss():
     """ Kullback-Leibler loss """
 
-    def __call__(self, mu1, logvar1, mu2, logvar2):
+    def __call__(self, slow, slow_pre, middle, middle_pre, fast, fast_pre):
         """
         Computing KL-loss for a minibatch #计算小批量的 KL 损失
 
@@ -34,9 +34,19 @@ class KLLoss():
         # else:
         #     loss = torch.tensor(0.)
         loss = 0
-        for m1, lv1, m2, lv2 in zip(mu1, logvar1, mu2, logvar2):
-            kl = F.kl_div(m1.softmax(dim=-1).log(), m2.softmax(dim=-1), reduction='sum')
+        # for m1, lv1, m2, lv2 in zip(mu1, logvar1, mu2, logvar2):
+        #     kl = F.kl_div(m1.softmax(dim=-1).log(), m2.softmax(dim=-1), reduction='sum')
+        #     loss += kl
+        for slow_item, slow_pre_item in zip(slow, slow_pre):
+            kl = F.kl_div(slow_item.softmax(dim=-1).log(), slow_pre_item.softmax(dim=-1), reduction='sum')
             loss += kl
+        for middle_item, middle_pre_item in zip(middle, middle_pre):
+            kl = F.kl_div(middle_item.softmax(dim=-1).log(), middle_pre_item.softmax(dim=-1), reduction='sum')
+            loss += kl
+        for fast_item, fast_pre_item in zip(fast, fast_pre):
+            kl = F.kl_div(fast_item.softmax(dim=-1).log(), fast_pre_item.softmax(dim=-1), reduction='sum')
+            loss += kl
+
         return loss
 
     def _kl_loss(self, mu1, logvar1, mu2, logvar2):

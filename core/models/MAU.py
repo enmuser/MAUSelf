@@ -200,17 +200,7 @@ class RNN(nn.Module):
                 tmp_s.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
             T_pre.append(tmp_t)
             S_pre.append(tmp_s)
-        empty_lists = []  # num_hierarch = 3
-        out_dict = {"mu_post": deepcopy(empty_lists), "logvar_post": deepcopy(empty_lists),
-                    "mu_prior": deepcopy(empty_lists), "logvar_prior": deepcopy(empty_lists)}
         for t in range(self.configs.total_length - 1):
-            if t >= self.configs.input_length:
-                diff_frame = frames[:, t+1] - frames[:, 10]
-                # for i in range(len(self.diff_encoders)):
-                #     diff_frame = self.diff_encoders[i](diff_frame)
-                # diff_mu_post, diff_logvar_post = torch.chunk(diff_frame, chunks=2, dim=1)
-                out_dict["mu_post"].append(diff_frame)
-                out_dict["logvar_post"].append(diff_frame)
             if t < self.configs.input_length:
                 net = frames[:, t]
             else:
@@ -244,13 +234,6 @@ class RNN(nn.Module):
                     out = out + frames_feature_encoded[-2 - i]
 
             x_gen = self.srcnn(out)
-            if t >= self.configs.input_length:
-                pred_diff_frame = x_gen - next_frames[9]
-                # for i in range(len(self.pred_diff_encoders)):
-                #     pred_diff_frame = self.pred_diff_encoders[i](pred_diff_frame)
-                # diff_mu_prior, logvar_prior = torch.chunk(pred_diff_frame, chunks=2, dim=1)
-                out_dict["mu_prior"].append(pred_diff_frame)
-                out_dict["logvar_prior"].append(pred_diff_frame)
             next_frames.append(x_gen)
         next_frames = torch.stack(next_frames, dim=0).permute(1, 0, 2, 3, 4).contiguous()
-        return next_frames, out_dict
+        return next_frames
