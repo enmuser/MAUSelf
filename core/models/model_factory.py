@@ -79,6 +79,8 @@ class Model(object):
         loss_l2 = self.MSE_criterion(next_frames,
                                      ground_truth[:, 1:])
 
+        print("kl_loss.item : ", kl_loss.item())
+        print("loss_l2: ", loss_l2)
         loss_gen = kl_loss
         print("loss_gen: ", loss_gen)
         loss_gen.backward()
