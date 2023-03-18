@@ -78,28 +78,8 @@ class Model(object):
                                ground_truth[:, 1:])
         loss_l2 = self.MSE_criterion(next_frames,
                                      ground_truth[:, 1:])
-        if kl_loss.item() > 100000000:
-            self.beta = 0.000000001
-        elif kl_loss.item() > 10000000:
-            self.beta = 0.00000001
-        elif kl_loss.item() > 1000000:
-            self.beta = 0.0000001
-        elif kl_loss.item() > 100000:
-            self.beta = 0.000001
-        elif kl_loss.item() > 10000:
-            self.beta = 0.00001
-        elif kl_loss.item() > 1000:
-            self.beta = 0.0001
-        elif kl_loss.item() > 100:
-            self.beta = 0.001
-        elif kl_loss.item() > 10:
-            self.beta = 0.01
-        elif kl_loss.item() > 1:
-            self.beta = 0.1
-        elif kl_loss.item() > 0.5:
-            self.beta = 1
 
-        loss_gen = loss_l2 + self.beta * kl_loss
+        loss_gen = kl_loss
         print("loss_gen: ", loss_gen)
         loss_gen.backward()
         self.optimizer.step()
