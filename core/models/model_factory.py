@@ -45,7 +45,7 @@ class Model(object):
         self.MSE_criterion = nn.MSELoss()
         self.kl_loss = KLLoss()
         self.L1_loss = nn.L1Loss()
-        self.beta = 0.00001
+        self.beta = 0.001
 
     def save(self, itr):
         stats = {'net_param': self.network.state_dict()}
@@ -104,8 +104,12 @@ class Model(object):
         loss_l2 = self.MSE_criterion(next_frames,
                                      ground_truth[:, 1:])
         print("kl_loss.item : ", kl_loss.item())
+
+        print("self.beta: ", self.beta)
+        print("batch_size: ", batch_size)
+        print("self.beta * (kl_loss  / batch_size): ", self.beta * (kl_loss / batch_size))
         print("loss_l2: ", loss_l2)
-        loss_gen = kl_loss
+        loss_gen = loss_l2 + self.beta * (kl_loss / batch_size)
         print("loss_gen: ", loss_gen)
         loss_gen.backward()
         self.optimizer.step()
