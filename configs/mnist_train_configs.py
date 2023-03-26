@@ -33,7 +33,7 @@ def configs():
     parser.add_argument('--is_training', type=str, default='True')
     parser.add_argument('--cell_mode', type=str, default='normal')
     parser.add_argument('--model_mode', type=str, default='normal')
-    parser.add_argument('--lr', type=float, default=1e-5)
+    parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--lr_decay', type=float, default=0.90)
     parser.add_argument('--delay_interval', type=float, default=2000)
     parser.add_argument('--batch_size', type=int, default=32)
