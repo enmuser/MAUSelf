@@ -133,6 +133,10 @@ def test_wrapper(model):
 if __name__ == '__main__':
 
     print('Initializing models')
+    print('is_traing', args.is_training)
+    print('batch_size', args.batch_size)
+    print('num_layers', args.num_layers)
+    print('tau', args.tau)
     if args.is_training == 'True':
         args.is_training = True
     else:
