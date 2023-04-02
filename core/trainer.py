@@ -273,3 +273,10 @@ def test(model, test_input_handle, configs, itr):
             img_lpips[i] = img_lpips[i] / batch_id
         data_write.writelines('total lpips per frame: ' +str(avg_lpips) + '\n\n')
         data_write.writelines('10 location lpips per frame: \n' + str(img_lpips) + '\n')
+    with codecs.open(configs.gen_frm_dir + '/all_data.txt', 'a+') as all_data_write:
+        all_data_write.writelines('------------------current itr : '+str(itr)+'---------------------\n')
+        all_data_write.writelines('total mse per frame: ' + str(avg_mse) + '\n')
+        all_data_write.writelines('total mae per frame: ' + str(avg_mae) + '\n')
+        all_data_write.writelines('total psnr per frame: ' + str(avg_psnr) + '\n')
+        all_data_write.writelines('total ssim per frame: ' + str(avg_ssim) + '\n')
+        all_data_write.writelines('total lpips per frame: ' + str(avg_lpips) + '\n')
