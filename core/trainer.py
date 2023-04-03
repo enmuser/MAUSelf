@@ -332,7 +332,7 @@ def plot_generate(avg_lpips, avg_mae, avg_mse, avg_psnr, avg_ssim, configs, itr)
     plt.title("lpips")
     plt.savefig(configs.gen_frm_dir + 'plot/all_result_plot_' + str(itr) + '.png')
     try:
-        os.remove(configs.gen_frm_dir + 'plot/all_result_plot_' + str(itr - int(configs.num_save_samples)) + '.png')
+        os.remove(configs.gen_frm_dir + 'plot/all_result_plot_' + str(itr - int(configs.test_interval)) + '.png')
     except:
         print("file not found!")
     plt.close()
@@ -342,7 +342,7 @@ def plot_generate(avg_lpips, avg_mae, avg_mse, avg_psnr, avg_ssim, configs, itr)
         plt.text(a, b, '%.2f' % b, ha='center', va='bottom', fontsize=7)
     plt.savefig(configs.gen_frm_dir + 'plot/mse_result_plot_' + str(itr) + '.png')
     try:
-        os.remove(configs.gen_frm_dir + 'plot/mse_result_plot_' + str(itr - int(configs.num_save_samples)) + '.png')
+        os.remove(configs.gen_frm_dir + 'plot/mse_result_plot_' + str(itr - int(configs.test_interval)) + '.png')
     except:
         print("file not found!")
     plt.close()
@@ -352,7 +352,7 @@ def plot_generate(avg_lpips, avg_mae, avg_mse, avg_psnr, avg_ssim, configs, itr)
         plt.text(a, b, '%.2f' % b, ha='center', va='bottom', fontsize=7)
     plt.savefig(configs.gen_frm_dir + 'plot/mae_result_plot_' + str(itr) + '.png')
     try:
-        os.remove(configs.gen_frm_dir + 'plot/mae_result_plot_' + str(itr - int(configs.num_save_samples)) + '.png')
+        os.remove(configs.gen_frm_dir + 'plot/mae_result_plot_' + str(itr - int(configs.test_interval)) + '.png')
     except:
         print("file not found!")
     plt.close()
@@ -362,8 +362,7 @@ def plot_generate(avg_lpips, avg_mae, avg_mse, avg_psnr, avg_ssim, configs, itr)
         plt.text(a, b, '%.2f' % b, ha='center', va='bottom', fontsize=7)
     plt.savefig(configs.gen_frm_dir + 'plot/psnr_result_plot_' + str(itr) + '.png')
     try:
-        os.remove(
-            configs.gen_frm_dir + 'plot/psnr_result_plot_' + str(itr - int(configs.num_save_samples)) + '.png')
+        os.remove(configs.gen_frm_dir + 'plot/psnr_result_plot_' + str(itr - int(configs.test_interval)) + '.png')
     except:
         print("file not found!")
     plt.close()
@@ -373,8 +372,7 @@ def plot_generate(avg_lpips, avg_mae, avg_mse, avg_psnr, avg_ssim, configs, itr)
         plt.text(a, b, '%.3f' % b, ha='center', va='bottom', fontsize=7)
     plt.savefig(configs.gen_frm_dir + 'plot/ssim_result_plot_' + str(itr) + '.png')
     try:
-        os.remove(
-            configs.gen_frm_dir + 'plot/ssim_result_plot_' + str(itr - int(configs.num_save_samples)) + '.png')
+        os.remove(configs.gen_frm_dir + 'plot/ssim_result_plot_' + str(itr - int(configs.test_interval)) + '.png')
     except:
         print("file not found!")
     plt.close()
@@ -384,8 +382,7 @@ def plot_generate(avg_lpips, avg_mae, avg_mse, avg_psnr, avg_ssim, configs, itr)
         plt.text(a, b, '%.2f' % b, ha='center', va='bottom', fontsize=7)
     plt.savefig(configs.gen_frm_dir + 'plot/lpips_result_plot_' + str(itr) + '.png')
     try:
-        os.remove(
-            configs.gen_frm_dir + 'plot/lpips_result_plot_' + str(itr - int(configs.num_save_samples)) + '.png')
+        os.remove(configs.gen_frm_dir + 'plot/lpips_result_plot_' + str(itr - int(configs.test_interval)) + '.png')
     except:
         print("file not found!")
     plt.close()
