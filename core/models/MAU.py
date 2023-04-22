@@ -159,12 +159,12 @@ class RNN(nn.Module):
             for i in range(self.tau):
                 tmp_t = []
                 tmp_s = []
-                tmp_t.append(torch.zeros([batch_size, in_channel * 2, height, width]).to(self.configs.device))# 16 * 64 * 16 * 16
-                tmp_s.append(torch.zeros([batch_size, in_channel * 2, height, width]).to(self.configs.device))# 16 * 64 * 16 * 16
-                tmp_t.append(torch.zeros([batch_size, in_channel * 4, height // 2, width // 2]).to(self.configs.device))  # 16 * 64 * 16 * 16
-                tmp_s.append(torch.zeros([batch_size, in_channel * 4, height // 2, width // 2]).to(self.configs.device))  # 16 * 64 * 16 * 16
-                tmp_t.append(torch.zeros([batch_size, in_channel * 8, height // 4, width // 4]).to(self.configs.device))  # 16 * 64 * 16 * 16
-                tmp_s.append(torch.zeros([batch_size, in_channel * 8, height // 4, width // 4]).to(self.configs.device))
+                tmp_t.append(torch.zeros([batch_size, in_channel * 2, height, width]).to(self.configs.device))# 16 * 128 * 16 * 16
+                tmp_s.append(torch.zeros([batch_size, in_channel * 2, height, width]).to(self.configs.device))# 16 * 128 * 16 * 16
+                tmp_t.append(torch.zeros([batch_size, in_channel * 4, height // 2, width // 2]).to(self.configs.device))  # 16 * 256 * 8 * 8
+                tmp_s.append(torch.zeros([batch_size, in_channel * 4, height // 2, width // 2]).to(self.configs.device))  # 16 * 256 * 8 * 8
+                tmp_t.append(torch.zeros([batch_size, in_channel * 8, height // 4, width // 4]).to(self.configs.device))  # 16 * 512 * 4 * 4
+                tmp_s.append(torch.zeros([batch_size, in_channel * 8, height // 4, width // 4]).to(self.configs.device))  # 16 * 512 * 4 * 4
                 tmp_t_all.append(tmp_t)# 16 * 64 * 16 * 16
                 tmp_s_all.append(tmp_s)
             T_pre.append(tmp_t_all) # 4 * 5 * 16 * 64 * 16 * 16
