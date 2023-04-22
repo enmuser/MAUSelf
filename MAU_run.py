@@ -175,7 +175,9 @@ def test_wrapper(model):
 
 if __name__ == '__main__':
 
-    print('current dataset is ',args.dataset)
+    print('current dataset is ', args.dataset)
+    print('batch_size=', args.batch_size)
+    print('num_frames=', args.real_length)
     print('Initializing models')
     #判断是训练还是测试
     if args.is_training == 'True':
