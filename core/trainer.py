@@ -166,7 +166,7 @@ def test(model, test_input_handle, configs, itr):
                 score /= batch_size
                 # ------------------------------
                 ssim[i] += score
-                ssim_list[i] += score
+                ssim_list[i] = score
                 avg_ssim += score
             # results/mau/performance.txt
             f.writelines('batch_id: '+str(batch_id) + '\n\n' +
