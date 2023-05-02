@@ -45,7 +45,7 @@ def configs():
     parser.add_argument('--num_save_samples', type=int, default=1)
     parser.add_argument('--n_gpu', type=int, default=1)
     # /kaggle/input/taxibjdataset/model.ckpt-44000
-    parser.add_argument('--pretrained_model', type=str, default='')
+    parser.add_argument('--pretrained_model', type=str, default='/kaggle/input/taxibjdataset/model.ckpt-34000')
     parser.add_argument('--perforamnce_dir', type=str, default='/kaggle/working/MAUSelf/results/taxibj/')
     parser.add_argument('--save_dir', type=str, default='/kaggle/working/MAUSelf/checkpoints/taxibj/')
     parser.add_argument('--gen_frm_dir', type=str, default='/kaggle/working/MAUSelf/results/taxibj/')
