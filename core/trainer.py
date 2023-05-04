@@ -1,5 +1,7 @@
 import csv
 import os.path
+import statistics
+
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
@@ -27,6 +29,7 @@ def test(model, test_input_handle, configs, itr):
     if not os.path.exists(res_path):
         os.mkdir(res_path)
     f = codecs.open(res_path + '/performance.txt', 'w+')
+    ft = codecs.open(configs.gen_frm_dir + '/all_performance.txt', 'a+')
     f.truncate()
 
     avg_mse = 0
@@ -51,6 +54,7 @@ def test(model, test_input_handle, configs, itr):
         ssim_list.append(0)
         lpips_list.append(0)
     # max_epoches = 200000
+    ft.writelines('====================================start=====' + str(itr) + '=====start=============================================\n')
     for epoch in range(configs.max_epoches):
         # num_save_samples = 5
         # batch_id 可以为 0,1,2,3,4,5 当 batch_id = 6时终止，
@@ -188,6 +192,13 @@ def test(model, test_input_handle, configs, itr):
                          'lpips_list: \n' + str(lpips_list) + '\n\n' +
                          'ssim_list: \n' + str(ssim_list) + '\n\n')
             f.writelines('============================================================================================\n')
+            ft.writelines('batch_id: ' + str(batch_id) + '\n\n' +
+                          'mse_list: \n' + str(mse_list) + '\n' + ' mse_list_avg: ' + str(statistics.mean(mse_list)) + '\n\n'
+                          'mae_list: \n' + str(mae_list) + '\n' + ' mae_list_avg: ' + str(statistics.mean(mae_list)) + '\n\n' +
+                          'psnr_list: \n' + str(psnr_list) + '\n' + ' psnr_list_avg: ' + str(statistics.mean(psnr_list)) + '\n\n' +
+                          'lpips_list: \n' + str(lpips_list) + '\n' + ' lpips_list_avg: ' + str(statistics.mean(lpips_list)) + '\n\n' +
+                          'ssim_list: \n' + str(ssim_list) + '\n' + ' ssim_list_avg: ' + str(statistics.mean(ssim_list)) + '\n\n')
+            ft.writelines('**************************************************************************************************\n')
             # res_width = 64
             res_width = configs.img_width
             # res_height = 64
@@ -228,7 +239,9 @@ def test(model, test_input_handle, configs, itr):
                 # 写出对比图片
                 cv2.imwrite(file_name, (img * 255).astype(np.uint8))
             batch_id = batch_id + 1
+    ft.writelines('====================================end=====' + str(itr) + '=====end=============================================\n')
     f.close()
+    ft.close()
     # results/mau/data.txt
     with codecs.open(res_path + '/data.txt', 'w+') as data_write:
         data_write.truncate()
