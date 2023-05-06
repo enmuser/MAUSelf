@@ -23,7 +23,7 @@ def configs():
     parser.add_argument('--dataset', type=str, default='taxibj')
     parser.add_argument('--num_workers', type=int, default=0)
     parser.add_argument('--num_hidden', type=int, default=64)
-    parser.add_argument('--num_layers', type=int, default=4)
+    parser.add_argument('--num_layers', type=int, default=3)
     parser.add_argument('--num_heads', type=int, default=4)
     parser.add_argument('--filter_size', type=int, default=(5, 5))
     parser.add_argument('--stride', type=int, default=1)
@@ -45,7 +45,7 @@ def configs():
     parser.add_argument('--num_save_samples', type=int, default=10)
     parser.add_argument('--n_gpu', type=int, default=1)
     # /kaggle/input/taxibjdataset/model.ckpt-44000
-    parser.add_argument('--pretrained_model', type=str, default='/kaggle/input/taxibjdataset/model.ckpt-67000')
+    parser.add_argument('--pretrained_model', type=str, default='')
     parser.add_argument('--perforamnce_dir', type=str, default='/kaggle/working/MAUSelf/results/taxibj/')
     parser.add_argument('--save_dir', type=str, default='/kaggle/working/MAUSelf/checkpoints/taxibj/')
     parser.add_argument('--gen_frm_dir', type=str, default='/kaggle/working/MAUSelf/results/taxibj/')
