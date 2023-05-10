@@ -44,7 +44,7 @@ def configs():
     parser.add_argument('--snapshot_interval', type=int, default=1000)
     parser.add_argument('--num_save_samples', type=int, default=20)
     parser.add_argument('--n_gpu', type=int, default=1)
-    parser.add_argument('--pretrained_model', type=str, default='/kaggle/input/taxibjdataset/model.ckpt-11000')
+    parser.add_argument('--pretrained_model', type=str, default='/kaggle/input/taxibjdataset/model.ckpt-22000')
     parser.add_argument('--perforamnce_dir', type=str, default='/kaggle/working/MAUSelf/results/taxibj/')
     parser.add_argument('--save_dir', type=str, default='/kaggle/working/MAUSelf/checkpoints/taxibj/')
     parser.add_argument('--gen_frm_dir', type=str, default='/kaggle/working/MAUSelf/results/taxibj/')
