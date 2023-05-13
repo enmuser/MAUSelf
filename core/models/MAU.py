@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from core.layers.MAUCell import MAUCell
+from core.layers.MAUCell import STAUCell
 import math
 
 
@@ -28,7 +28,7 @@ class RNN(nn.Module):
         for i in range(num_layers):
             in_channel = num_hidden[i - 1]
             cell_list.append(
-                MAUCell(in_channel, num_hidden[i], height, width, configs.filter_size,
+                STAUCell(in_channel, num_hidden[i], height, width, configs.filter_size,
                            configs.stride, self.tau, self.cell_mode)
             )
         self.cell_list = nn.ModuleList(cell_list)
