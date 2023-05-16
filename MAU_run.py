@@ -24,6 +24,8 @@ if args_main.is_train == 'True':
        from configs.synpick_train_configs import configs
     elif args_main.dataset == 'caltech_pedestrian':
        from configs.caltech_pedestrian_train_configs import configs
+    elif args_main.dataset == 'kitti':
+       from configs.kitti_train_configs import configs
 else:
     if args_main.dataset == 'mnist':
        from configs.mnist_configs import configs
@@ -33,6 +35,8 @@ else:
        from configs.synpick_configs import configs
     elif args_main.dataset == 'caltech_pedestrian':
        from configs.caltech_pedestrian_configs import configs
+    elif args_main.dataset == 'kitti':
+       from configs.kitti_configs import configs
 parser = configs()
 parser.add_argument('--device', type=str, default='cuda')
 args = parser.parse_args()

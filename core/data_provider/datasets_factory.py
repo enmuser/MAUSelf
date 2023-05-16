@@ -1,5 +1,7 @@
 from torchvision import transforms
 from torch.utils.data import DataLoader
+
+from core.data_provider.kitti_raw import KITTIRawDataset
 from core.data_provider.vp.dataset_wrapper import VPDatasetWrapper
 
 from core.data_provider.caltech_pedestrian import CaltechPedestrianDataset
@@ -59,6 +61,25 @@ def data_provider(dataset, configs, data_train_path, data_test_path, batch_size,
             split_tmp = "train"
         datasetTotal = VPDatasetWrapper(dataset_class,split=split_tmp,data_root_path=root)
         datasetTotal.set_seq_len(configs.input_length,configs.pred_length,1)
+        if split == "train":
+            dataset = datasetTotal.train_data
+        elif split == "val":
+            dataset = datasetTotal.val_data
+        elif split == "test":
+            dataset = datasetTotal.test_data
+    elif configs.dataset == 'kitti':
+        dataset_class = KITTIRawDataset(
+            split=split,
+            data_root_path=root,
+            json_path=configs.json_path,
+            img_size=(128, 160)
+        )
+        split_tmp = split
+        if split == "val":
+            split_tmp = "train"
+        datasetTotal = VPDatasetWrapper(dataset_class, split=split_tmp, data_root_path=root,
+                                        json_path=configs.json_path, img_size=(128, 160))
+        datasetTotal.set_seq_len(configs.input_length, configs.pred_length, 1)
         if split == "train":
             dataset = datasetTotal.train_data
         elif split == "val":
