@@ -1,5 +1,5 @@
 import sys
-from .typing import TypedDict, Union, Sequence, List
+from typing import TypedDict, Union, Sequence, List
 from copy import deepcopy
 from pathlib import Path
 import random
@@ -74,7 +74,7 @@ class VPDataset(Dataset):
     value_range_min: float = 0.0  #: The lower end of the value range for the returned data.
     value_range_max: float = 1.0  #: The upper end of the value range for the returned data.
 
-    def __init__(self, split: str,data_root_path, **dataset_kwargs):
+    def __init__(self, split: str,data_root_path,json_path, **dataset_kwargs):
         r"""
         Initializes the dataset loader by determining its split and extracting and processing
         all dataset attributes from the parameters given in `dataset_kwargs`.
@@ -93,7 +93,7 @@ class VPDataset(Dataset):
         set_from_kwarg(self, dataset_kwargs, "seq_step")
         self.data_dir = dataset_kwargs.get("data_dir", self.data_dir)
         if self.data_dir is None:
-            if not self.default_available(self.split,data_root_path, **dataset_kwargs):
+            if not self.default_available(self.split, data_root_path, json_path, **dataset_kwargs):
                 if "pytest" in sys.modules:  # don't download datasets if running this code from the test suite
                     raise PytestExpectedException(f"Default for Dataset '{self.NAME}' is unavailable "
                                                   f"and pytest won't download it")
@@ -297,7 +297,7 @@ class VPDataset(Dataset):
         x = x.cpu().numpy().astype('uint8')
         return x
 
-    def default_available(self, split: str,data_root_path, **dataset_kwargs):
+    def default_available(self, split: str,data_root_path,json_path, **dataset_kwargs):
         r"""
         Tries to load a dataset and a datapoint using the default :attr:`self.data_dir` value.
         If this succeeds, then we can safely use the default data dir,
@@ -313,7 +313,7 @@ class VPDataset(Dataset):
         try:
             kwargs_ = deepcopy(dataset_kwargs)
             kwargs_.update({"data_dir": self.DEFAULT_DATA_DIR})
-            default_ = self.__class__(split,data_root_path, **kwargs_)
+            default_ = self.__class__(split,data_root_path,json_path, **kwargs_)
             default_.set_seq_len(1, 1, 1)
             _ = default_[0]
         except (FileNotFoundError, ValueError, IndexError) as e:  # TODO other exceptions?
@@ -330,7 +330,7 @@ class VPDataset(Dataset):
         raise NotImplementedError
 
     @classmethod
-    def get_train_val(cls, data_root_path,**dataset_kwargs):
+    def get_train_val(cls, data_root_path,json_path, **dataset_kwargs):
         r"""
         A wrapper method that creates a training and a validation dataset from the given dataset class.
         Like when initializing such datasets directly,
@@ -353,12 +353,12 @@ class VPDataset(Dataset):
             len_val = len_main - len_train
             D_train, D_val = _random_split(D_main, [len_train, len_val], cls.train_val_seed)
         else:
-            D_train = cls("train",data_root_path, **dataset_kwargs)
-            D_val = cls("val",data_root_path, **dataset_kwargs)
+            D_train = cls("train",data_root_path,json_path, **dataset_kwargs)
+            D_val = cls("val",data_root_path, json_path, **dataset_kwargs)
         return D_train, D_val
 
     @classmethod
-    def get_test(cls, data_root_path,**dataset_kwargs):
+    def get_test(cls, data_root_path,json_path, **dataset_kwargs):
         r"""
         A wrapper method that creates a test dataset from the given dataset class.
         Like when initializing such datasets directly,
@@ -370,7 +370,7 @@ class VPDataset(Dataset):
         Returns: The created test dataset of the same class.
 
         """
-        D_test = cls("test",data_root_path, **dataset_kwargs)
+        D_test = cls("test",data_root_path, json_path, **dataset_kwargs)
         return D_test
 
 
