@@ -10,7 +10,7 @@ import pynvml
 pynvml.nvmlInit()
 # -----------------------------------------------------------------------------
 parser = argparse.ArgumentParser(description='MAU')
-parser.add_argument('--dataset', type=str, default='kth')
+parser.add_argument('--dataset', type=str, default='kitti')
 parser.add_argument('--is_train', type=str, default='True', required=False)
 args_main = parser.parse_args()
 args_main.tied = True
@@ -22,7 +22,7 @@ if args_main.is_train == 'True':
        from configs.kth_train_configs import configs
     elif args_main.dataset == 'synpick':
        from configs.synpick_train_configs import configs
-    elif args_main.dataset == 'caltech_pedestrian':
+    elif args_main.dataset == 'caltkittiech_pedestrian':
        from configs.caltech_pedestrian_train_configs import configs
     elif args_main.dataset == 'kitti':
        from configs.kitti_train_configs import configs
@@ -180,7 +180,7 @@ def test_wrapper(model):
 if __name__ == '__main__':
 
     print('current dataset is ',args.dataset)
-    print('batch_size=',args.batch_size)
+    print('batch_size=', args.batch_size)
     print('Initializing models')
     #判断是训练还是测试
     if args.is_training == 'True':
