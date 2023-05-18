@@ -8,10 +8,10 @@ def configs():
     parser = argparse.ArgumentParser(description='MAU_train')
 
 
-    parser.add_argument('--data_train_path', type=str, default='/kaggle/input/kittidataset/')
-    parser.add_argument('--data_val_path', type=str, default='/kaggle/input/kittidataset/')
-    parser.add_argument('--data_test_path', type=str, default='/kaggle/input/kittidataset/')
-    parser.add_argument('--json_path', type=str, default='/kaggle/input/kittidataset/')
+    parser.add_argument('--data_train_path', type=str, default='/kaggle/input/kittidataset/kitti_dataset/')
+    parser.add_argument('--data_val_path', type=str, default='/kaggle/input/kittidataset/kitti_dataset/')
+    parser.add_argument('--data_test_path', type=str, default='/kaggle/input/kittidataset/kitti_dataset/')
+    parser.add_argument('--json_path', type=str, default='/kaggle/input/kittidataset/kitti_dataset/')
     parser.add_argument('--input_length', type=int, default=10)
     parser.add_argument('--real_length', type=int, default=20)
     parser.add_argument('--total_length', type=int, default=20)
