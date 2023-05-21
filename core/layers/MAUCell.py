@@ -118,20 +118,36 @@ class MAUCell(nn.Module):
             for i in range(self.tau):
                 current_t_att.append(t_att[i][index])
             current_t_att = torch.stack(current_t_att, dim=0)
+
+            current_s_att = []
+            for i in range(self.tau):
+                current_s_att.append(s_att[i][index])
+            current_s_att = torch.stack(current_s_att, dim=0)
+
             # 一次空间特征卷积操作
             s_next = self.conv_s_next[index](S_t[index])
             # 一次时间特征卷积操作
             t_next = self.conv_t_next[index](T_t[index])
             # 计算注意分数权重
-            weights_list = []
+            weights_s_list = []
             for i in range(self.tau):
                 # tau = τ = 5
                 # qi的计算 当前空间特征卷积操作的结果 与 历史前τ个进行Hadamard乘积
-                weights_list.append((s_att[i][index] * s_next).sum(dim=(1, 2, 3)) / math.sqrt(self.d[index]))
-            weights_list = torch.stack(weights_list, dim=0)
-            weights_list = torch.reshape(weights_list, (*weights_list.shape, 1, 1, 1))
-            weights_list = self.softmax(weights_list)
-            T_trend = current_t_att * weights_list
+                weights_s_list.append((s_att[i][index] * s_next).sum(dim=(1, 2, 3)) / math.sqrt(self.d[index]))
+            weights_s_list = torch.stack(weights_s_list, dim=0)
+            weights_s_list = torch.reshape(weights_s_list, (*weights_s_list.shape, 1, 1, 1))
+            weights_s_list = self.softmax(weights_s_list)
+
+            weights_t_list = []
+            for i in range(self.tau):
+                # tau = τ = 5
+                # qi的计算 当前空间特征卷积操作的结果 与 历史前τ个进行Hadamard乘积
+                weights_t_list.append((t_att[i][index] * t_next).sum(dim=(1, 2, 3)) / math.sqrt(self.d[index]))
+            weights_t_list = torch.stack(weights_t_list, dim=0)
+            weights_t_list = torch.reshape(weights_t_list, (*weights_t_list.shape, 1, 1, 1))
+            weights_t_list = self.softmax(weights_t_list)
+
+            T_trend = current_t_att * weights_s_list
             # T_trend = T_att 长期运动信息
             T_trend = T_trend.sum(dim=0)
             # t_att_gate = Uf 融合门
@@ -139,10 +155,20 @@ class MAUCell(nn.Module):
             # T_fusion = T_AMI
             # 表示增强的运动信息 长期运动信息 T_trend 和 短期运动信息 T_t 进行融合得到
             T_fusion = T_t[index] * t_att_gate + (1 - t_att_gate) * T_trend
+
+            S_trend = current_s_att * weights_t_list
+            # T_trend = T_att 长期运动信息
+            S_trend = S_trend.sum(dim=0)
+            # t_att_gate = Uf 融合门
+            s_att_gate = torch.sigmoid(s_next)
+            # T_fusion = T_AMI
+            # 表示增强的运动信息 长期运动信息 T_trend 和 短期运动信息 T_t 进行融合得到
+            S_fusion = S_t[index] * s_att_gate + (1 - s_att_gate) * S_trend
+
             # T_AMI 卷积一次 => U_t   T_concat shape=16 * 192 * 16 * 16
             T_concat = self.conv_t[index](T_fusion)
             # S_t 卷积一次 => U_s   S_concat shape=16 * 192 * 16 * 16
-            S_concat = self.conv_s[index](S_t[index])
+            S_concat = self.conv_s[index](S_fusion)
             # T_concat 一分为三 t_g, t_t, t_s shape= 16 * 64 * 16 * 16
             t_g, t_t, t_s = torch.split(T_concat, self.num_hidden_split[index], dim=1)
             # S_concat 一分为三 s_g, s_t, s_s shape= 16 * 64 * 16 * 16
