@@ -1,12 +1,12 @@
 import os
+from copy import deepcopy
+
 import torch
 import torch.nn as nn
 from torch.optim import Adam
+
+from core.data_provider.losses import KLLoss
 from core.models import MAU
-# from core.models import STAU
-# from core.models import AAU
-# from core.models import STAUv2
-# from core.models import AAUv2
 import torch.optim.lr_scheduler as lr_scheduler
 
 class Model(object):
@@ -18,10 +18,6 @@ class Model(object):
         self.num_layers = configs.num_layers
         networks_map = {
             'mau': MAU.RNN,
-            # 'stau': STAU.RNN,
-            # 'aau': AAU.RNN,
-            # 'stauv2': STAUv2.RNN, 
-            # 'aauv2': AAUv2.RNN
         }
         num_hidden = []
         for i in range(configs.num_layers):
@@ -39,7 +35,9 @@ class Model(object):
         self.scheduler = lr_scheduler.ExponentialLR(self.optimizer, gamma=configs.lr_decay)
 
         self.MSE_criterion = nn.MSELoss()
+        self.kl_loss = KLLoss()
         self.L1_loss = nn.L1Loss()
+        self.beta = 0.001
 
     def save(self, itr):
         stats = {'net_param': self.network.state_dict()}
@@ -64,11 +62,46 @@ class Model(object):
         batch_size = next_frames.shape[0]
 
         self.optimizer.zero_grad()
+
+        empty_lists = []
+
+        out_dict = {"slow_self": deepcopy(empty_lists), "slow_pre": deepcopy(empty_lists),
+                    "middle_self": deepcopy(empty_lists), "middle_pre": deepcopy(empty_lists),
+                    "fast_self": deepcopy(empty_lists), "fast_pre": deepcopy(empty_lists)}
+
+        for slow in range(11, 20):
+            slow_diff_frame = ground_truth[:, slow] - ground_truth[:, slow - 1]
+            slow_diff_frame_pre = next_frames[:, slow - 1] - next_frames[:, slow - 2]
+            out_dict["slow_self"].append(slow_diff_frame)
+            out_dict["slow_pre"].append(slow_diff_frame_pre)
+        for middle in range(12, 20, 2):
+            middle_diff_frame = ground_truth[:, middle] - ground_truth[:, middle - 2]
+            middle_diff_frame_pre = next_frames[:, middle - 1] - next_frames[:, middle - 3]
+            out_dict["middle_self"].append(middle_diff_frame)
+            out_dict["middle_pre"].append(middle_diff_frame_pre)
+        for fast in range(13, 20, 3):
+            fast_diff_frame = ground_truth[:, fast] - ground_truth[:, fast - 3]
+            fast_diff_frame_pre = next_frames[:, fast - 1] - next_frames[:, fast - 4]
+            out_dict["fast_self"].append(fast_diff_frame)
+            out_dict["fast_pre"].append(fast_diff_frame_pre)
+
+        kl_loss = self.kl_loss(
+            slow=out_dict["slow_self"], slow_pre=out_dict["slow_pre"],
+            middle=out_dict["middle_self"], middle_pre=out_dict["middle_pre"],
+            fast=out_dict["fast_self"], fast_pre=out_dict["fast_pre"]
+        )
+
         loss_l1 = self.L1_loss(next_frames,
                                ground_truth[:, 1:])
         loss_l2 = self.MSE_criterion(next_frames,
                                      ground_truth[:, 1:])
-        loss_gen = loss_l2
+        print("kl_loss : ", kl_loss.item())
+        # print("self.beta: ", self.beta)
+        # print("batch_size: ", batch_size)
+        # print("self.beta * (kl_loss  / batch_size): ", self.beta * (kl_loss / batch_size))
+        print("loss_l2: ", loss_l2)
+        loss_gen = loss_l2 + 0.625 * kl_loss
+        print("loss_gen = loss_l2 + 0.625 * kl_loss => ", (loss_l2 + 0.625 * kl_loss))
         loss_gen.backward()
         self.optimizer.step()
 
