@@ -100,8 +100,9 @@ class Model(object):
         # print("batch_size: ", batch_size)
         # print("self.beta * (kl_loss  / batch_size): ", self.beta * (kl_loss / batch_size))
         print("loss_l2: ", loss_l2)
-        loss_gen = loss_l2 + 0.625 * kl_loss
-        print("loss_gen = loss_l2 + 0.625 * kl_loss => ", (loss_l2 + 0.625 * kl_loss))
+        print("kl_loss / 5000 = ", (kl_loss.item() / 5000))
+        loss_gen = loss_l2 + (kl_loss / 5000)
+        print("loss_gen = loss_l2 + (kl_loss / 5000) => ", (loss_l2 + (kl_loss / 5000)))
         loss_gen.backward()
         self.optimizer.step()
 
