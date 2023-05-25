@@ -9,6 +9,9 @@ from core.data_provider.losses import KLLoss
 from core.models import MAU
 import torch.optim.lr_scheduler as lr_scheduler
 
+from core.models.AutomaticWeightedLoss import AutomaticWeightedLoss
+
+
 class Model(object):
     def __init__(self, configs):
         self.configs = configs
@@ -16,6 +19,7 @@ class Model(object):
         self.patch_width = configs.img_width // configs.patch_size
         self.patch_channel = configs.img_channel * (configs.patch_size ** 2)
         self.num_layers = configs.num_layers
+        self.weight_loss = AutomaticWeightedLoss(2)
         networks_map = {
             'mau': MAU.RNN,
         }
@@ -31,7 +35,10 @@ class Model(object):
         # print("Network state:")
         # for param_tensor in self.network.state_dict():  # 字典的遍历默认是遍历 key，所以param_tensor实际上是键值
         #     print(param_tensor, '\t', self.network.state_dict()[param_tensor].size())
-        self.optimizer = Adam(self.network.parameters(), lr=configs.lr)
+        self.optimizer = Adam([
+            {'params': self.network.parameters(), 'lr': configs.lr},
+            {'params': self.weight_loss.parameters(), 'weight_decay': 0}
+        ])
         self.scheduler = lr_scheduler.ExponentialLR(self.optimizer, gamma=configs.lr_decay)
 
         self.MSE_criterion = nn.MSELoss()
@@ -99,10 +106,10 @@ class Model(object):
         # print("self.beta: ", self.beta)
         # print("batch_size: ", batch_size)
         # print("self.beta * (kl_loss  / batch_size): ", self.beta * (kl_loss / batch_size))
-        print("loss_l2: ", loss_l2)
-        print("kl_loss / 10000 = ", (kl_loss.item() / 10000))
-        loss_gen = loss_l2 + (kl_loss / 10000)
-        print("loss_gen = loss_l2 + (kl_loss / 10000) => ", (loss_l2 + (kl_loss / 10000)))
+        print("loss_l2 = ", loss_l2)
+        print("kl_loss / 20000 = ", (kl_loss.item() / 20000))
+        loss_gen = self.weight_loss(loss_l2, (kl_loss / 20000))
+        print("loss_gen = ", loss_gen)
         loss_gen.backward()
         self.optimizer.step()
 
