@@ -1,12 +1,10 @@
-from torchvision import transforms
 from torch.utils.data import DataLoader
 
-from core.data_provider.kitti_raw import KITTIRawDataset
-from core.data_provider.vp.dataset_wrapper import VPDatasetWrapper
-
-from core.data_provider.caltech_pedestrian import CaltechPedestrianDataset
+from core.data_provider.caltech_pedestrian_dataset import PedestrianDataset
+from core.data_provider.kitti import KITTIDataset
 from core.data_provider.mm import MovingMNIST
-from core.data_provider import CustomMovingMNIST, KTH, SynpickMoving
+from core.data_provider import KTH, SynpickMoving
+import torchvision.transforms as TF
 
 
 def data_provider(dataset, configs, data_train_path, data_test_path, batch_size, split,
@@ -43,49 +41,24 @@ def data_provider(dataset, configs, data_train_path, data_test_path, batch_size,
             img_size=[64,112]
         )
     elif configs.dataset == 'caltech_pedestrian':
-        # suite = VPSuite()
-        # suite.load_dataset("CP")  # load moving MNIST dataset from default location
-        # datasetTotal = suite.datasets[0]
-        # datasetTotal.set_seq_len(10, 10, 1)
-        # train_data, val_data = datasetTotal.train_data, datasetTotal.val_data
-        # if is_training:
-        #     dataset = train_data
-        # else:
-        #     dataset = val_data
-        dataset_class = CaltechPedestrianDataset(
-                split=split,
-                data_root_path=root
-           )
-        split_tmp = split
-        if split == "val":
-            split_tmp = "train"
-        datasetTotal = VPDatasetWrapper(dataset_class,split=split_tmp,data_root_path=root)
-        datasetTotal.set_seq_len(configs.input_length,configs.pred_length,1)
-        if split == "train":
-            dataset = datasetTotal.train_data
-        elif split == "val":
-            dataset = datasetTotal.val_data
-        elif split == "test":
-            dataset = datasetTotal.test_data
-    elif configs.dataset == 'kitti':
-        dataset_class = KITTIRawDataset(
+        dataset = PedestrianDataset(
             split=split,
             data_root_path=root,
+            transform=TF.Resize(size=(128, 160)),
             json_path=configs.json_path,
-            img_size=(128, 160)
+            context_frames=configs.input_length,
+            pred_frames=configs.pred_length,
+            seq_step=1
         )
-        split_tmp = split
-        if split == "val":
-            split_tmp = "train"
-        datasetTotal = VPDatasetWrapper(dataset_class, split=split_tmp, data_root_path=root,
-                                        json_path=configs.json_path, img_size=(128, 160))
-        datasetTotal.set_seq_len(configs.input_length, configs.pred_length, 1)
-        if split == "train":
-            dataset = datasetTotal.train_data
-        elif split == "val":
-            dataset = datasetTotal.val_data
-        elif split == "test":
-            dataset = datasetTotal.test_data
+    elif configs.dataset == 'kitti':
+        dataset = KITTIDataset(
+            split=split,
+            data_root_path=root,
+            transform=TF.Resize(size=(128, 160)),
+            context_frames=configs.input_length,
+            pred_frames=configs.pred_length,
+            seq_step=1
+        )
     return DataLoader(dataset,
                       pin_memory=True,
                       batch_size=batch_size,
