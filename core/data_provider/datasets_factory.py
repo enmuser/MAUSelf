@@ -1,5 +1,7 @@
 from torchvision import transforms
 from torch.utils.data import DataLoader
+
+from core.data_provider.synpick_dataset import SynpickDataset
 from core.data_provider.vp.dataset_wrapper import VPDatasetWrapper
 
 from core.data_provider.caltech_pedestrian import CaltechPedestrianDataset
@@ -34,11 +36,11 @@ def data_provider(dataset, configs, data_train_path, data_test_path, batch_size,
                 img_size=configs.img_height
             )
     elif configs.dataset == 'synpick':
-        dataset = SynpickMoving(
+        dataset = SynpickDataset(
             split=split,
             data_root_path=root,
             num_frames=20,
-            img_size=[64,112]
+            img_size=[64, 112]
         )
     elif configs.dataset == 'caltech_pedestrian':
         # suite = VPSuite()
