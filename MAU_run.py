@@ -124,7 +124,7 @@ def train_wrapper(model):
                                                       batch_size=args.batch_size,
                                                       split="val",
                                                       is_training=False,
-                                                      is_shuffle=True)
+                                                      is_shuffle=False)
     # sampling_start_value = 1.0
     eta = args.sampling_start_value
     #sampling_changing_rate =  0.00002
