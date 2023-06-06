@@ -45,7 +45,7 @@ def configs():
     parser.add_argument('--snapshot_interval', type=int, default=1000)
     parser.add_argument('--num_save_samples', type=int, default=10)
     parser.add_argument('--n_gpu', type=int, default=1)
-    parser.add_argument('--pretrained_model', type=str, default='/kaggle/input/synpickdataset/model.ckpt-48000')
+    parser.add_argument('--pretrained_model', type=str, default='/kaggle/input/synpickdataset/model.ckpt-60000')
     parser.add_argument('--perforamnce_dir', type=str, default='/kaggle/working/MAUSelf/results/synpick/')
     parser.add_argument('--save_dir', type=str, default='/kaggle/working/MAUSelf/checkpoints/synpick/')
     parser.add_argument('--gen_frm_dir', type=str, default='/kaggle/working/MAUSelf/results/synpick/')
