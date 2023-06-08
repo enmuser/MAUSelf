@@ -1,6 +1,10 @@
+import csv
 import os.path
+import statistics
+
 import cv2
 import numpy as np
+from matplotlib import pyplot as plt
 from skimage.metrics import structural_similarity as compare_ssim
 from core.utils import preprocess
 import torch
@@ -25,6 +29,7 @@ def test(model, test_input_handle, configs, itr):
     if not os.path.exists(res_path):
         os.mkdir(res_path)
     f = codecs.open(res_path + '/performance.txt', 'w+')
+    ft = codecs.open(configs.gen_frm_dir + '/all_performance.txt', 'a+')
     f.truncate()
 
     avg_mse = 0
@@ -48,6 +53,7 @@ def test(model, test_input_handle, configs, itr):
         psnr_list.append(0)
         ssim_list.append(0)
         lpips_list.append(0)
+    ft.writelines('====================================start=====' + str(itr) + '=====start=============================================\n')
     # max_epoches = 200000
     for epoch in range(configs.max_epoches):
         # num_save_samples = 5
@@ -174,37 +180,88 @@ def test(model, test_input_handle, configs, itr):
                          'lpips_list: \n' + str(lpips_list) + '\n\n' +
                          'ssim_list: \n' + str(ssim_list) + '\n\n')
             f.writelines('============================================================================================\n')
+
+            ft.writelines('batch_id: '+str(batch_id) + '\n\n' +
+                         'mse_list: \n' + str(mse_list) + '\n' +' mse_list_avg: '+ str(statistics.mean(mse_list)) +'\n\n' 
+                         'mae_list: \n'+str(mae_list) + '\n' + ' mae_list_avg: '+ str(statistics.mean(mae_list)) +'\n\n'+
+                         'psnr_list: \n' + str(psnr_list) + '\n' +' psnr_list_avg: '+ str(statistics.mean(psnr_list)) +'\n\n' +
+                         'lpips_list: \n' + str(lpips_list) +'\n' + ' lpips_list_avg: '+ str(statistics.mean(lpips_list)) +'\n\n' +
+                         'ssim_list: \n' + str(ssim_list) + '\n' +' ssim_list_avg: '+  str(statistics.mean(ssim_list)) +'\n\n')
+            ft.writelines('**************************************************************************************************\n')
+
             # res_width = 64
             res_width = configs.img_width
             # res_height = 64
             res_height = configs.img_height
             # img = (64 * 2 , 20 * 64, 1)
+            interval = 8
             img = np.ones((2 * res_height,
                            configs.total_length * res_width,
                            configs.img_channel))
+            img_input = np.ones((res_height,
+                                 configs.input_length * res_width + configs.input_length * interval,
+                                 configs.img_channel))
+            img_ground_true = np.ones((res_height,
+                                       configs.pred_length * res_width + configs.pred_length * interval,
+                                       configs.img_channel))
+            img_pred = np.ones((res_height,
+                                configs.pred_length * res_width + configs.pred_length * interval,
+                                configs.img_channel))
             # name = 1.png
             name = str(batch_id) + '.png'
+
+            img_input_name = str(batch_id) + '_input.png'
+            img_ground_true_name = str(batch_id) + '_ground_true.png'
+            img_pred_name = str(batch_id) + '_pred.png'
+
             # file_name = results/mau/1.png
             file_name = os.path.join(res_path, name)
+
+            file_img_input_name = os.path.join(res_path, img_input_name)
+            file_img_ground_true_name = os.path.join(res_path, img_ground_true_name)
+            file_img_pred_name = os.path.join(res_path, img_pred_name)
+
             # total_length = 20 | 0,1,2,3,...,17,18,19
             for i in range(configs.total_length):
                 # img[:res_height, i * res_width:(i + 1) * res_width, :]
                 # = img[:res_height, i * res_width:(i + 1) * res_width, :]
                 # = img[:64,1*64:2*64,:] = test_ims[0, 1, :]
                 img[:res_height, i * res_width:(i + 1) * res_width, :] = test_ims[0, i, :]
+
+                if i < configs.input_length:
+                    img_input[:res_height, (i * res_width + i * interval):((i + 1) * res_width + i * interval),:] = test_ims[0, i, :]
+                else:
+                    img_ground_true[:res_height,((i - configs.input_length) * res_width + (i - configs.input_length) * interval):((i + 1 - configs.input_length) * res_width + (i - configs.input_length) * interval),:] = test_ims[0, i, :]
             # total_length = 10 | 0,1,2,3,...,7,8,9
             for i in range(output_length):
                 # img[res_height:, (configs.input_length + i) * res_width:(configs.input_length + i + 1) * res_width,:]
                 # = img[64:, (10 + 1) * 64:(10 + 1 + 1) * 64,:] = img_out[0, -10 + 1, :] = img_out[0, -9, :]
                 img[res_height:, (configs.input_length + i) * res_width:(configs.input_length + i + 1) * res_width,:] \
                     = img_out[0, -output_length + i, :]
+                img_pred[:res_height, (i * res_width + i * interval):((i + 1) * res_width + i * interval), :] \
+                    = img_out[0, -output_length + i, :]
             # 将小于0的变成0, 将大于1的变成1
             img = np.maximum(img, 0)
             img = np.minimum(img, 1)
+
+            img_input = np.maximum(img_input, 0)
+            img_input = np.minimum(img_input, 1)
+
+            img_ground_true = np.maximum(img_ground_true, 0)
+            img_ground_true = np.minimum(img_ground_true, 1)
+
+            img_pred = np.maximum(img_pred, 0)
+            img_pred = np.minimum(img_pred, 1)
+
             # 写出对比图片
             cv2.imwrite(file_name, (img * 255).astype(np.uint8))
+            cv2.imwrite(file_img_input_name, (img_input * 255).astype(np.uint8))
+            cv2.imwrite(file_img_ground_true_name, (img_ground_true * 255).astype(np.uint8))
+            cv2.imwrite(file_img_pred_name, (img_pred * 255).astype(np.uint8))
             batch_id = batch_id + 1
+    ft.writelines('====================================end=====' + str(itr) + '=====end=============================================\n')
     f.close()
+    ft.close()
     # results/mau/data.txt
     with codecs.open(res_path + '/data.txt', 'w+') as data_write:
         data_write.truncate()
@@ -273,3 +330,120 @@ def test(model, test_input_handle, configs, itr):
             img_lpips[i] = img_lpips[i] / batch_id
         data_write.writelines('total lpips per frame: ' +str(avg_lpips) + '\n\n')
         data_write.writelines('10 location lpips per frame: \n' + str(img_lpips) + '\n')
+
+        with codecs.open(configs.gen_frm_dir + '/all_data.txt', 'a+') as all_data_write:
+            all_data_write.writelines('------------------current itr : ' + str(itr) + '---------------------\n')
+            all_data_write.writelines('total mse per frame: ' + str(avg_mse) + '\n')
+            all_data_write.writelines('total mae per frame: ' + str(avg_mae) + '\n')
+            all_data_write.writelines('total psnr per frame: ' + str(avg_psnr) + '\n')
+            all_data_write.writelines('total ssim per frame: ' + str(avg_ssim) + '\n')
+            all_data_write.writelines('total lpips per frame: ' + str(avg_lpips) + '\n')
+
+        plot_generate(avg_lpips, avg_mae, avg_mse, avg_psnr, avg_ssim, configs, itr)
+
+
+
+def plot_generate(avg_lpips, avg_mae, avg_mse, avg_psnr, avg_ssim, configs, itr):
+    data_list = []
+    data_list.append(itr)
+    data_list.append(avg_mse)
+    data_list.append(avg_mae)
+    data_list.append(avg_psnr)
+    data_list.append(avg_ssim)
+    data_list.append(avg_lpips)
+    with open(configs.gen_frm_dir + '/result.csv', 'a+', encoding='UTF8', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(data_list)
+    result_file = open(configs.gen_frm_dir + '/result.csv')  # 打开csv文件
+    result_reader = csv.reader(result_file)  # 读取csv文件
+    result_data = list(result_reader)  # csv数据转换为列表
+    length_row = len(result_data)  # 得到数据行数
+    length_col = len(result_data[0])  # 得到每行长度
+    itrList = list()
+    mseList = list()
+    maeList = list()
+    psnrList = list()
+    ssimList = list()
+    lpipsList = list()
+    for i in range(0, length_row):  # 从第二行开始读取
+        itrList.append(int(result_data[i][0]))  # 将第一列数据从第二行读取到最后一行赋给列表x
+        mseList.append(float("{:.3f}".format(float(result_data[i][1]))))
+        maeList.append(float("{:.3f}".format(float(result_data[i][2]))))
+        psnrList.append(float("{:.3f}".format(float(result_data[i][3]))))
+        ssimList.append(float("{:.3f}".format(float(result_data[i][4]))))
+        lpipsList.append(float("{:.3f}".format(float(result_data[i][5]))))
+    plt.subplots_adjust(left=None, bottom=None, right=None, top=None, wspace=None, hspace=1)
+    plt.subplot(5, 1, 1)
+    plt.plot(itrList, mseList, color='deepskyblue')
+    plt.title("mse")
+    plt.subplot(5, 1, 2)
+    plt.plot(itrList, maeList, color='orange')
+    plt.title("mae")
+    plt.subplot(5, 1, 3)
+    plt.plot(itrList, psnrList, color='green')
+    plt.title("psnr")
+    plt.subplot(5, 1, 4)
+    plt.plot(itrList, ssimList, color='red')
+    plt.title("ssim")
+    plt.subplot(5, 1, 5)
+    plt.plot(itrList, lpipsList, color='aquamarine')
+    plt.title("lpips")
+    plt.savefig(configs.gen_frm_dir + 'plot/all_result_plot_' + str(itr) + '.png')
+    try:
+        os.remove(configs.gen_frm_dir + 'plot/all_result_plot_' + str(itr - int(configs.test_interval)) + '.png')
+    except:
+        print("file not found!")
+    plt.close()
+    plt.plot(itrList, mseList, color='deepskyblue')
+    plt.title("mse")
+    for a, b in zip(itrList, mseList):
+        plt.text(a, b, '%.2f' % b, ha='center', va='bottom', fontsize=7)
+    plt.savefig(configs.gen_frm_dir + 'plot/mse_result_plot_' + str(itr) + '.png')
+    try:
+        os.remove(configs.gen_frm_dir + 'plot/mse_result_plot_' + str(itr - int(configs.test_interval)) + '.png')
+    except:
+        print("file not found!")
+    plt.close()
+    plt.plot(itrList, maeList, color='orange')
+    plt.title("mae")
+    for a, b in zip(itrList, maeList):
+        plt.text(a, b, '%.2f' % b, ha='center', va='bottom', fontsize=7)
+    plt.savefig(configs.gen_frm_dir + 'plot/mae_result_plot_' + str(itr) + '.png')
+    try:
+        os.remove(configs.gen_frm_dir + 'plot/mae_result_plot_' + str(itr - int(configs.test_interval)) + '.png')
+    except:
+        print("file not found!")
+    plt.close()
+    plt.plot(itrList, psnrList, color='green')
+    plt.title("psnr")
+    for a, b in zip(itrList, psnrList):
+        plt.text(a, b, '%.2f' % b, ha='center', va='bottom', fontsize=7)
+    plt.savefig(configs.gen_frm_dir + 'plot/psnr_result_plot_' + str(itr) + '.png')
+    try:
+        os.remove(
+            configs.gen_frm_dir + 'plot/psnr_result_plot_' + str(itr - int(configs.test_interval)) + '.png')
+    except:
+        print("file not found!")
+    plt.close()
+    plt.plot(itrList, ssimList, color='red')
+    plt.title("ssim")
+    for a, b in zip(itrList, ssimList):
+        plt.text(a, b, '%.3f' % b, ha='center', va='bottom', fontsize=7)
+    plt.savefig(configs.gen_frm_dir + 'plot/ssim_result_plot_' + str(itr) + '.png')
+    try:
+        os.remove(
+            configs.gen_frm_dir + 'plot/ssim_result_plot_' + str(itr - int(configs.test_interval)) + '.png')
+    except:
+        print("file not found!")
+    plt.close()
+    plt.plot(itrList, lpipsList, color='aquamarine')
+    plt.title("lpips")
+    for a, b in zip(itrList, lpipsList):
+        plt.text(a, b, '%.2f' % b, ha='center', va='bottom', fontsize=7)
+    plt.savefig(configs.gen_frm_dir + 'plot/lpips_result_plot_' + str(itr) + '.png')
+    try:
+        os.remove(
+            configs.gen_frm_dir + 'plot/lpips_result_plot_' + str(itr - int(configs.test_interval)) + '.png')
+    except:
+        print("file not found!")
+    plt.close()
