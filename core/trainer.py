@@ -194,7 +194,7 @@ def test(model, test_input_handle, configs, itr):
             # res_height = 64
             res_height = configs.img_height
             # img = (64 * 2 , 20 * 64, 1)
-            interval = 8
+            interval = 4
             img = np.ones((2 * res_height,
                            configs.total_length * res_width,
                            configs.img_channel))
