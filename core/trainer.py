@@ -127,11 +127,19 @@ def test(model, test_input_handle, configs, itr):
                 shape = t1.shape
                 # shape[1] = 1
                 if not shape[1] == 3:
-                    # new_shape = (16,3,64,64)
-                    new_shape = (shape[0], 3, *shape[2:])
-                    # 将tensor按照某一维度扩展
-                    t1.expand(new_shape)
-                    t2.expand(new_shape)
+                    if shape[1] == 1:
+                        # new_shape = (16,3,64,64)
+                        new_shape = (shape[0], 3, *shape[2:])
+                        # 将tensor按照某一维度扩展
+                        t1.expand(new_shape)
+                        t2.expand(new_shape)
+                    elif shape[1] == 2:
+                        # new_shape = (16,3,64,64)
+                        new_shape = (shape[0], 1, *shape[2:])
+                        add_channel = np.zeros(new_shape)
+                        add_channel = torch.FloatTensor(add_channel).to(configs.device)
+                        t1 = torch.concat([t1, add_channel], axis=1)
+                        t2 = torch.concat([t2, add_channel], axis=1)
                 d = loss_fn.forward(t1, t2)
                 lpips_score = d.mean()
                 lpips_score = lpips_score.detach().cpu().numpy() * 100
