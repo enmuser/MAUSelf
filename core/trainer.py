@@ -53,8 +53,8 @@ def test(model, test_input_handle, configs, itr):
         psnr_list.append(0)
         ssim_list.append(0)
         lpips_list.append(0)
-    # max_epoches = 200000
     ft.writelines('====================================start=====' + str(itr) + '=====start=============================================\n')
+    # max_epoches = 200000
     for epoch in range(configs.max_epoches):
         # num_save_samples = 5
         # batch_id 可以为 0,1,2,3,4,5 当 batch_id = 6时终止，
@@ -127,23 +127,11 @@ def test(model, test_input_handle, configs, itr):
                 shape = t1.shape
                 # shape[1] = 1
                 if not shape[1] == 3:
-                    if shape[1] == 1:
-                        # new_shape = (16,3,64,64)
-                        new_shape = (shape[0], 3, *shape[2:])
-                        # 将tensor按照某一维度扩展
-                        t1.expand(new_shape)
-                        t2.expand(new_shape)
-                    elif shape[1] == 2:
-                        # new_shape = (16,3,64,64)
-                        new_shape = (shape[0], 1, *shape[2:])
-                        add_channel = np.zeros(new_shape)
-                        add_channel = torch.FloatTensor(add_channel).to(configs.device)
-                        t1 = torch.concat([t1,add_channel],axis=1)
-                        t2 = torch.concat([t2,add_channel], axis=1)
-                        # 将tensor按照某一维度扩展
-                        #t1.expand(new_shape)
-                        #t2.expand(new_shape)
-
+                    # new_shape = (16,3,64,64)
+                    new_shape = (shape[0], 3, *shape[2:])
+                    # 将tensor按照某一维度扩展
+                    t1.expand(new_shape)
+                    t2.expand(new_shape)
                 d = loss_fn.forward(t1, t2)
                 lpips_score = d.mean()
                 lpips_score = lpips_score.detach().cpu().numpy() * 100
@@ -192,52 +180,113 @@ def test(model, test_input_handle, configs, itr):
                          'lpips_list: \n' + str(lpips_list) + '\n\n' +
                          'ssim_list: \n' + str(ssim_list) + '\n\n')
             f.writelines('============================================================================================\n')
-            ft.writelines('batch_id: ' + str(batch_id) + '\n\n' +
-                          'mse_list: \n' + str(mse_list) + '\n' + ' mse_list_avg: ' + str(statistics.mean(mse_list)) + '\n\n'
-                          'mae_list: \n' + str(mae_list) + '\n' + ' mae_list_avg: ' + str(statistics.mean(mae_list)) + '\n\n' +
-                          'psnr_list: \n' + str(psnr_list) + '\n' + ' psnr_list_avg: ' + str(statistics.mean(psnr_list)) + '\n\n' +
-                          'lpips_list: \n' + str(lpips_list) + '\n' + ' lpips_list_avg: ' + str(statistics.mean(lpips_list)) + '\n\n' +
-                          'ssim_list: \n' + str(ssim_list) + '\n' + ' ssim_list_avg: ' + str(statistics.mean(ssim_list)) + '\n\n')
+
+            ft.writelines('batch_id: '+str(batch_id) + '\n\n' +
+                         'mse_list: \n' + str(mse_list) + '\n' +' mse_list_avg: '+ str(statistics.mean(mse_list)) +'\n\n' 
+                         'mae_list: \n'+str(mae_list) + '\n' + ' mae_list_avg: '+ str(statistics.mean(mae_list)) +'\n\n'+
+                         'psnr_list: \n' + str(psnr_list) + '\n' +' psnr_list_avg: '+ str(statistics.mean(psnr_list)) +'\n\n' +
+                         'lpips_list: \n' + str(lpips_list) +'\n' + ' lpips_list_avg: '+ str(statistics.mean(lpips_list)) +'\n\n' +
+                         'ssim_list: \n' + str(ssim_list) + '\n' +' ssim_list_avg: '+  str(statistics.mean(ssim_list)) +'\n\n')
             ft.writelines('**************************************************************************************************\n')
+
             # res_width = 64
             res_width = configs.img_width
             # res_height = 64
             res_height = configs.img_height
             # img = (64 * 2 , 20 * 64, 1)
+            interval = 4
             img = np.ones((2 * res_height,
                            configs.total_length * res_width,
                            configs.img_channel))
+            img_input = np.ones((res_height,
+                                 configs.input_length * res_width + configs.input_length * interval,
+                                 configs.img_channel))
+            img_ground_true = np.ones((res_height,
+                                       configs.pred_length * res_width + configs.pred_length * interval,
+                                       configs.img_channel))
+            img_pred = np.ones((res_height,
+                                configs.pred_length * res_width + configs.pred_length * interval,
+                                configs.img_channel))
             # name = 1.png
             name = str(batch_id) + '.png'
+
+            img_input_name = str(batch_id) + '_input.png'
+            img_ground_true_name = str(batch_id) + '_ground_true.png'
+            img_pred_name = str(batch_id) + '_pred.png'
+
             # file_name = results/mau/1.png
             file_name = os.path.join(res_path, name)
+
+            file_img_input_name = os.path.join(res_path, img_input_name)
+            file_img_ground_true_name = os.path.join(res_path, img_ground_true_name)
+            file_img_pred_name = os.path.join(res_path, img_pred_name)
+
             # total_length = 20 | 0,1,2,3,...,17,18,19
             for i in range(configs.total_length):
                 # img[:res_height, i * res_width:(i + 1) * res_width, :]
                 # = img[:res_height, i * res_width:(i + 1) * res_width, :]
                 # = img[:64,1*64:2*64,:] = test_ims[0, 1, :]
                 img[:res_height, i * res_width:(i + 1) * res_width, :] = test_ims[0, i, :]
+
+                if i < configs.input_length:
+                    img_input[:res_height, (i * res_width + i * interval):((i + 1) * res_width + i * interval),:] = test_ims[0, i, :]
+                else:
+                    img_ground_true[:res_height,((i - configs.input_length) * res_width + (i - configs.input_length) * interval):((i + 1 - configs.input_length) * res_width + (i - configs.input_length) * interval),:] = test_ims[0, i, :]
             # total_length = 10 | 0,1,2,3,...,7,8,9
             for i in range(output_length):
                 # img[res_height:, (configs.input_length + i) * res_width:(configs.input_length + i + 1) * res_width,:]
                 # = img[64:, (10 + 1) * 64:(10 + 1 + 1) * 64,:] = img_out[0, -10 + 1, :] = img_out[0, -9, :]
                 img[res_height:, (configs.input_length + i) * res_width:(configs.input_length + i + 1) * res_width,:] \
                     = img_out[0, -output_length + i, :]
+                img_pred[:res_height, (i * res_width + i * interval):((i + 1) * res_width + i * interval), :] \
+                    = img_out[0, -output_length + i, :]
             # 将小于0的变成0, 将大于1的变成1
             if configs.img_channel == 2:
                 # add_image = np.zeros((2 * res_height,
                 #          configs.total_length * res_width,1))
                 # img = np.concatenate([img,add_image],axis=2)
-                img_total = img[:,:,0] + img[:,:,1]
+                img_total = img[:, :, 0] + img[:, :, 1]
                 name_svg = str(batch_id) + '.svg'
+
+                img_total_input = img_input[:, :, 0] + img_input[:, :, 1]
+                img_input_name = str(batch_id) + '_input.svg'
+
+                img_total_ground_true = img_ground_true[:, :, 0] + img_ground_true[:, :, 1]
+                img_ground_true_name = str(batch_id) + '_ground_true.svg'
+
+                img_total_pred = img_pred[:, :, 0] + img_pred[:, :, 1]
+                img_pred_name = str(batch_id) + '_pred.svg'
+
                 # file_name = results/mau/1.png
                 file_name_svg = os.path.join(res_path, name_svg)
+
+                file_img_input_nam_svg = os.path.join(res_path, img_input_name)
+                file_img_ground_true_name_svg = os.path.join(res_path, img_ground_true_name)
+                file_img_pred_name_svg = os.path.join(res_path, img_pred_name)
+
                 plt.imsave(file_name_svg, img_total.reshape(img_total.shape[0], img_total.shape[1]), vmin=0, vmax=1.0)
+
+                plt.imsave(file_img_input_nam_svg, img_total_input.reshape(img_total_input.shape[0], img_total_input.shape[1]), vmin=0, vmax=1.0)
+                plt.imsave(file_img_ground_true_name_svg, img_total_ground_true.reshape(img_total_ground_true.shape[0], img_total_ground_true.shape[1]), vmin=0, vmax=1.0)
+                plt.imsave(file_img_pred_name_svg, img_total_pred.reshape(img_total_pred.shape[0], img_total_pred.shape[1]), vmin=0, vmax=1.0)
             else:
                 img = np.maximum(img, 0)
                 img = np.minimum(img, 1)
+
+                img_input = np.maximum(img_input, 0)
+                img_input = np.minimum(img_input, 1)
+
+                img_ground_true = np.maximum(img_ground_true, 0)
+                img_ground_true = np.minimum(img_ground_true, 1)
+
+                img_pred = np.maximum(img_pred, 0)
+                img_pred = np.minimum(img_pred, 1)
+
                 # 写出对比图片
                 cv2.imwrite(file_name, (img * 255).astype(np.uint8))
+                cv2.imwrite(file_img_input_name, (img_input * 255).astype(np.uint8))
+                cv2.imwrite(file_img_ground_true_name, (img_ground_true * 255).astype(np.uint8))
+                cv2.imwrite(file_img_pred_name, (img_pred * 255).astype(np.uint8))
             batch_id = batch_id + 1
     ft.writelines('====================================end=====' + str(itr) + '=====end=============================================\n')
     f.close()
@@ -310,6 +359,7 @@ def test(model, test_input_handle, configs, itr):
             img_lpips[i] = img_lpips[i] / batch_id
         data_write.writelines('total lpips per frame: ' +str(avg_lpips) + '\n\n')
         data_write.writelines('10 location lpips per frame: \n' + str(img_lpips) + '\n')
+
         with codecs.open(configs.gen_frm_dir + '/all_data.txt', 'a+') as all_data_write:
             all_data_write.writelines('------------------current itr : ' + str(itr) + '---------------------\n')
             all_data_write.writelines('total mse per frame: ' + str(avg_mse) + '\n')
@@ -317,7 +367,9 @@ def test(model, test_input_handle, configs, itr):
             all_data_write.writelines('total psnr per frame: ' + str(avg_psnr) + '\n')
             all_data_write.writelines('total ssim per frame: ' + str(avg_ssim) + '\n')
             all_data_write.writelines('total lpips per frame: ' + str(avg_lpips) + '\n')
+
         plot_generate(avg_lpips, avg_mae, avg_mse, avg_psnr, avg_ssim, configs, itr)
+
 
 
 def plot_generate(avg_lpips, avg_mae, avg_mse, avg_psnr, avg_ssim, configs, itr):
