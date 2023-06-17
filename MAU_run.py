@@ -170,7 +170,7 @@ def test_wrapper(model):
                                                        batch_size=args.batch_size,
                                                        split="test",
                                                        is_training=False,
-                                                       is_shuffle=False)
+                                                       is_shuffle=True)
 
     itr = args.test_batch_size
     for i in range(itr):
