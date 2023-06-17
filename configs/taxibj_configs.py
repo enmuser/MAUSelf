@@ -44,7 +44,7 @@ def configs():
     parser.add_argument('--display_interval', type=int, default=1)
     parser.add_argument('--test_interval', type=int, default=1000)
     parser.add_argument('--snapshot_interval', type=int, default=1000)
-    parser.add_argument('--num_save_samples', type=int, default=500)
+    parser.add_argument('--num_save_samples', type=int, default=10)
     parser.add_argument('--n_gpu', type=int, default=1)
     # /kaggle/input/taxibjdataset/model.ckpt-44000
     parser.add_argument('--pretrained_model', type=str, default='/kaggle/input/taxibjdataset/model.ckpt-15000')
