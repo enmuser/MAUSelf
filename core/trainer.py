@@ -229,6 +229,10 @@ def test(model, test_input_handle, configs, itr):
             file_img_ground_true_name = os.path.join(res_path, img_ground_true_name)
             file_img_pred_name = os.path.join(res_path, img_pred_name)
 
+            img_input_single = np.ones((res_height, res_width, configs.img_channel))
+            img_ground_true_single = np.ones((res_height, res_width, configs.img_channel))
+            img_pred_single = np.ones((res_height, res_width, configs.img_channel))
+
             # total_length = 20 | 0,1,2,3,...,17,18,19
             for i in range(configs.total_length):
                 # img[:res_height, i * res_width:(i + 1) * res_width, :]
@@ -238,8 +242,30 @@ def test(model, test_input_handle, configs, itr):
 
                 if i < configs.input_length:
                     img_input[:res_height, (i * res_width + i * interval):((i + 1) * res_width + i * interval),:] = test_ims[0, i, :]
+
+                    if configs.img_channel == 2:
+                        img_input_single[:, :, :] = test_ims[0, i, :]
+                        img_total_input_single = img_input_single[:, :, 0] + img_input_single[:, :, 1]
+                        img_input_name_single = 'batch_' + str(batch_id) + '_input_' + str(i) + '.svg'
+                        file_img_input_name_single_svg = os.path.join(res_path, img_input_name_single)
+                        plt.imsave(file_img_input_name_single_svg,img_total_input_single.reshape(img_total_input_single.shape[0],img_total_input_single.shape[1]), vmin=0, vmax=1.0)
                 else:
                     img_ground_true[:res_height,((i - configs.input_length) * res_width + (i - configs.input_length) * interval):((i + 1 - configs.input_length) * res_width + (i - configs.input_length) * interval),:] = test_ims[0, i, :]
+
+                    if configs.img_channel == 2:
+                        img_ground_true_single[:, :, :] = test_ims[0, i, :]
+                        img_total_ground_true_single = img_ground_true_single[:, :, 0] + img_ground_true_single[:, :, 1]
+                        img_ground_true_name_single = 'batch_' + str(batch_id) + '_ground_true_' + str(i - configs.input_length) + '.svg'
+                        file_img_ground_true_name_single_svg = os.path.join(res_path, img_ground_true_name_single)
+                        plt.imsave(file_img_ground_true_name_single_svg,img_total_ground_true_single.reshape(img_total_ground_true_single.shape[0],img_total_ground_true_single.shape[1]), vmin=0,vmax=1.0)
+
+                        img_pred_single[:, :, :] = img_out[0, -output_length + (i - configs.input_length), :]
+                        img_total_pred_single = img_pred_single[:, :, 0] + img_pred_single[:, :, 1]
+
+                        img_total_target_pred_diff_single = img_total_ground_true_single[:, :] - img_total_pred_single[:, :]
+                        img_target_pred_diff_name_single = 'batch_' + str(batch_id) + '_target_pred_diff_' + str(i - configs.input_length) + '.svg'
+                        file_img_target_pred_diff_name_single_svg = os.path.join(res_path,img_target_pred_diff_name_single)
+                        plt.imsave(file_img_target_pred_diff_name_single_svg,img_total_target_pred_diff_single.reshape(img_total_target_pred_diff_single.shape[0],img_total_target_pred_diff_single.shape[1]),vmin=0, vmax=1.0)
             # total_length = 10 | 0,1,2,3,...,7,8,9
             for i in range(output_length):
                 # img[res_height:, (configs.input_length + i) * res_width:(configs.input_length + i + 1) * res_width,:]
@@ -248,6 +274,13 @@ def test(model, test_input_handle, configs, itr):
                     = img_out[0, -output_length + i, :]
                 img_pred[:res_height, (i * res_width + i * interval):((i + 1) * res_width + i * interval), :] \
                     = img_out[0, -output_length + i, :]
+                if configs.img_channel == 2:
+                    img_pred_single[:, :, :] = img_out[0, -output_length + i, :]
+                    img_total_pred_single = img_pred_single[:, :, 0] + img_pred_single[:, :, 1]
+                    img_pred_name_single = 'batch_' + str(batch_id) + '_pred_' + str(i) + '.svg'
+                    file_img_pred_name_single_svg = os.path.join(res_path, img_pred_name_single)
+                    plt.imsave(file_img_pred_name_single_svg, img_total_pred_single.reshape(img_total_pred_single.shape[0],img_total_pred_single.shape[1]),vmin=0, vmax=1.0)
+
             # 将小于0的变成0, 将大于1的变成1
             if configs.img_channel == 2:
                 # add_image = np.zeros((2 * res_height,
