@@ -11,7 +11,7 @@ pynvml.nvmlInit()
 # -----------------------------------------------------------------------------
 parser = argparse.ArgumentParser(description='MAU')
 parser.add_argument('--dataset', type=str, default='kth')
-parser.add_argument('--is_train', type=str, default='True', required=False)
+parser.add_argument('--is_train', type=str, default='False', required=False)
 args_main = parser.parse_args()
 args_main.tied = True
 
@@ -168,7 +168,7 @@ def test_wrapper(model):
                                                        is_training=False,
                                                        is_shuffle=False)
 
-    itr = 1
+    itr = args.test_batch_size
     for i in range(itr):
         trainer.test(model, test_input_handle, args, itr)
 
