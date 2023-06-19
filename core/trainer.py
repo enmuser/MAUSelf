@@ -215,6 +215,17 @@ def test(model, test_input_handle, configs, itr):
             img_pred = np.ones((res_height,
                                 configs.pred_length * res_width + configs.pred_length * interval,
                                 configs.img_channel))
+            if configs.is_training == False and configs.dataset == 'kth':
+                img_input = np.ones((res_height,
+                                     (configs.input_length//2) * res_width + (configs.input_length//2) * interval,
+                                     configs.img_channel))
+
+                img_ground_true = np.ones((res_height,
+                                           (configs.pred_length//2) * res_width + (configs.pred_length//2) * interval,
+                                           configs.img_channel))
+                img_pred = np.ones((res_height,
+                                    (configs.pred_length//2) * res_width +(configs.pred_length//2)  * interval,
+                                    configs.img_channel))
             # name = 1.png
             name = str(batch_id) + '.png'
 
@@ -241,8 +252,13 @@ def test(model, test_input_handle, configs, itr):
                 img[:res_height, i * res_width:(i + 1) * res_width, :] = test_ims[0, i, :]
 
                 if i < configs.input_length:
-                    img_input[:res_height, (i * res_width + i * interval):((i + 1) * res_width + i * interval),:] = test_ims[0, i, :]
-
+                    if configs.is_training == False and configs.dataset == 'kth':
+                        if i % 2 != 0:
+                            continue
+                        else:
+                            img_input[:res_height, ((i // 2) * res_width + (i // 2) * interval):(((i // 2) + 1) * res_width + (i // 2) * interval), :] = test_ims[0, i, :]
+                    else:
+                        img_input[:res_height, (i * res_width + i * interval):((i + 1) * res_width + i * interval),:] = test_ims[0, i, :]
                     if configs.img_channel == 2:
                         img_input_single[:, :, :] = test_ims[0, i, :]
                         img_total_input_single = img_input_single[:, :, 0] + img_input_single[:, :, 1]
@@ -250,8 +266,13 @@ def test(model, test_input_handle, configs, itr):
                         file_img_input_name_single_svg = os.path.join(res_path, img_input_name_single)
                         plt.imsave(file_img_input_name_single_svg,img_total_input_single.reshape(img_total_input_single.shape[0],img_total_input_single.shape[1]), vmin=0, vmax=1.0)
                 else:
-                    img_ground_true[:res_height,((i - configs.input_length) * res_width + (i - configs.input_length) * interval):((i + 1 - configs.input_length) * res_width + (i - configs.input_length) * interval),:] = test_ims[0, i, :]
-
+                    if configs.is_training == False and configs.dataset == 'kth':
+                        if (i - configs.input_length) % 2 != 0:
+                            continue
+                        else:
+                            img_ground_true[:res_height, (((i - configs.input_length) // 2) * res_width + ((i - configs.input_length) // 2) * interval):((((i - configs.input_length) // 2) + 1) * res_width + ((i - configs.input_length) // 2) * interval),:] = test_ims[0, i, :]
+                    else:
+                        img_ground_true[:res_height,((i - configs.input_length) * res_width + (i - configs.input_length) * interval):((i + 1 - configs.input_length) * res_width + (i - configs.input_length) * interval),:] = test_ims[0, i, :]
                     if configs.img_channel == 2:
                         img_ground_true_single[:, :, :] = test_ims[0, i, :]
                         img_total_ground_true_single = img_ground_true_single[:, :, 0] + img_ground_true_single[:, :, 1]
@@ -272,8 +293,13 @@ def test(model, test_input_handle, configs, itr):
                 # = img[64:, (10 + 1) * 64:(10 + 1 + 1) * 64,:] = img_out[0, -10 + 1, :] = img_out[0, -9, :]
                 img[res_height:, (configs.input_length + i) * res_width:(configs.input_length + i + 1) * res_width,:] \
                     = img_out[0, -output_length + i, :]
-                img_pred[:res_height, (i * res_width + i * interval):((i + 1) * res_width + i * interval), :] \
-                    = img_out[0, -output_length + i, :]
+                if configs.is_training == False and configs.dataset == 'kth':
+                    if i % 2 != 0:
+                        continue
+                    else:
+                        img_pred[:res_height,((i // 2) * res_width + (i // 2) * interval):(((i // 2) + 1) * res_width + (i // 2) * interval),:] = img_out[0, -output_length + i, :]
+                else:
+                    img_pred[:res_height, (i * res_width + i * interval):((i + 1) * res_width + i * interval),:] = img_out[0, -output_length + i, :]
                 if configs.img_channel == 2:
                     img_pred_single[:, :, :] = img_out[0, -output_length + i, :]
                     img_total_pred_single = img_pred_single[:, :, 0] + img_pred_single[:, :, 1]
