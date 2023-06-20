@@ -17,7 +17,7 @@ def configs():
     parser.add_argument('--pred_length', type=int, default=40)
     parser.add_argument('--img_height', type=int, default=128)
     parser.add_argument('--img_width', type=int, default=128)
-    parser.add_argument('--img_channel', type=int, default=3)
+    parser.add_argument('--img_channel', type=int, default=1)
     parser.add_argument('--sr_size', type=int, default=4)
     parser.add_argument('--patch_size', type=int, default=1)
     parser.add_argument('--alpha', type=float, default=1)
@@ -48,7 +48,7 @@ def configs():
     parser.add_argument('--num_save_samples', type=int, default=100)
     parser.add_argument('--n_gpu', type=int, default=1)
     # /kaggle/input/kthdataset128/model.ckpt-78000
-    parser.add_argument('--pretrained_model', type=str, default='/kaggle/input/kthdataset128/model.ckpt-6000')
+    parser.add_argument('--pretrained_model', type=str, default='/kaggle/input/kthdataset128/model.ckpt-52000')
     parser.add_argument('--perforamnce_dir', type=str, default='/kaggle/working/MAUSelf/results/kth/')
     parser.add_argument('--save_dir', type=str, default='/kaggle/working/MAUSelf/checkpoints/kth/')
     parser.add_argument('--gen_frm_dir', type=str, default='/kaggle/working/MAUSelf/results/kth/')
