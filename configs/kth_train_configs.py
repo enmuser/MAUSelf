@@ -41,7 +41,7 @@ def configs():
     parser.add_argument('--batch_size', type=int, default=4)
     parser.add_argument('--max_iterations', type=int, default=550000)
     parser.add_argument('--max_epoches', type=int, default=550000)
-    parser.add_argument('--test_iterations', type=int, default=21000)
+    parser.add_argument('--test_iterations', type=int, default=52000)
     parser.add_argument('--display_interval', type=int, default=1)
     parser.add_argument('--test_interval', type=int, default=1000)
     parser.add_argument('--snapshot_interval', type=int, default=1000)
