@@ -142,15 +142,16 @@ class KTH(SequenceDataset):
         cls_kps = self.keypoints[cls]
         dname = os.path.join(self.data_root, cls, vid[b'vid'].decode('utf-8'))
         frames = np.zeros((self.n_frames, self.img_size, self.img_size, self.num_channels))
-        hmaps = [
-                np.zeros((self.n_frames, self.NUM_HMAP_CHANNELS[0], self.img_size, self.img_size)),
-                np.zeros((self.n_frames, self.NUM_HMAP_CHANNELS[1], self.img_size, self.img_size))
-            ]
+        # hmaps = [
+        #         np.zeros((self.n_frames, self.NUM_HMAP_CHANNELS[0], self.img_size, self.img_size)),
+        #         np.zeros((self.n_frames, self.NUM_HMAP_CHANNELS[1], self.img_size, self.img_size))
+        #     ]
 
         # getting random starting idx, and corresponding data
         first_frame = 0
         if len(seq) > self.n_frames:
-            rand_gen = random.Random(self.first_frame_rng_seed) if self.split == "test" else random
+            rand_gen = random.Random(self.first_frame_rng_seed)
+            #rand_gen = random.Random(self.first_frame_rng_seed) if self.split == "test" else random
             first_frame = rand_gen.randint(0, len(seq) - self.n_frames)
         last_frame = (len(seq) - 1) if (len(seq) <= self.n_frames) else (first_frame + self.n_frames - 1)
         for i in range(first_frame, last_frame + 1):
@@ -159,22 +160,22 @@ class KTH(SequenceDataset):
             if self.num_channels == 1:
                 im = im[:, :, 0][:, :, np.newaxis]
             frames[i - first_frame] = im
-            full_fname = os.path.join(vid[b'vid'].decode('utf-8'), seq[i].decode('utf-8'))
-            full_fname = full_fname.replace("\\","/")
-            frame_kpts = cls_kps[full_fname]
-            for h, kpts in enumerate([frame_kpts[:-1], frame_kpts[-1:]]):
-                hmaps[h][i-first_frame] = self.generate_hmaps[h](kpts)
+            # full_fname = os.path.join(vid[b'vid'].decode('utf-8'), seq[i].decode('utf-8'))
+            # full_fname = full_fname.replace("\\","/")
+            # frame_kpts = cls_kps[full_fname]
+            # for h, kpts in enumerate([frame_kpts[:-1], frame_kpts[-1:]]):
+            #     hmaps[h][i-first_frame] = self.generate_hmaps[h](kpts)
 
         for i in range(last_frame + 1, self.n_frames):
             frames[i] = frames[last_frame]
-            for h in range(2):
-                hmaps[h][i] = hmaps[h][last_frame]
+            # for h in range(2):
+            #     hmaps[h][i] = hmaps[h][last_frame]
 
         frames = torch.Tensor(frames).permute(0, 3, 1, 2)
-        hmaps = [torch.Tensor(hmap) for hmap in hmaps]
-        # random horizontal flip augmentation
-        if self.horiz_flip_aug and (random.randint(0, 1) == 0):
-            frames, hmaps = self._horiz_flip(frames, hmaps)
+        # hmaps = [torch.Tensor(hmap) for hmap in hmaps]
+        # # random horizontal flip augmentation
+        # if self.horiz_flip_aug and (random.randint(0, 1) == 0):
+        #     frames, hmaps = self._horiz_flip(frames, hmaps)
         return frames
 
     def _horiz_flip(self, frames, hmaps):
