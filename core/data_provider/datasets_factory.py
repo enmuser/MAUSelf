@@ -29,7 +29,7 @@ def data_provider(dataset, configs, data_train_path, data_test_path, batch_size,
         dataset = KTH(
                 split=split,
                 data_root_path=root,
-                num_frames=30,
+                num_frames=configs.total_length,
                 num_channels=configs.img_channel,
                 img_size=configs.img_height
             )
