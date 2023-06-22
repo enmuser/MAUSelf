@@ -168,9 +168,9 @@ def test_wrapper(model):
                                                        is_training=False,
                                                        is_shuffle=False)
 
-    itr = 1
+    itr = args.test_batch_size
     for i in range(itr):
-        trainer.test(model, test_input_handle, args, itr)
+        trainer.test(model, test_input_handle, args, i)
 
 
 if __name__ == '__main__':
