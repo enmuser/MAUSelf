@@ -14,6 +14,7 @@ def configs():
     parser.add_argument('--input_length', type=int, default=10)
     parser.add_argument('--real_length', type=int, default=30)
     parser.add_argument('--total_length', type=int, default=30)
+    parser.add_argument('--pred_length', type=int, default=20)
     parser.add_argument('--img_height', type=int, default=128)
     parser.add_argument('--img_width', type=int, default=128)
     parser.add_argument('--img_channel', type=int, default=1)
