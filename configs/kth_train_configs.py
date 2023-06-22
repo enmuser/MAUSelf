@@ -38,7 +38,7 @@ def configs():
     parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--lr_decay', type=float, default=0.90)
     parser.add_argument('--delay_interval', type=float, default=2000)
-    parser.add_argument('--batch_size', type=int, default=4)
+    parser.add_argument('--batch_size', type=int, default=1)
     parser.add_argument('--max_iterations', type=int, default=550000)
     parser.add_argument('--max_epoches', type=int, default=550000)
     parser.add_argument('--test_iterations', type=int, default=52000)
