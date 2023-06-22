@@ -148,6 +148,7 @@ def train_wrapper(model):
                 print('Validate:')
                 trainer.test(model, val_input_handle, args, itr)
                 break
+            break
             trainer.train(model, ims, real_input_flag, args, itr)
             # snapshot_interval = 1000 每1000次保存一次
             if itr % args.snapshot_interval == 0 and itr > begin:
