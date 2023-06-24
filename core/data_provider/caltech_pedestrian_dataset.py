@@ -27,11 +27,8 @@ class PedestrianDataset(data.Dataset):
     ACTION_SIZE = 0
     DATASET_FRAME_SHAPE = (480, 640, 3)
     FPS = 30  #: Frames per second.
-    #TRAIN_VAL_SETS = [f"set{i:02d}" for i in range(6)]  #: The official training sets (here: training and validation).
-    #TEST_SETS = [f"set{i:02d}" for i in range(6, 11)]  #: The official test sets.
-
-    TEST_SETS = [f"set{i:02d}" for i in range(6)]  #: The official training sets (here: training and validation).
-    TRAIN_VAL_SETS = [f"set{i:02d}" for i in range(6, 11)]
+    TRAIN_VAL_SETS = [f"set{i:02d}" for i in range(6)]  #: The official training sets (here: training and validation).
+    TEST_SETS = [f"set{i:02d}" for i in range(6, 11)]  #: The official test sets.
 
     train_to_val_ratio = 0.9
 
