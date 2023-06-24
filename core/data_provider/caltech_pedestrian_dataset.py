@@ -27,8 +27,9 @@ class PedestrianDataset(data.Dataset):
     ACTION_SIZE = 0
     DATASET_FRAME_SHAPE = (480, 640, 3)
     FPS = 30  #: Frames per second.
-    TRAIN_VAL_SETS = [f"set{i:02d}" for i in range(6)]  #: The official training sets (here: training and validation).
-    TEST_SETS = [f"set{i:02d}" for i in range(6, 11)]  #: The official test sets.
+    TRAIN_SETS = [f"set{i:02d}" for i in range(9)]  #: The official training sets (here: training and validation).
+    VAL_SETS = [f"set{i:02d}" for i in range(9, 10)]  #: The official test sets.
+    TEST_SETS = [f"set{i:02d}" for i in range(10, 11)]
 
     train_to_val_ratio = 0.9
 
@@ -85,13 +86,18 @@ class PedestrianDataset(data.Dataset):
             if len(sequences) < 1:
                 raise ValueError(f"Dataset {self.NAME}: didn't find enough test sequences "
                                  f"-> can't use dataset")
-        else:
-            sequences = [(fp, frames) for (fp, frames) in sequences if fp.split("/")[-2] in self.TRAIN_VAL_SETS]
+        elif self.split == "train":
+            sequences = [(fp, frames) for (fp, frames) in sequences if fp.split("/")[-2] in self.TRAIN_SETS]
             if len(sequences) < 2:
                 raise ValueError(f"Dataset {self.NAME}: didn't find enough train/val sequences "
                                  f"-> can't use dataset")
-            slice_idx = max(1, int(len(sequences) * self.train_to_val_ratio))
-            random.Random(self.train_val_seed).shuffle(sequences)
+        else:
+            sequences = [(fp, frames) for (fp, frames) in sequences if fp.split("/")[-2] in self.VAL_SETS]
+            if len(sequences) < 2:
+                raise ValueError(f"Dataset {self.NAME}: didn't find enough train/val sequences "
+                                 f"-> can't use dataset")
+            # slice_idx = max(1, int(len(sequences) * self.train_to_val_ratio))
+            # random.Random(self.train_val_seed).shuffle(sequences)
             # if self.split == "train":
             #     sequences = sequences[:slice_idx]
             # else:
