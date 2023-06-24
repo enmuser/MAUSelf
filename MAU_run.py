@@ -136,8 +136,8 @@ def train_wrapper(model):
         # max_iterations = 80000
         if itr > args.max_iterations:
             break
-        if itr > args.test_iterations:
-            break
+        # if itr > args.test_iterations:
+        #     break
         for ims in train_input_handle:
             if itr > args.max_iterations:
                 break
@@ -149,10 +149,10 @@ def train_wrapper(model):
             if itr % args.test_interval == 0:
                 print('Validate:')
                 trainer.test(model, val_input_handle, args, itr)
-                print('itr: ', itr)
-                itr += 1
-                break
-            break
+            #     print('itr: ', itr)
+            #     itr += 1
+            #     break
+            # break
             trainer.train(model, ims, real_input_flag, args, itr)
             # snapshot_interval = 1000 每1000次保存一次
             if itr % args.snapshot_interval == 0 and itr > begin:
