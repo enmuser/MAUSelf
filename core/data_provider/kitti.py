@@ -30,7 +30,7 @@ class KITTIDataset(data.Dataset):
     AVAILABLE_CAMERAS = [f"image_{i:02d}" for i in range(4)]  #: Available cameras: [`greyscale_left`, `greyscale_right`, `color_left`, `color_right`].
 
     camera = "image_02"  #: Chosen camera, can be set to any of the `AVAILABLE_CAMERAS`.
-    trainval_to_test_ratio = 0.8  #: The ratio of files that will be training/validation data (rest will be test data).
+    trainval_to_test_ratio = 0.9  #: The ratio of files that will be training/validation data (rest will be test data).
     train_to_val_ratio = 0.9
     trainval_test_seed = 1234  #: The random seed used to separate training/validation and testing data.
 
@@ -67,13 +67,13 @@ class KITTIDataset(data.Dataset):
         self.split = split
         # slice accordingly
         slice_idx = max(1, int(len(sequence_dirs) * self.trainval_to_test_ratio))
-        random.Random(self.trainval_test_seed).shuffle(sequence_dirs)
+        #random.Random(self.trainval_test_seed).shuffle(sequence_dirs)
         if self.split == "test":
             sequence_dirs = sequence_dirs[slice_idx:]
         else:
             sequence_dirs = sequence_dirs[:slice_idx]
             slice_idx = max(1, int(len(sequence_dirs) * self.train_to_val_ratio))
-            random.Random(self.train_val_seed).shuffle(sequence_dirs)
+            #random.Random(self.train_val_seed).shuffle(sequence_dirs)
             if self.split == "train":
                 sequence_dirs = sequence_dirs[:slice_idx]
             else:
