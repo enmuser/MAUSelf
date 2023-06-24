@@ -92,10 +92,10 @@ class PedestrianDataset(data.Dataset):
                                  f"-> can't use dataset")
             slice_idx = max(1, int(len(sequences) * self.train_to_val_ratio))
             random.Random(self.train_val_seed).shuffle(sequences)
-            if self.split == "train":
-                sequences = sequences[:slice_idx]
-            else:
-                sequences = sequences[slice_idx:]
+            # if self.split == "train":
+            #     sequences = sequences[:slice_idx]
+            # else:
+            #     sequences = sequences[slice_idx:]
         self.sequences = sequences
 
         self.sequences_with_frame_index = [] # mock value, must not be used for iteration till sequence length is set

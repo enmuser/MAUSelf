@@ -226,6 +226,11 @@ def test(model, test_input_handle, configs, itr):
                 img_pred = np.ones((res_height,
                                     (configs.pred_length//2) * res_width +(configs.pred_length//2)  * interval,
                                     configs.img_channel))
+            if configs.dataset == 'caltech_pedestrian':
+                img_input_cal = np.ones((res_height,res_width, configs.img_channel))
+                img_ground_true_cal = np.ones((res_height,res_width, configs.img_channel))
+                img_pred_cal = np.ones((res_height,res_width, configs.img_channel))
+                img_ground_true_pred_diff_cal = np.ones((res_height, res_width, configs.img_channel))
             # name = 1.png
             name = str(batch_id) + '.png'
 
@@ -265,6 +270,13 @@ def test(model, test_input_handle, configs, itr):
                         img_input_name_single = 'batch_' + str(batch_id) + '_input_' + str(i) + '.svg'
                         file_img_input_name_single_svg = os.path.join(res_path, img_input_name_single)
                         plt.imsave(file_img_input_name_single_svg,img_total_input_single.reshape(img_total_input_single.shape[0],img_total_input_single.shape[1]), vmin=0, vmax=1.0)
+                    if configs.dataset == 'caltech_pedestrian' and i == 9:
+                        img_input_cal[:, :, :] = test_ims[0, i, :]
+                        img_input_cal_name_single = 'batch_' + str(batch_id) + '_input_cal_' + str(i) + '.png'
+                        file_img_input_cal_name_single_png = os.path.join(res_path, img_input_cal_name_single)
+                        img_input_cal = np.maximum(img_input_cal, 0)
+                        img_input_cal = np.minimum(img_input_cal, 1)
+                        cv2.imwrite(file_img_input_cal_name_single_png, (img_input_cal * 255).astype(np.uint8))
                 else:
                     if configs.is_training == True and configs.dataset == 'kth':
                         if (i - configs.input_length) % 2 != 0:
@@ -287,6 +299,13 @@ def test(model, test_input_handle, configs, itr):
                         img_target_pred_diff_name_single = 'batch_' + str(batch_id) + '_target_pred_diff_' + str(i - configs.input_length) + '.svg'
                         file_img_target_pred_diff_name_single_svg = os.path.join(res_path,img_target_pred_diff_name_single)
                         plt.imsave(file_img_target_pred_diff_name_single_svg,img_total_target_pred_diff_single.reshape(img_total_target_pred_diff_single.shape[0],img_total_target_pred_diff_single.shape[1]),vmin=0, vmax=1.0)
+                    if configs.dataset == 'caltech_pedestrian' and i == 10:
+                        img_ground_true_cal[:, :, :] = test_ims[0, i, :]
+                        img_ground_true_cal_name_single = 'batch_' + str(batch_id) + '_ground_true_cal_' + str(i) + '.png'
+                        file_img_ground_true_cal_name_single_png = os.path.join(res_path, img_ground_true_cal_name_single)
+                        img_ground_true_cal = np.maximum(img_ground_true_cal, 0)
+                        img_ground_true_cal = np.minimum(img_ground_true_cal, 1)
+                        cv2.imwrite(file_img_ground_true_cal_name_single_png, (img_ground_true_cal * 255).astype(np.uint8))
             # total_length = 10 | 0,1,2,3,...,7,8,9
             for i in range(output_length):
                 # img[res_height:, (configs.input_length + i) * res_width:(configs.input_length + i + 1) * res_width,:]
@@ -306,6 +325,21 @@ def test(model, test_input_handle, configs, itr):
                     img_pred_name_single = 'batch_' + str(batch_id) + '_pred_' + str(i) + '.svg'
                     file_img_pred_name_single_svg = os.path.join(res_path, img_pred_name_single)
                     plt.imsave(file_img_pred_name_single_svg, img_total_pred_single.reshape(img_total_pred_single.shape[0],img_total_pred_single.shape[1]),vmin=0, vmax=1.0)
+                if configs.dataset == 'caltech_pedestrian' and i == 0:
+                    img_pred_cal[:, :, :] = img_out[0, -output_length + i, :]
+                    img_pred_cal_name_single = 'batch_' + str(batch_id) + '_pred_cal_' + str(i) + '.png'
+                    file_img_pred_cal_name_single_png = os.path.join(res_path, img_pred_cal_name_single)
+                    img_pred_cal = np.maximum(img_pred_cal, 0)
+                    img_pred_cal = np.minimum(img_pred_cal, 1)
+                    cv2.imwrite(file_img_pred_cal_name_single_png, (img_pred_cal * 255).astype(np.uint8))
+
+                    img_ground_true_pred_diff_cal = img_ground_true_cal[:, :, :] - img_pred_cal[:, :, :]
+                    img_ground_true_pred_diff_cal_name_single = 'batch_' + str(batch_id) + '_ground_true_pred_diff_cal_' + str(i) + '.png'
+                    file_img_ground_true_pred_diff_cal_name_single_png = os.path.join(res_path, img_ground_true_pred_diff_cal_name_single)
+                    img_ground_true_pred_diff_cal = np.maximum(img_ground_true_pred_diff_cal, 0)
+                    img_ground_true_pred_diff_cal = np.minimum(img_ground_true_pred_diff_cal, 1)
+                    cv2.imwrite(file_img_ground_true_pred_diff_cal_name_single_png, (img_ground_true_pred_diff_cal * 255).astype(np.uint8))
+
 
             # 将小于0的变成0, 将大于1的变成1
             if configs.img_channel == 2:
