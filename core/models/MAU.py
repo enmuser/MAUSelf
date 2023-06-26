@@ -101,12 +101,22 @@ class RNN(nn.Module):
         frame_channels = frames.shape[2]
         next_frames = []
         T_t = []
+        T_t_level_one = []
+        T_t_level_two = []
         T_pre = []
         S_pre = []
+        T_pre_level_one = []
+        S_pre_level_one = []
+        T_pre_level_two = []
+        S_pre_level_two = []
         x_gen = None
         for layer_idx in range(self.num_layers):
             tmp_t = []
             tmp_s = []
+            tmp_t_level_one = []
+            tmp_s_level_one = []
+            tmp_t_level_two = []
+            tmp_s_level_two = []
             if layer_idx == 0:
                 in_channel = self.num_hidden[layer_idx]
             else:
@@ -114,8 +124,16 @@ class RNN(nn.Module):
             for i in range(self.tau):
                 tmp_t.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
                 tmp_s.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
+                tmp_t_level_one.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
+                tmp_s_level_one.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
+                tmp_t_level_two.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
+                tmp_s_level_two.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
             T_pre.append(tmp_t)
             S_pre.append(tmp_s)
+            T_pre_level_one.append(tmp_t_level_one)
+            S_pre_level_one.append(tmp_s_level_one)
+            T_pre_level_two.append(tmp_t_level_two)
+            S_pre_level_two.append(tmp_s_level_two)
 
         for t in range(self.configs.total_length - 1):
             if t < self.configs.input_length:
@@ -131,16 +149,44 @@ class RNN(nn.Module):
             if t == 0:
                 for i in range(self.num_layers):
                     zeros = torch.zeros([batch_size, self.num_hidden[i], height, width]).to(self.configs.device)
+                    zeros_level_one = torch.zeros([batch_size, self.num_hidden[i], height, width]).to(self.configs.device)
+                    zeros_level_two = torch.zeros([batch_size, self.num_hidden[i], height, width]).to(self.configs.device)
                     T_t.append(zeros)
+                    T_t_level_one.append(zeros_level_one)
+                    T_t_level_two.append(zeros_level_two)
             S_t = frames_feature
+            if t % 2 == 0:
+               S_t_level_one = frames_feature
+            if t % 3 == 0:
+               S_t_level_two = frames_feature
             for i in range(self.num_layers):
                 t_att = T_pre[i][-self.tau:]
                 t_att = torch.stack(t_att, dim=0)
                 s_att = S_pre[i][-self.tau:]
                 s_att = torch.stack(s_att, dim=0)
                 S_pre[i].append(S_t)
-                T_t[i], S_t = self.cell_list[i](T_t[i], S_t, t_att, s_att)
+
+                t_att_level_one = T_pre_level_one[i][-self.tau:]
+                t_att_level_one = torch.stack(t_att_level_one, dim=0)
+                s_att_level_one = S_pre_level_one[i][-self.tau:]
+                s_att_level_one = torch.stack(s_att_level_one, dim=0)
+                if t % 2 == 0:
+                   S_pre_level_one[i].append(S_t_level_one)
+
+                t_att_level_two = T_pre_level_two[i][-self.tau:]
+                t_att_level_two = torch.stack(t_att_level_two, dim=0)
+                s_att_level_two = S_pre_level_two[i][-self.tau:]
+                s_att_level_two = torch.stack(s_att_level_two, dim=0)
+                if t % 3 == 0:
+                   S_pre_level_two[i].append(S_t_level_two)
+
+                T_t[i], T_t_level_one[i], T_t_level_two[i], S_t, S_t_level_one, S_t_level_two = \
+                    self.cell_list[i](T_t[i],T_t_level_one[i], T_t_level_two[i], S_t, t_att, s_att, t_att_level_one, s_att_level_one, t_att_level_two, s_att_level_two)
                 T_pre[i].append(T_t[i])
+                if t % 2 == 0:
+                   T_pre_level_one[i].append(T_t_level_one[i])
+                if t % 3 == 0:
+                   T_pre_level_two[i].append(T_t_level_two[i])
             out = S_t
             # out = self.merge(torch.cat([T_t[-1], S_t], dim=1))
             frames_feature_decoded = []

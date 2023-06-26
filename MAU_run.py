@@ -90,7 +90,7 @@ def train_wrapper(model):
                                                       data_test_path=args.data_val_path,
                                                       batch_size=args.batch_size,
                                                       is_training=False,
-                                                      is_shuffle=True)
+                                                      is_shuffle=False)
     eta = args.sampling_start_value
     eta -= (begin * args.sampling_changing_rate)
     itr = begin

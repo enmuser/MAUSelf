@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import math
 
+
 class MAUCell(nn.Module):
     def __init__(self, in_channel, num_hidden, height, width, filter_size, stride, tau, cell_mode):
         super(MAUCell, self).__init__()
@@ -24,7 +25,28 @@ class MAUCell(nn.Module):
                       ),
             nn.LayerNorm([3 * num_hidden, height, width])
         )
+        self.conv_t_level_one = nn.Sequential(
+            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([3 * num_hidden, height, width])
+        )
+        self.conv_t_level_two = nn.Sequential(
+            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([3 * num_hidden, height, width])
+        )
         self.conv_t_next = nn.Sequential(
+            nn.Conv2d(in_channel, num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([num_hidden, height, width])
+        )
+        self.conv_t_next_level_one = nn.Sequential(
+            nn.Conv2d(in_channel, num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([num_hidden, height, width])
+        )
+
+        self.conv_t_next_level_two = nn.Sequential(
             nn.Conv2d(in_channel, num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
                       ),
             nn.LayerNorm([num_hidden, height, width])
@@ -34,82 +56,127 @@ class MAUCell(nn.Module):
                       ),
             nn.LayerNorm([3 * num_hidden, height, width])
         )
+
+        self.conv_s_level_one = nn.Sequential(
+            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([3 * num_hidden, height, width])
+        )
+
+        self.conv_s_level_two = nn.Sequential(
+            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([3 * num_hidden, height, width])
+        )
+
         self.conv_s_next = nn.Sequential(
             nn.Conv2d(num_hidden, num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
 
+        self.conv_s_next_level_one = nn.Sequential(
+            nn.Conv2d(num_hidden, num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([num_hidden, height, width])
+        )
+
+        self.conv_s_next_level_two = nn.Sequential(
+            nn.Conv2d(num_hidden, num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([num_hidden, height, width])
+        )
         self.softmax = nn.Softmax(dim=0)
 
-    def forward(self, T_t, S_t, t_att, s_att):
-        # T_t => T(k,t-1) 当前时间特征
-        # S_t => S(k-1,t) 当前空间特征
-        # t_att => T(k,t-tau:t-1)
-        # s_att => S(k-1,t-tau:t-1)
-        # 一次空间特征卷积操作
+    def forward(self, T_t, S_t, t_att, s_att, t_att_level_one, s_att_level_one, t_att_level_two, s_att_level_two):
         s_next = self.conv_s_next(S_t)
-        # 一次时间特征卷积操作
         t_next = self.conv_t_next(T_t)
-        # 计算注意分数权重
-        weights_list_s = []
-        weights_list_t = []
-        for i in range(self.tau):
-            # tau = τ = 5
-            # qi的计算 当前空间特征卷积操作的结果 与 历史前τ个进行Hadamard乘积
-            weights_list_s.append((s_att[i] * s_next).sum(dim=(1, 2, 3)) / math.sqrt(self.d))
-        for i in range(self.tau):
-            # tau = τ = 5
-            # qi的计算 当前空间特征卷积操作的结果 与 历史前τ个进行Hadamard乘积
-            weights_list_t.append((t_att[i] * t_next).sum(dim=(1, 2, 3)) / math.sqrt(self.d))
-        #for i in range(self.tau):
-        #    S_t = S_t + self.block(s_att[i])
-        weights_list_s = torch.stack(weights_list_s, dim=0)
-        weights_list_s = torch.reshape(weights_list_s, (*weights_list_s.shape, 1, 1, 1))
-        weights_list_s = self.softmax(weights_list_s)
 
-        weights_list_t = torch.stack(weights_list_t, dim=0)
-        weights_list_t = torch.reshape(weights_list_t, (*weights_list_t.shape, 1, 1, 1))
-        weights_list_t = self.softmax(weights_list_t)
+        s_next_level_one = self.conv_s_next_level_one(S_t)
+        t_next_level_one = self.conv_t_next_level_one(T_t)
 
-        T_trend = t_att * weights_list_s
-        # T_trend = T_att 长期运动信息
+        s_next_level_two = self.conv_s_next_level_two(S_t)
+        t_next_level_two = self.conv_t_next_level_two(T_t)
+
+
+        weights_list = []
+        for i in range(self.tau):
+            weights_list.append((s_att[i] * s_next).sum(dim=(1, 2, 3)) / math.sqrt(self.d))
+        weights_list = torch.stack(weights_list, dim=0)
+        weights_list = torch.reshape(weights_list, (*weights_list.shape, 1, 1, 1))
+        weights_list = self.softmax(weights_list)
+        T_trend = t_att * weights_list
         T_trend = T_trend.sum(dim=0)
-        # t_att_gate = Uf 融合门
+
+        weights_list_level_one = []
+        for i in range(self.tau):
+            weights_list_level_one.append((s_att_level_one[i] * s_next_level_one).sum(dim=(1, 2, 3)) / math.sqrt(self.d))
+        weights_list_level_one = torch.stack(weights_list_level_one, dim=0)
+        weights_list_level_one = torch.reshape(weights_list_level_one, (*weights_list_level_one.shape, 1, 1, 1))
+        weights_list_level_one = self.softmax(weights_list_level_one)
+        T_trend_level_one = t_att_level_one * weights_list_level_one
+        T_trend_level_one = T_trend_level_one.sum(dim=0)
+
+
+        weights_list_level_two = []
+        for i in range(self.tau):
+            weights_list_level_two.append((s_att_level_two[i] * s_next_level_two).sum(dim=(1, 2, 3)) / math.sqrt(self.d))
+        weights_list_level_two = torch.stack(weights_list_level_two, dim=0)
+        weights_list_level_two = torch.reshape(weights_list_level_two, (*weights_list_level_two.shape, 1, 1, 1))
+        weights_list_level_two = self.softmax(weights_list_level_two)
+        T_trend_level_two = t_att_level_two * weights_list_level_two
+        T_trend_level_two = T_trend_level_two.sum(dim=0)
+
+
+
+        t_att_gate_level_one = torch.sigmoid(t_next_level_one)
+        T_fusion_level_one = T_t * t_att_gate_level_one + (1 - t_att_gate_level_one) * T_trend_level_one
+        T_concat_level_one = self.conv_t_level_one(T_fusion_level_one)
+        S_concat_level_one = self.conv_s_level_one(S_t)
+        t_g_level_one, t_t_level_one, t_s_level_one = torch.split(T_concat_level_one, self.num_hidden, dim=1)
+        s_g_level_one, s_t_level_one, s_s_level_one = torch.split(S_concat_level_one, self.num_hidden, dim=1)
+        T_gate_level_one = torch.sigmoid(t_g_level_one)
+        S_gate_level_one = torch.sigmoid(s_g_level_one)
+        T_new_level_one = T_gate_level_one * t_t_level_one + (1 - T_gate_level_one) * s_t_level_one
+        S_new_level_one = S_gate_level_one * s_s_level_one + (1 - S_gate_level_one) * t_s_level_one
+
+
+        t_att_gate_level_two = torch.sigmoid(t_next_level_two)
+        T_fusion_level_two = T_t * t_att_gate_level_two + (1 - t_att_gate_level_two) * T_trend_level_two
+        T_concat_level_two = self.conv_t_level_two(T_fusion_level_two)
+        S_concat_level_two = self.conv_s_level_two(S_t)
+        t_g_level_two, t_t_level_two, t_s_level_two = torch.split(T_concat_level_two, self.num_hidden, dim=1)
+        s_g_level_two, s_t_level_two, s_s_level_two = torch.split(S_concat_level_two, self.num_hidden, dim=1)
+        T_gate_level_two = torch.sigmoid(t_g_level_two)
+        S_gate_level_two = torch.sigmoid(s_g_level_two)
+        T_new_level_two = T_gate_level_two * t_t_level_two + (1 - T_gate_level_two) * s_t_level_two
+        S_new_level_two = S_gate_level_two * s_s_level_two + (1 - S_gate_level_two) * t_s_level_two
+
+
         t_att_gate = torch.sigmoid(t_next)
-        # T_fusion = T_AMI
-        # 表示增强的运动信息 长期运动信息 T_trend 和 短期运动信息 T_t 进行融合得到
         T_fusion = T_t * t_att_gate + (1 - t_att_gate) * T_trend
-        # T_AMI 卷积一次 => U_t   T_concat shape=16 * 192 * 16 * 16
         T_concat = self.conv_t(T_fusion)
-        # S_t 卷积一次 => U_s   S_concat shape=16 * 192 * 16 * 16
-
-        S_trend = s_att * weights_list_t
-        # T_trend = T_att 长期运动信息
-        S_trend = S_trend.sum(dim=0)
-        # t_att_gate = Uf 融合门
-        s_att_gate = torch.sigmoid(s_next)
-        # T_fusion = T_AMI
-        # 表示增强的运动信息 长期运动信息 T_trend 和 短期运动信息 T_t 进行融合得到
-        S_fusion = S_t * s_att_gate + (1 - s_att_gate) * S_trend
-        # T_AMI 卷积一次 => U_t   T_concat shape=16 * 192 * 16 * 16
-        S_concat = self.conv_s(S_fusion)
-
-
-        #S_concat = self.conv_s(S_t)
-        # T_concat 一分为三 t_g, t_t, t_s shape= 16 * 64 * 16 * 16
+        S_concat = self.conv_s(S_t)
         t_g, t_t, t_s = torch.split(T_concat, self.num_hidden, dim=1)
-        # S_concat 一分为三 s_g, s_t, s_s shape= 16 * 64 * 16 * 16
         s_g, s_t, s_s = torch.split(S_concat, self.num_hidden, dim=1)
-        # T_gate 为 U_t_1 第一分组
         T_gate = torch.sigmoid(t_g)
-        # S_gate 为 U_s_1 第一分组
         S_gate = torch.sigmoid(s_g)
-        # sigmoid(U_t_1) * U_t_2 + (1-sigmoid(U_t_1))*U_s_2
         T_new = T_gate * t_t + (1 - T_gate) * s_t
-        # sigmoid(U_s_1) * U_s_2 + (1-sigmoid(U_s_1))*U_t_2
         S_new = S_gate * s_s + (1 - S_gate) * t_s
-        # 如果是残差网络 将 S_t 加到 S_new 上
+
+        # version 1
+
+        T_new = T_new + T_concat_level_two + T_concat_level_two
+        S_new = S_new + S_new_level_one + S_new_level_two
+
+        # version 2
+        # T_new = 0.5 * T_new + 0.3 * T_concat_level_one + 0.2 * T_concat_level_two
+        # S_new = 0.5 * S_new + 0.3 * S_new_level_one + 0.2 * S_new_level_two
+
+       # version3
+       # iAFF AFF
+
+
         if self.cell_mode == 'residual':
             S_new = S_new + S_t
-        return T_new, S_new
+        return T_new, T_new_level_one, T_new_level_two, S_new, S_new_level_one, S_new_level_two
