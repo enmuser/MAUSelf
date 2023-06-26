@@ -166,7 +166,7 @@ class MAUCell(nn.Module):
 
         # version 1
 
-        T_new = T_new + T_concat_level_two + T_concat_level_two
+        T_new = T_new + T_new_level_one + T_new_level_two
         S_new = S_new + S_new_level_one + S_new_level_two
 
         # version 2
