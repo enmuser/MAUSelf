@@ -181,7 +181,7 @@ class RNN(nn.Module):
                    S_pre_level_two[i].append(S_t_level_two)
 
                 T_t[i], T_t_level_one[i], T_t_level_two[i], S_t, S_t_level_one, S_t_level_two = \
-                    self.cell_list[i](T_t[i],T_t_level_one[i], T_t_level_two[i], S_t, t_att, s_att, t_att_level_one, s_att_level_one, t_att_level_two, s_att_level_two)
+                    self.cell_list[i](T_t[i], T_t_level_one[i], T_t_level_two[i], S_t, t_att, s_att, t_att_level_one, s_att_level_one, t_att_level_two, s_att_level_two)
                 T_pre[i].append(T_t[i])
                 if t % 2 == 0:
                    T_pre_level_one[i].append(T_t_level_one[i])

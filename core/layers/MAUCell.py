@@ -88,15 +88,15 @@ class MAUCell(nn.Module):
         )
         self.softmax = nn.Softmax(dim=0)
 
-    def forward(self, T_t, S_t, t_att, s_att, t_att_level_one, s_att_level_one, t_att_level_two, s_att_level_two):
+    def forward(self, T_t, T_t_level_one, T_t_level_two, S_t, t_att, s_att, t_att_level_one, s_att_level_one, t_att_level_two, s_att_level_two):
         s_next = self.conv_s_next(S_t)
         t_next = self.conv_t_next(T_t)
 
         s_next_level_one = self.conv_s_next_level_one(S_t)
-        t_next_level_one = self.conv_t_next_level_one(T_t)
+        t_next_level_one = self.conv_t_next_level_one(T_t_level_one)
 
         s_next_level_two = self.conv_s_next_level_two(S_t)
-        t_next_level_two = self.conv_t_next_level_two(T_t)
+        t_next_level_two = self.conv_t_next_level_two(T_t_level_two)
 
 
         weights_list = []
@@ -130,7 +130,7 @@ class MAUCell(nn.Module):
 
 
         t_att_gate_level_one = torch.sigmoid(t_next_level_one)
-        T_fusion_level_one = T_t * t_att_gate_level_one + (1 - t_att_gate_level_one) * T_trend_level_one
+        T_fusion_level_one = T_t_level_one * t_att_gate_level_one + (1 - t_att_gate_level_one) * T_trend_level_one
         T_concat_level_one = self.conv_t_level_one(T_fusion_level_one)
         S_concat_level_one = self.conv_s_level_one(S_t)
         t_g_level_one, t_t_level_one, t_s_level_one = torch.split(T_concat_level_one, self.num_hidden, dim=1)
@@ -142,7 +142,7 @@ class MAUCell(nn.Module):
 
 
         t_att_gate_level_two = torch.sigmoid(t_next_level_two)
-        T_fusion_level_two = T_t * t_att_gate_level_two + (1 - t_att_gate_level_two) * T_trend_level_two
+        T_fusion_level_two = T_t_level_two * t_att_gate_level_two + (1 - t_att_gate_level_two) * T_trend_level_two
         T_concat_level_two = self.conv_t_level_two(T_fusion_level_two)
         S_concat_level_two = self.conv_s_level_two(S_t)
         t_g_level_two, t_t_level_two, t_s_level_two = torch.split(T_concat_level_two, self.num_hidden, dim=1)
