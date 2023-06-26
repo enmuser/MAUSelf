@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import math
+from core.utils.fusion import AFF, iAFF
 
 
 class MAUCell(nn.Module):
@@ -166,8 +167,8 @@ class MAUCell(nn.Module):
 
         # version 1
 
-        T_new = T_new + T_new_level_one + T_new_level_two
-        S_new = S_new + S_new_level_one + S_new_level_two
+        # T_new = T_new + T_new_level_one + T_new_level_two
+        # S_new = S_new + S_new_level_one + S_new_level_two
 
         # version 2
         # T_new = 0.5 * T_new + 0.3 * T_concat_level_one + 0.2 * T_concat_level_two
@@ -175,6 +176,17 @@ class MAUCell(nn.Module):
 
        # version3
        # iAFF AFF
+
+        # x,residual  [B,C,H,W]
+        fusion_mode_ta = AFF(channels=64)
+        T_new_level_two_one = fusion_mode_ta(T_new_level_two, T_new_level_one)
+        fusion_mode_tb = AFF(channels=64)
+        T_new = fusion_mode_tb(T_new_level_two_one, T_new)
+
+        fusion_mode_sa = AFF(channels=64)
+        S_new_level_two_one = fusion_mode_sa(S_new_level_two, S_new_level_one)
+        fusion_mode_sb = AFF(channels=64)
+        S_new = fusion_mode_sb(S_new_level_two_one, S_new)
 
 
         if self.cell_mode == 'residual':
