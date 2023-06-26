@@ -166,12 +166,12 @@ class MAUCell(nn.Module):
 
         # version 1
 
-        T_new = T_new + T_new_level_one + T_new_level_two
-        S_new = S_new + S_new_level_one + S_new_level_two
+        # T_new = T_new + T_new_level_one + T_new_level_two
+        # S_new = S_new + S_new_level_one + S_new_level_two
 
         # version 2
-        # T_new = 0.5 * T_new + 0.3 * T_concat_level_one + 0.2 * T_concat_level_two
-        # S_new = 0.5 * S_new + 0.3 * S_new_level_one + 0.2 * S_new_level_two
+        T_new = 0.5 * T_new + 0.3 * T_new_level_one + 0.2 * T_new_level_two
+        S_new = 0.5 * S_new + 0.3 * S_new_level_one + 0.2 * S_new_level_two
 
        # version3
        # iAFF AFF
