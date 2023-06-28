@@ -89,6 +89,11 @@ class MAUCell(nn.Module):
         )
         self.softmax = nn.Softmax(dim=0)
 
+        self.attention_s1 = AFF(channels=64)
+        self.attention_s2 = AFF(channels=64)
+        self.attention_t1 = AFF(channels=64)
+        self.attention_t2 = AFF(channels=64)
+
     def forward(self, T_t, T_t_level_one, T_t_level_two, S_t, t_att, s_att, t_att_level_one, s_att_level_one, t_att_level_two, s_att_level_two):
         s_next = self.conv_s_next(S_t)
         t_next = self.conv_t_next(T_t)
@@ -178,16 +183,10 @@ class MAUCell(nn.Module):
        # iAFF AFF
 
         # x,residual  [B,C,H,W]
-        fusion_mode_ta = AFF(channels=64)
-        T_new_level_two_one = fusion_mode_ta(T_new_level_two, T_new_level_one)
-        fusion_mode_tb = AFF(channels=64)
-        T_new = fusion_mode_tb(T_new_level_two_one, T_new)
-
-        fusion_mode_sa = AFF(channels=64)
-        S_new_level_two_one = fusion_mode_sa(S_new_level_two, S_new_level_one)
-        fusion_mode_sb = AFF(channels=64)
-        S_new = fusion_mode_sb(S_new_level_two_one, S_new)
-
+        T_new_level_two_one = self.attention_t1(T_new_level_two, T_new_level_one)
+        T_new = self.attention_t2(T_new_level_two_one, T_new)
+        S_new_level_two_one = self.attention_s1(S_new_level_two, S_new_level_one)
+        S_new = self.attention_s2(S_new_level_two_one, S_new)
 
         if self.cell_mode == 'residual':
             S_new = S_new + S_t
