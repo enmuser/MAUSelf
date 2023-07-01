@@ -88,14 +88,14 @@ class MAUCell(nn.Module):
         )
         self.softmax = nn.Softmax(dim=0)
 
-    def forward(self, T_t, T_t_level_one, T_t_level_two, S_t, t_att, s_att, t_att_level_one, s_att_level_one, t_att_level_two, s_att_level_two):
+    def forward(self, T_t, T_t_level_one, T_t_level_two, S_t, S_t_level_one, S_t_level_two, t_att, s_att, t_att_level_one, s_att_level_one, t_att_level_two, s_att_level_two):
         s_next = self.conv_s_next(S_t)
         t_next = self.conv_t_next(T_t)
 
-        s_next_level_one = self.conv_s_next_level_one(S_t)
+        s_next_level_one = self.conv_s_next_level_one(S_t_level_one)
         t_next_level_one = self.conv_t_next_level_one(T_t_level_one)
 
-        s_next_level_two = self.conv_s_next_level_two(S_t)
+        s_next_level_two = self.conv_s_next_level_two(S_t_level_two)
         t_next_level_two = self.conv_t_next_level_two(T_t_level_two)
 
 
@@ -132,7 +132,7 @@ class MAUCell(nn.Module):
         t_att_gate_level_one = torch.sigmoid(t_next_level_one)
         T_fusion_level_one = T_t_level_one * t_att_gate_level_one + (1 - t_att_gate_level_one) * T_trend_level_one
         T_concat_level_one = self.conv_t_level_one(T_fusion_level_one)
-        S_concat_level_one = self.conv_s_level_one(S_t)
+        S_concat_level_one = self.conv_s_level_one(S_t_level_one)
         t_g_level_one, t_t_level_one, t_s_level_one = torch.split(T_concat_level_one, self.num_hidden, dim=1)
         s_g_level_one, s_t_level_one, s_s_level_one = torch.split(S_concat_level_one, self.num_hidden, dim=1)
         T_gate_level_one = torch.sigmoid(t_g_level_one)
@@ -144,7 +144,7 @@ class MAUCell(nn.Module):
         t_att_gate_level_two = torch.sigmoid(t_next_level_two)
         T_fusion_level_two = T_t_level_two * t_att_gate_level_two + (1 - t_att_gate_level_two) * T_trend_level_two
         T_concat_level_two = self.conv_t_level_two(T_fusion_level_two)
-        S_concat_level_two = self.conv_s_level_two(S_t)
+        S_concat_level_two = self.conv_s_level_two(S_t_level_two)
         t_g_level_two, t_t_level_two, t_s_level_two = torch.split(T_concat_level_two, self.num_hidden, dim=1)
         s_g_level_two, s_t_level_two, s_s_level_two = torch.split(S_concat_level_two, self.num_hidden, dim=1)
         T_gate_level_two = torch.sigmoid(t_g_level_two)
@@ -165,7 +165,6 @@ class MAUCell(nn.Module):
         S_new = S_gate * s_s + (1 - S_gate) * t_s
 
         # version 1
-
         T_new = T_new + T_new_level_one + T_new_level_two
         S_new = S_new + S_new_level_one + S_new_level_two
 
@@ -175,6 +174,12 @@ class MAUCell(nn.Module):
 
        # version3
        # iAFF AFF
+
+        # x,residual  [B,C,H,W]
+        # T_new_level_two_one = self.attention_t1(T_new_level_two, T_new_level_one)
+        # T_new = self.attention_t2(T_new_level_two_one, T_new)
+        # S_new_level_two_one = self.attention_s1(S_new_level_two, S_new_level_one)
+        # S_new = self.attention_s2(S_new_level_two_one, S_new)
 
 
         if self.cell_mode == 'residual':
