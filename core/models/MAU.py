@@ -155,10 +155,8 @@ class RNN(nn.Module):
                     T_t_level_one.append(zeros_level_one)
                     T_t_level_two.append(zeros_level_two)
             S_t = frames_feature
-            if t % 2 == 0:
-               S_t_level_one = frames_feature
-            if t % 3 == 0:
-               S_t_level_two = frames_feature
+            S_t_level_one = frames_feature
+            S_t_level_two = frames_feature
             for i in range(self.num_layers):
                 t_att = T_pre[i][-self.tau:]
                 t_att = torch.stack(t_att, dim=0)
