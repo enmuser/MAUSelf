@@ -1,11 +1,6 @@
-import gzip
-import math
-
 import cv2
-import imageio_ffmpeg
 import numpy as np
 import os
-from PIL import Image
 import random
 import torch
 import torch.utils.data as data
