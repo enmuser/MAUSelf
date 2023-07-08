@@ -5,13 +5,14 @@ from core.data_provider import datasets_factory
 from core.models.model_factory import Model
 import core.trainer as trainer
 import pynvml
+import cv2 as cv
 
 
 pynvml.nvmlInit()
 # -----------------------------------------------------------------------------
 parser = argparse.ArgumentParser(description='MAU')
 parser.add_argument('--dataset', type=str, default='mnist')
-parser.add_argument('--is_train', type=str, default='False', required=True)
+parser.add_argument('--is_train', type=str, default='True', required=False)
 args_main = parser.parse_args()
 args_main.tied = True
 
@@ -98,7 +99,7 @@ def train_wrapper(model):
     for epoch in range(0, args.max_epoches):
         if itr > args.max_iterations:
             break
-        for ims in train_input_handle:
+        for ims, ims_mask, ims_back in train_input_handle:
             if itr > args.max_iterations:
                 break
             batch_size = ims.shape[0]
@@ -106,7 +107,8 @@ def train_wrapper(model):
             if itr % args.test_interval == 0:
                 print('Validate:')
                 trainer.test(model, val_input_handle, args, itr)
-            trainer.train(model, ims, real_input_flag, args, itr)
+            trainer.train(model, ims, ims_mask, ims_back, real_input_flag, args, itr)
+            # snapshot_interval = 1000 每1000次保存一次
             if itr % args.snapshot_interval == 0 and itr > begin:
                 model.save(itr)
             itr += 1
@@ -133,6 +135,8 @@ def test_wrapper(model):
 if __name__ == '__main__':
 
     print('Initializing models')
+    print('batch_size ', args.batch_size)
+    #判断是训练还是测试
     if args.is_training == 'True':
         args.is_training = True
     else:

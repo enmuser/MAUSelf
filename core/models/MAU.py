@@ -92,7 +92,7 @@ class RNN(nn.Module):
         self.merge = nn.Conv2d(self.num_hidden[-1] * 2, self.num_hidden[-1], kernel_size=1, stride=1, padding=0)
         self.conv_last_sr = nn.Conv2d(self.frame_channel * 2, self.frame_channel, kernel_size=1, stride=1, padding=0)
 
-    def forward(self, frames, mask_true):
+    def forward(self, frames, frames_mask, frames_back, mask_true):
         # print('ok')
         mask_true = mask_true.permute(0, 1, 4, 2, 3).contiguous()
         batch_size = frames.shape[0]
@@ -139,14 +139,26 @@ class RNN(nn.Module):
             if t < self.configs.input_length:
                 net = frames[:, t]
             else:
-                time_diff = t - self.configs.input_length
-                # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
+                # time_diff = t - self.configs.input_length
+                #net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
                 net = x_gen
+            net_mask = frames_mask[:, t]
+            net_back = frames_back[:, t]
             frames_feature = net
             frames_feature_encoded = []
+            frames_feature_mask = net_mask
+            frames_feature__mask_encoded = []
+            frames_feature_back = net_back
+            frames_feature_back_encoded = []
             for i in range(len(self.encoders)):
                 frames_feature = self.encoders[i](frames_feature)
                 frames_feature_encoded.append(frames_feature)
+            for i in range(len(self.encoders)):
+                frames_feature_mask = self.encoders[i](frames_feature_mask)
+                frames_feature__mask_encoded.append(frames_feature_mask)
+            for i in range(len(self.encoders)):
+                frames_feature_back = self.encoders[i](frames_feature_back)
+                frames_feature_back_encoded.append(frames_feature_back)
             if t == 0:
                 for i in range(self.num_layers):
                     zeros = torch.zeros([batch_size, self.num_hidden[i], height, width]).to(self.configs.device)
@@ -156,10 +168,10 @@ class RNN(nn.Module):
                     T_t_level_one.append(zeros_level_one)
                     T_t_level_two.append(zeros_level_two)
             S_t = frames_feature
-            if t % 2 == 0:
-               S_t_level_one = frames_feature
-            if t % 3 == 0:
-               S_t_level_two = frames_feature
+            # if t % 2 == 0:
+            S_t_level_one = frames_feature_mask
+            # if t % 3 == 0:
+            S_t_level_two = frames_feature_back
             for i in range(self.num_layers):
                 t_att = T_pre[i][-self.tau:]
                 t_att = torch.stack(t_att, dim=0)
@@ -171,23 +183,19 @@ class RNN(nn.Module):
                 t_att_level_one = torch.stack(t_att_level_one, dim=0)
                 s_att_level_one = S_pre_level_one[i][-self.tau:]
                 s_att_level_one = torch.stack(s_att_level_one, dim=0)
-                if t % 2 == 0:
-                   S_pre_level_one[i].append(S_t_level_one)
+                S_pre_level_one[i].append(S_t_level_one)
 
                 t_att_level_two = T_pre_level_two[i][-self.tau:]
                 t_att_level_two = torch.stack(t_att_level_two, dim=0)
                 s_att_level_two = S_pre_level_two[i][-self.tau:]
                 s_att_level_two = torch.stack(s_att_level_two, dim=0)
-                if t % 3 == 0:
-                   S_pre_level_two[i].append(S_t_level_two)
+                S_pre_level_two[i].append(S_t_level_two)
 
                 T_t[i], T_t_level_one[i], T_t_level_two[i], S_t, S_t_level_one, S_t_level_two = \
                     self.cell_list[i](T_t[i], T_t_level_one[i], T_t_level_two[i], S_t, S_t_level_one, S_t_level_two, t_att, s_att, t_att_level_one, s_att_level_one, t_att_level_two, s_att_level_two)
                 T_pre[i].append(T_t[i])
-                if t % 2 == 0:
-                   T_pre_level_one[i].append(T_t_level_one[i])
-                if t % 3 == 0:
-                   T_pre_level_two[i].append(T_t_level_two[i])
+                T_pre_level_one[i].append(T_t_level_one[i])
+                T_pre_level_two[i].append(T_t_level_two[i])
             out = S_t
             # out = self.merge(torch.cat([T_t[-1], S_t], dim=1))
             frames_feature_decoded = []
