@@ -116,7 +116,6 @@ def img2video(image_root, dst_name, fps=24):
             img = cv2.imread(filename=path)
         else:
             continue
-        cv2.waitKey(10)
         video_writer.write(img)
         #print(img_path + ' done!')
     video_writer.release()
