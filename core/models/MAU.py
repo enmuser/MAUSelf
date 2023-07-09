@@ -143,15 +143,15 @@ class RNN(nn.Module):
             else:
                 time_diff = t - self.configs.input_length
                 # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
-                net_mask = mask_true[:, time_diff] * frames_mask[:, t] + (1 - mask_true[:, time_diff]) * x_gen
-                net_back = mask_true[:, time_diff] * frames_back[:, t] + (1 - mask_true[:, time_diff]) * x_gen
+                net_mask = mask_true[:, time_diff] * frames_mask[:, t] + (1 - mask_true[:, time_diff]) * x_gen_mask
+                net_back = mask_true[:, time_diff] * frames_back[:, t] + (1 - mask_true[:, time_diff]) * x_gen_back
                 net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
             # net_mask = frames_mask[:, t]
             # net_back = frames_back[:, t]
             frames_feature = net
             frames_feature_encoded = []
             frames_feature_mask = net_mask
-            frames_feature__mask_encoded = []
+            frames_feature_mask_encoded = []
             frames_feature_back = net_back
             frames_feature_back_encoded = []
             for i in range(len(self.encoders)):
@@ -159,7 +159,7 @@ class RNN(nn.Module):
                 frames_feature_encoded.append(frames_feature)
             for i in range(len(self.encoders)):
                 frames_feature_mask = self.encoders[i](frames_feature_mask)
-                frames_feature__mask_encoded.append(frames_feature_mask)
+                frames_feature_mask_encoded.append(frames_feature_mask)
             for i in range(len(self.encoders)):
                 frames_feature_back = self.encoders[i](frames_feature_back)
                 frames_feature_back_encoded.append(frames_feature_back)
@@ -201,14 +201,26 @@ class RNN(nn.Module):
                 T_pre_level_one[i].append(T_t_level_one[i])
                 T_pre_level_two[i].append(T_t_level_two[i])
             out = S_t
+            out_mask = S_t_level_one
+            out_back = S_t_level_two
             # out = self.merge(torch.cat([T_t[-1], S_t], dim=1))
             frames_feature_decoded = []
             for i in range(len(self.decoders)):
                 out = self.decoders[i](out)
                 if self.configs.model_mode == 'recall':
                     out = out + frames_feature_encoded[-2 - i]
+            for i in range(len(self.decoders)):
+                out_mask = self.decoders[i](out_mask)
+                if self.configs.model_mode == 'recall':
+                    out_mask = out_mask + frames_feature_mask_encoded[-2 - i]
+            for i in range(len(self.decoders)):
+                out_back = self.decoders[i](out_back)
+                if self.configs.model_mode == 'recall':
+                    out_back = out_back + frames_feature_back_encoded[-2 - i]
 
             x_gen = self.srcnn(out)
+            x_gen_mask = self.srcnn(out_mask)
+            x_gen_back = self.srcnn(out_back)
             next_frames.append(x_gen)
         next_frames = torch.stack(next_frames, dim=0).permute(1, 0, 2, 3, 4).contiguous()
         return next_frames
