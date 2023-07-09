@@ -138,12 +138,16 @@ class RNN(nn.Module):
         for t in range(self.configs.total_length - 1):
             if t < self.configs.input_length:
                 net = frames[:, t]
+                net_mask = frames_mask[:, t]
+                net_back = frames_back[:, t]
             else:
-                # time_diff = t - self.configs.input_length
-                #net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
+                time_diff = t - self.configs.input_length
+                # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
+                net_mask = mask_true[:, time_diff] * frames_mask[:, t] + (1 - mask_true[:, time_diff]) * x_gen
+                net_back = mask_true[:, time_diff] * frames_back[:, t] + (1 - mask_true[:, time_diff]) * x_gen
                 net = x_gen
-            net_mask = frames_mask[:, t]
-            net_back = frames_back[:, t]
+            # net_mask = frames_mask[:, t]
+            # net_back = frames_back[:, t]
             frames_feature = net
             frames_feature_encoded = []
             frames_feature_mask = net_mask
