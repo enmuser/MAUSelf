@@ -143,9 +143,12 @@ class RNN(nn.Module):
             else:
                 time_diff = t - self.configs.input_length
                 # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
-                net_mask = mask_true[:, time_diff] * frames_mask[:, t] + (1 - mask_true[:, time_diff]) * x_gen_mask
-                net_back = mask_true[:, time_diff] * frames_back[:, t] + (1 - mask_true[:, time_diff]) * x_gen_back
-                net = x_gen
+                # net_mask = mask_true[:, time_diff] * frames_mask[:, t] + (1 - mask_true[:, time_diff]) * x_gen_mask
+                # net_back = mask_true[:, time_diff] * frames_back[:, t] + (1 - mask_true[:, time_diff]) * x_gen_back
+                # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
+                net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
+                net_back = frames_back[:, (self.configs.input_length - 1)]
+                net_mask = net - net_back
             # net_mask = frames_mask[:, t]
             # net_back = frames_back[:, t]
             frames_feature = net
