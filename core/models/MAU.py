@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 from core.layers.MAUCell import MAUCell
 import math
-
+import random
 
 class RNN(nn.Module):
     def __init__(self, num_layers, num_hidden, configs):
@@ -92,7 +92,7 @@ class RNN(nn.Module):
         self.merge = nn.Conv2d(self.num_hidden[-1] * 2, self.num_hidden[-1], kernel_size=1, stride=1, padding=0)
         self.conv_last_sr = nn.Conv2d(self.frame_channel * 2, self.frame_channel, kernel_size=1, stride=1, padding=0)
 
-    def forward(self, frames, frames_mask, frames_back, mask_true):
+    def forward(self, frames, frames_mask, frames_back, mask_true, itr):
         # print('ok')
         mask_true = mask_true.permute(0, 1, 4, 2, 3).contiguous()
         batch_size = frames.shape[0]
@@ -146,9 +146,33 @@ class RNN(nn.Module):
                 # net_mask = mask_true[:, time_diff] * frames_mask[:, t] + (1 - mask_true[:, time_diff]) * x_gen_mask
                 # net_back = mask_true[:, time_diff] * frames_back[:, t] + (1 - mask_true[:, time_diff]) * x_gen_back
                 # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
-                net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
-                net_back = frames_back[:, (self.configs.input_length - 1)]
-                net_mask = net - net_back
+                # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
+                # net_back = frames_back[:, (self.configs.input_length - 1)]
+                if itr <= 8000:
+                    net_mask = frames_mask[:, t]
+                    net_back = frames_back[:, t]
+                elif itr <= 16000:
+                    list1 = [0,1]
+                    random_element = random.choice(list1)
+                    if random_element == 0:
+                    # net_mask = net - net_back
+                        if t % 2 == 0:
+                            net_mask = frames_mask[:, t]
+                            net_back = frames_back[:, t]
+                        else:
+                            net_mask = x_gen_mask
+                            net_back = x_gen_back
+                    else:
+                        if t % 2 == 0:
+                            net_mask = x_gen_mask
+                            net_back = x_gen_back
+                        else:
+                            net_mask = frames_mask[:, t]
+                            net_back = frames_back[:, t]
+                else:
+                    net_mask = x_gen_mask
+                    net_back = x_gen_back
+                net = x_gen
             # net_mask = frames_mask[:, t]
             # net_back = frames_back[:, t]
             frames_feature = net
