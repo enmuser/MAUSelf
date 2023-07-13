@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
 import math
-from core.utils.fusion import AFF, iAFF
-
 
 class MAUCell(nn.Module):
     def __init__(self, in_channel, num_hidden, height, width, filter_size, stride, tau, cell_mode):
@@ -88,11 +86,6 @@ class MAUCell(nn.Module):
             nn.LayerNorm([num_hidden, height, width])
         )
         self.softmax = nn.Softmax(dim=0)
-
-        # self.attention_s1 = AFF(channels=64)
-        # self.attention_s2 = AFF(channels=64)
-        # self.attention_t1 = AFF(channels=64)
-        # self.attention_t2 = AFF(channels=64)
 
     def forward(self, T_t, T_t_level_one, T_t_level_two, S_t, S_t_level_one, S_t_level_two, t_att, s_att, t_att_level_one, s_att_level_one, t_att_level_two, s_att_level_two):
         s_next = self.conv_s_next(S_t)
