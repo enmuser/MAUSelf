@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import math
+from core.utils.fusion import AFF, iAFF
 
 
 class MAUCell(nn.Module):
@@ -88,6 +89,11 @@ class MAUCell(nn.Module):
         )
         self.softmax = nn.Softmax(dim=0)
 
+        # self.attention_s1 = AFF(channels=64)
+        # self.attention_s2 = AFF(channels=64)
+        # self.attention_t1 = AFF(channels=64)
+        # self.attention_t2 = AFF(channels=64)
+
     def forward(self, T_t, T_t_level_one, T_t_level_two, S_t, S_t_level_one, S_t_level_two, t_att, s_att, t_att_level_one, s_att_level_one, t_att_level_two, s_att_level_two):
         s_next = self.conv_s_next(S_t)
         t_next = self.conv_t_next(T_t)
@@ -165,8 +171,14 @@ class MAUCell(nn.Module):
         S_new = S_gate * s_s + (1 - S_gate) * t_s
 
         # version 1
-        T_new = T_new + T_new_level_one + T_new_level_two
-        S_new = S_new + S_new_level_one + S_new_level_two
+        T_new_return = T_new + T_new_level_one + T_new_level_two
+        S_new_return = S_new + S_new_level_one + S_new_level_two
+
+        T_new_level_one = T_new + T_new_level_one
+        S_new_level_one = S_new + S_new_level_one
+
+        T_new_level_two = T_new + T_new_level_two
+        S_new_level_two = S_new + S_new_level_two
 
         # version 2
         # T_new = 0.5 * T_new + 0.3 * T_concat_level_one + 0.2 * T_concat_level_two
@@ -183,5 +195,5 @@ class MAUCell(nn.Module):
 
 
         if self.cell_mode == 'residual':
-            S_new = S_new + S_t
-        return T_new, T_new_level_one, T_new_level_two, S_new, S_new_level_one, S_new_level_two
+            S_new_return = S_new_return + S_t
+        return T_new_return, T_new_level_one, T_new_level_two, S_new_return, S_new_level_one, S_new_level_two
