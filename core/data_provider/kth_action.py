@@ -12,6 +12,10 @@ import torchfile
 from .CONFIG import CONFIG, METRIC_SETS
 from .base_dataset import SequenceDataset
 from .heatmaps import HeatmapGenerator
+import cv2
+import cv2 as cv
+
+from core.utils.ImagesToVideo import img2video
 
 
 
@@ -158,7 +162,7 @@ class KTH(SequenceDataset):
         last_frame = (len(seq) - 1) if (len(seq) <= self.n_frames) else (first_frame + self.n_frames - 1)
         for i in range(first_frame, last_frame + 1):
             fname = os.path.join(dname, seq[i].decode('utf-8'))
-            im = imageio.imread(fname) / 255.
+            im = imageio.imread(fname)
             if self.num_channels == 1:
                 im = im[:, :, 0][:, :, np.newaxis]
             frames[i - first_frame] = im
@@ -173,13 +177,49 @@ class KTH(SequenceDataset):
             # for h in range(2):
             #     hmaps[h][i] = hmaps[h][last_frame]
 
-        frames = torch.Tensor(frames).permute(0, 3, 1, 2)
+        img_mask_frames = np.ones((self.n_frames, self.img_size, self.img_size, self.num_channels))
+        img_background_frames = np.ones((self.n_frames, self.img_size, self.img_size, self.num_channels))
+        for t in range(self.n_frames):
+            img = frames[t]
+            name = str(t) + '.png'
+            file_name = os.path.join("results/kth/video/file", name)
+            cv2.imwrite(file_name, img.astype(np.uint8))
+        img2video(image_root="results/kth/video/file/", dst_name="results/kth/video/file/images.mp4")
+        backSub = cv.createBackgroundSubtractorMOG2()
+        # backSub = cv.createBackgroundSubtractorKNN()
+        capture = cv.VideoCapture(cv.samples.findFileOrKeep("results/kth/video/file/images.mp4"))
+        count = 0
+        while True:
+            ret, frame = capture.read()
+            if frame is None:
+                break
+            fgMask = backSub.apply(frame)
+            fgMask = np.expand_dims(fgMask, axis=2)
+            img_mask_frames[count] = fgMask
+            background = backSub.getBackgroundImage()
+            background_0 = background[:, :, 0]
+            background_0 = np.expand_dims(background_0, axis=2)
+            img_background_frames[count] = background_0
+            count += 1
+        # 50 * 128 * 128 * 1
+        #frames = torch.Tensor(frames).permute(0, 3, 1, 2)
+        #img_mask_frames = torch.Tensor(img_mask_frames).permute(0, 3, 1, 2)
+        #img_background_frames = torch.Tensor(img_background_frames).permute(0, 3, 1, 2)
+
+        frames = torch.from_numpy(frames / 255.0).contiguous().float().permute(0, 3, 1, 2)
+        img_mask_frames = torch.from_numpy(img_mask_frames / 255.0).contiguous().float().permute(0, 3, 1, 2)
+        img_background_frames = torch.from_numpy(img_background_frames / 255.0).contiguous().float().permute(0, 3, 1, 2)
+
         # hmaps = [torch.Tensor(hmap) for hmap in hmaps]
         # # random horizontal flip augmentation
-        if self.horiz_flip_aug and (random.randint(0, 1) == 0):
+        if self.horiz_flip_aug and (random.randint(0, 1) == 0) and self.dataset == "train":
             #  frames, hmaps = self._horiz_flip(frames, hmaps)
             frames = torch.flip(frames, dims=[3])
-        return frames
+            img_mask_frames = torch.flip(img_mask_frames, dims=[3])
+            img_background_frames = torch.flip(img_background_frames, dims=[3])
+
+        # 50 * 1 * 128 * 128
+        return frames, img_mask_frames, img_background_frames
 
     def _horiz_flip(self, frames, hmaps):
         """ Horizontal flip augmentation """
