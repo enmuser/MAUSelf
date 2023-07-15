@@ -262,10 +262,10 @@ class RNN(nn.Module):
                 # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
                 # net_back = frames_back[:, (self.configs.input_length - 1)]
                 # print("Itr: ", itr)
-                if itr <= 60000:
+                if itr <= 20000:
                     net_mask = frames_mask[:, t]
                     net_back = frames_back[:, t]
-                elif itr <= 80000:
+                elif itr <= 40000:
                     list1 = [0,1]
                     random_element = random.choice(list1)
                     if random_element == 0:
@@ -283,14 +283,14 @@ class RNN(nn.Module):
                         else:
                             net_mask = frames_mask[:, t]
                             net_back = frames_back[:, t]
-                elif itr <= 100000:
+                elif itr <= 60000:
                     if ((t+2) % 3) == 0:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
                     else:
                         net_mask = x_gen_mask
                         net_back = x_gen_back
-                elif itr <= 120000:
+                elif itr <= 80000:
                     if ((t+2) % 4) == 0:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
