@@ -182,12 +182,12 @@ class KTH(SequenceDataset):
         for t in range(self.n_frames):
             img = frames[t]
             name = str(t) + '.png'
-            file_name = os.path.join("results/kth/video/file", name)
+            file_name = os.path.join("/kaggle/working/MAUSelf/results/kth/video/file", name)
             cv2.imwrite(file_name, img.astype(np.uint8))
-        img2video(image_root="results/kth/video/file/", dst_name="results/kth/video/file/images.mp4")
+        img2video(image_root="/kaggle/working/MAUSelf/results/kth/video/file/", dst_name="/kaggle/working/MAUSelf/results/kth/video/file/images.mp4")
         backSub = cv.createBackgroundSubtractorMOG2()
         # backSub = cv.createBackgroundSubtractorKNN()
-        capture = cv.VideoCapture(cv.samples.findFileOrKeep("results/kth/video/file/images.mp4"))
+        capture = cv.VideoCapture(cv.samples.findFileOrKeep("/kaggle/working/MAUSelf/results/kth/video/file/images.mp4"))
         count = 0
         while True:
             ret, frame = capture.read()
