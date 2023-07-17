@@ -10,7 +10,7 @@ import pynvml
 pynvml.nvmlInit()
 # -----------------------------------------------------------------------------
 parser = argparse.ArgumentParser(description='MAU')
-parser.add_argument('--dataset', type=str, default='kitti')
+parser.add_argument('--dataset', type=str, default='caltech_pedestrian')
 parser.add_argument('--is_train', type=str, default='True', required=False)
 args_main = parser.parse_args()
 args_main.tied = True
@@ -22,10 +22,8 @@ if args_main.is_train == 'True':
        from configs.kth_train_configs import configs
     elif args_main.dataset == 'synpick':
        from configs.synpick_train_configs import configs
-    elif args_main.dataset == 'caltkittiech_pedestrian':
+    elif args_main.dataset == 'caltech_pedestrian':
        from configs.caltech_pedestrian_train_configs import configs
-    elif args_main.dataset == 'kitti':
-       from configs.kitti_train_configs import configs
 else:
     if args_main.dataset == 'mnist':
        from configs.mnist_configs import configs
@@ -35,8 +33,6 @@ else:
        from configs.synpick_configs import configs
     elif args_main.dataset == 'caltech_pedestrian':
        from configs.caltech_pedestrian_configs import configs
-    elif args_main.dataset == 'kitti':
-       from configs.kitti_configs import configs
 parser = configs()
 parser.add_argument('--device', type=str, default='cuda')
 args = parser.parse_args()
@@ -140,7 +136,7 @@ def train_wrapper(model):
         # max_iterations = 80000
         if itr > args.max_iterations:
             break
-        for ims in train_input_handle:
+        for ims, ims_mask, ims_back in train_input_handle:
             if itr > args.max_iterations:
                 break
             batch_size = ims.shape[0]
@@ -151,7 +147,7 @@ def train_wrapper(model):
             if itr % args.test_interval == 0:
                 print('Validate:')
                 trainer.test(model, val_input_handle, args, itr)
-            trainer.train(model, ims, real_input_flag, args, itr)
+            trainer.train(model, ims, ims_mask, ims_back, real_input_flag, args, itr)
             # snapshot_interval = 1000 每1000次保存一次
             if itr % args.snapshot_interval == 0 and itr > begin:
                 model.save(itr)
@@ -179,7 +175,7 @@ def test_wrapper(model):
 
 if __name__ == '__main__':
 
-    print('current dataset is ',args.dataset)
+    print('current dataset is ', args.dataset)
     print('batch_size=', args.batch_size)
     print('Initializing models')
     #判断是训练还是测试

@@ -10,6 +10,10 @@ from core.data_provider.vp.utils import set_from_kwarg, read_video
 import numpy as np
 import torch.utils.data as data
 
+import cv2 as cv
+
+from core.utils.ImagesToVideo import img2video
+
 
 class PedestrianDataset(data.Dataset):
     r"""
@@ -41,6 +45,9 @@ class PedestrianDataset(data.Dataset):
         self.split = split
         self.data_dir = data_root_path
         self.data_dir_json = json_path
+        self.img_height_size = 480
+        self.img_width_size = 640
+        self.num_channels = 3
 
         total_frames = context_frames + pred_frames
         seq_len = (total_frames - 1) * seq_step + 1
@@ -114,9 +121,9 @@ class PedestrianDataset(data.Dataset):
     def __getitem__(self, i):
         sequence_path, start_idx = self.sequences_with_frame_index[i]
         vid = read_video(sequence_path, start_index=start_idx, num_frames=self.seq_len)  # [T, h, w, c]
-        vid = vid[::self.seq_step]  # [t, h, w, c]
-        vid = self.preprocess(vid)  # [t, c, h, w]
-        return vid
+        vid = vid[::self.seq_step]  # [t, h, w, c] # 20 * 480 * 640 * 3
+        frames, img_mask_frames, img_background_frames = self.preprocess(vid)  # [t, c, h, w]
+        return frames, img_mask_frames, img_background_frames
 
     def __len__(self):
         return len(self.sequences_with_frame_index)
@@ -126,6 +133,40 @@ class PedestrianDataset(data.Dataset):
         pass
 
     def preprocess(self, x, transform: bool = True) -> torch.Tensor:
+        # x = 20 * 480 * 640 * 3
+        img_mask_frames = np.ones((self.total_frames, self.img_height_size, self.img_width_size, self.num_channels))
+        img_background_frames = np.ones((self.total_frames, self.img_height_size, self.img_width_size, self.num_channels))
+        for t in range(self.total_frames):
+            img = x[t]
+            name = str(t) + '.png'
+            file_name = os.path.join("/kaggle/working/MAUSelf/results/caltech_pedestrian/video/file", name)
+            cv2.imwrite(file_name, img.astype(np.uint8))
+        img2video(image_root="/kaggle/working/MAUSelf/results/caltech_pedestrian/video/file/", dst_name="/kaggle/working/MAUSelf/results/caltech_pedestrian/video/file/images.mp4")
+        backSub = cv.createBackgroundSubtractorMOG2()
+        # backSub = cv.createBackgroundSubtractorKNN()
+        capture = cv.VideoCapture(cv.samples.findFileOrKeep("/kaggle/working/MAUSelf/results/caltech_pedestrian/video/file/images.mp4"))
+        count = 0
+        while True:
+            ret, frame = capture.read()
+            if frame is None:
+                break
+            fgMask = backSub.apply(frame)
+            fgMask = np.expand_dims(fgMask, axis=2)
+            fgMask_Three =np.concatenate([fgMask, fgMask, fgMask], axis=2)
+            img_mask_frames[count] = fgMask_Three
+            background = backSub.getBackgroundImage()
+            # background_0 = background[:, :, 0]
+            # background_0 = np.expand_dims(background_0, axis=2)
+            img_background_frames[count] = background
+            count += 1
+        frames = self.changeImageData(x, transform)
+        img_mask_frames = self.changeImageData(img_mask_frames, transform)
+        img_background_frames = self.changeImageData(img_background_frames, transform)
+        return frames, img_mask_frames, img_background_frames
+
+
+
+    def changeImageData(self, x, transform):
         if isinstance(x, np.ndarray):
             if x.dtype == np.uint16:
                 x = x.astype(np.float32) / ((1 << 16) - 1)
@@ -165,4 +206,4 @@ class PedestrianDataset(data.Dataset):
         # crop -> resize -> augment
         if transform:
             x = self.transform(x)
-        return x
+        return x;

@@ -10,8 +10,8 @@ import codecs
 import lpips
 
 
-def train(model, ims, real_input_flag, configs, itr):
-    _, loss_l1, loss_l2 = model.train(ims, real_input_flag, itr)
+def train(model, ims, ims_mask, ims_back, real_input_flag, configs, itr):
+    _, loss_l1, loss_l2 = model.train(ims, ims_mask, ims_back, real_input_flag, itr)
     # display_interval = 1 打印损失的频次
     if itr % configs.display_interval == 0:
         print('itr: ' + str(itr),
@@ -57,7 +57,7 @@ def test(model, test_input_handle, configs, itr):
         if batch_id > configs.num_save_samples:
             break
         # num_save_samples = 5
-        for data in test_input_handle:
+        for data, data_mask, data_back in test_input_handle:
             if batch_id > configs.num_save_samples:
                 break
             print(batch_id)
@@ -72,7 +72,7 @@ def test(model, test_input_handle, configs, itr):
                  configs.patch_size ** 2 * configs.img_channel))
             # data = 16 * 20 * 1 * 64 * 64
             # img_gen = # 16 * 19 * 1 * 64 * 64
-            img_gen = model.test(data, real_input_flag)
+            img_gen = model.test(data, data_mask, data_back, real_input_flag, itr)
             # img_gen = 16 * 19 * 1 * 64 * 64 -> 16 * 19 * 64 * 64 * 1
             img_gen = img_gen.transpose(0, 1, 3, 4, 2)  # * 0.5 + 0.5
             # data = 16 * 20 * 1 * 64 * 64 -> 16 * 20 * 64 * 64 * 1 = test_ims
