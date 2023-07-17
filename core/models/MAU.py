@@ -13,6 +13,7 @@ class RNN(nn.Module):
         self.num_hidden = num_hidden
         self.tau = configs.tau
         self.cell_mode = configs.cell_mode
+        self.train_level_base_line = configs.train_level_base_line
         self.states = ['recall', 'normal']
         if not self.configs.model_mode in self.states:
             raise AssertionError
@@ -262,10 +263,10 @@ class RNN(nn.Module):
                 # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
                 # net_back = frames_back[:, (self.configs.input_length - 1)]
                 # print("Itr: ", itr)
-                if itr <= 20000:
+                if itr <= self.train_level_base_line:
                     net_mask = frames_mask[:, t]
                     net_back = frames_back[:, t]
-                elif itr <= 40000:
+                elif itr <= (self.train_level_base_line + 20000):
                     list1 = [0,1]
                     random_element = random.choice(list1)
                     if random_element == 0:
@@ -283,14 +284,14 @@ class RNN(nn.Module):
                         else:
                             net_mask = frames_mask[:, t]
                             net_back = frames_back[:, t]
-                elif itr <= 60000:
+                elif itr <= (self.train_level_base_line + 40000):
                     if ((t+2) % 3) == 0:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
                     else:
                         net_mask = x_gen_mask
                         net_back = x_gen_back
-                elif itr <= 80000:
+                elif itr <= (self.train_level_base_line + 60000):
                     if ((t+2) % 4) == 0:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
