@@ -10,7 +10,7 @@ import pynvml
 pynvml.nvmlInit()
 # -----------------------------------------------------------------------------
 parser = argparse.ArgumentParser(description='MAU')
-parser.add_argument('--dataset', type=str, default='caltech_pedestrian')
+parser.add_argument('--dataset', type=str, default='kitti')
 parser.add_argument('--is_train', type=str, default='True', required=False)
 args_main = parser.parse_args()
 args_main.tied = True
@@ -24,6 +24,8 @@ if args_main.is_train == 'True':
        from configs.synpick_train_configs import configs
     elif args_main.dataset == 'caltech_pedestrian':
        from configs.caltech_pedestrian_train_configs import configs
+    elif args_main.dataset == 'kitti':
+       from configs.kitti_train_configs import configs
 else:
     if args_main.dataset == 'mnist':
        from configs.mnist_configs import configs
@@ -33,6 +35,8 @@ else:
        from configs.synpick_configs import configs
     elif args_main.dataset == 'caltech_pedestrian':
        from configs.caltech_pedestrian_configs import configs
+    elif args_main.dataset == 'kitti':
+       from configs.kitti_configs import configs
 parser = configs()
 parser.add_argument('--device', type=str, default='cuda')
 args = parser.parse_args()
