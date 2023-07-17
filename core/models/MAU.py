@@ -266,7 +266,7 @@ class RNN(nn.Module):
                 if itr <= self.train_level_base_line:
                     net_mask = frames_mask[:, t]
                     net_back = frames_back[:, t]
-                elif itr <= (self.train_level_base_line + 20000):
+                elif itr <= (self.train_level_base_line + 40000):
                     list1 = [0,1]
                     random_element = random.choice(list1)
                     if random_element == 0:
@@ -284,14 +284,14 @@ class RNN(nn.Module):
                         else:
                             net_mask = frames_mask[:, t]
                             net_back = frames_back[:, t]
-                elif itr <= (self.train_level_base_line + 40000):
+                elif itr <= (self.train_level_base_line + 100000):
                     if ((t+2) % 3) == 0:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
                     else:
                         net_mask = x_gen_mask
                         net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 60000):
+                elif itr <= (self.train_level_base_line + 180000):
                     if ((t+2) % 4) == 0:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
