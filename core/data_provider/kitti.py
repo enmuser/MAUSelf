@@ -4,12 +4,15 @@ from pathlib import Path
 import cv2
 import numpy as np
 import torch
+import cv2 as cv
 
 from core.data_provider.vp import VPDataset, VPData
 #from vp_suite.defaults import SETTINGS
 from core.data_provider.vp.utils import set_from_kwarg
 
 import torch.utils.data as data
+import os
+from core.utils.ImagesToVideo import img2video
 
 
 class KITTIDataset(data.Dataset):
@@ -104,8 +107,8 @@ class KITTIDataset(data.Dataset):
         #print('seq_img_paths: ',seq_img_paths)# t items of [h, w, c]
         seq_imgs = [cv2.cvtColor(cv2.imread(str(fp.resolve())), cv2.COLOR_BGR2RGB) for fp in seq_img_paths]
         vid = np.stack(seq_imgs, axis=0)  # [t, *self.DATASET_FRAME_SHAPE]
-        vid = self.preprocess(vid)  # [t, *self.img_shape]
-        return vid
+        frames, img_mask_frames, img_background_frames = self.preprocess(vid)  # [t, c, h, w]
+        return frames, img_mask_frames, img_background_frames
 
     def __len__(self):
         return len(self.sequences_with_frame_index)
@@ -115,6 +118,48 @@ class KITTIDataset(data.Dataset):
         pass
 
     def preprocess(self, x, transform: bool = True) -> torch.Tensor:
+        x = torch.from_numpy(x)
+        permutation = list(range(x.ndim - 3)) + [-1, -3, -2]
+        x = x.permute(permutation)
+        if transform:
+            x = self.transform(x)
+            x = x.permute((0, 2, 3, 1))
+
+        x = x.numpy()
+        # x = 20 * 370 * 1224 * 3
+        img_mask_frames = np.ones((self.total_frames, x.shape[1], x.shape[2], x.shape[3]))
+        img_background_frames = np.ones(
+            (self.total_frames, x.shape[1], x.shape[2], x.shape[3]))
+        for t in range(self.total_frames):
+            img = x[t]
+            name = str(t) + '.png'
+            file_name = os.path.join("results/kitti/video/file", name)
+            cv2.imwrite(file_name, img.astype(np.uint8))
+        img2video(image_root="results/kitti/video/file/",
+                  dst_name="results/kitti/video/file/images.mp4")
+        backSub = cv.createBackgroundSubtractorMOG2()
+        # backSub = cv.createBackgroundSubtractorKNN()
+        capture = cv.VideoCapture(cv.samples.findFileOrKeep("results/kitti/video/file/images.mp4"))
+        count = 0
+        while True:
+            ret, frame = capture.read()
+            if frame is None:
+                break
+            fgMask = backSub.apply(frame)
+            fgMask = np.expand_dims(fgMask, axis=2)
+            fgMask_Three = np.concatenate([fgMask, fgMask, fgMask], axis=2)
+            img_mask_frames[count] = fgMask_Three
+            background = backSub.getBackgroundImage()
+            # background_0 = background[:, :, 0]
+            # background_0 = np.expand_dims(background_0, axis=2)
+            img_background_frames[count] = background
+            count += 1
+        frames = self.changeImageData(x, transform)
+        img_mask_frames = self.changeImageData(img_mask_frames, transform)
+        img_background_frames = self.changeImageData(img_background_frames, transform)
+        return frames, img_mask_frames, img_background_frames
+
+    def changeImageData(self, x, transform):
         if isinstance(x, np.ndarray):
             if x.dtype == np.uint16:
                 x = x.astype(np.float32) / ((1 << 16) - 1)
@@ -150,9 +195,4 @@ class KITTIDataset(data.Dataset):
         if self.value_range_min != 0.0 or self.value_range_max != 1.0:
             x *= self.value_range_max - self.value_range_min  # [0, max_val - min_val]
             x += self.value_range_min  # [min_val, max_val]
-
-        # crop -> resize -> augment
-        if transform:
-            x = self.transform(x)
         return x
-
