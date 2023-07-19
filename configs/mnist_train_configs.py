@@ -39,7 +39,7 @@ def configs():
     parser.add_argument('--delay_interval', type=float, default=2000)
     parser.add_argument('--batch_size', type=int, default=16)
     parser.add_argument('--max_iterations', type=int, default=800000)
-    parser.add_argument('--train_level_base_line', type=int, default=40000)
+    parser.add_argument('--train_level_base_line', type=int, default=60000)
     parser.add_argument('--max_epoches', type=int, default=800000)
     parser.add_argument('--display_interval', type=int, default=1)
     parser.add_argument('--test_interval', type=int, default=1000)
