@@ -298,6 +298,13 @@ class RNN(nn.Module):
                     else:
                         net_mask = x_gen_mask
                         net_back = x_gen_back
+                elif itr <= (self.train_level_base_line + 260000):
+                    if (t % 5) == 0:
+                        net_mask = frames_mask[:, t]
+                        net_back = frames_back[:, t]
+                    else:
+                        net_mask = x_gen_mask
+                        net_back = x_gen_back
                 else:
                     net_mask = x_gen_mask
                     net_back = x_gen_back
