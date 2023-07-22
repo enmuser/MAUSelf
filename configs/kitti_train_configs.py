@@ -48,7 +48,7 @@ def configs():
     parser.add_argument('--num_save_samples', type=int, default=10)
     parser.add_argument('--n_gpu', type=int, default=1)
     # /kaggle/input/kittidataset/model.ckpt-88000
-    parser.add_argument('--pretrained_model', type=str, default='')
+    parser.add_argument('--pretrained_model', type=str, default='/kaggle/input/kittidataset/model.ckpt-7000')
     parser.add_argument('--perforamnce_dir', type=str, default='/kaggle/working/MAUSelf/results/kitti/')
     parser.add_argument('--save_dir', type=str, default='/kaggle/working/MAUSelf/checkpoints/kitti/')
     parser.add_argument('--gen_frm_dir', type=str, default='/kaggle/working/MAUSelf/results/kitti/')
