@@ -157,9 +157,14 @@ class PedestrianDataset(data.Dataset):
             if frame is None:
                 break
             fgMask = backSub.apply(frame)
-            fgMask = np.expand_dims(fgMask, axis=2)
-            fgMask_Three =np.concatenate([fgMask, fgMask, fgMask], axis=2)
-            img_mask_frames[count] = fgMask_Three
+            # fgMask = np.expand_dims(fgMask, axis=2)
+            # fgMask_Three =np.concatenate([fgMask, fgMask, fgMask], axis=2)
+            # img_mask_frames[count] = fgMask_Three
+            fgMask_bool = fgMask[:,:] == 0
+            frame[:,:,0][fgMask_bool] = 0
+            frame[:,:,1][fgMask_bool] = 0
+            frame[:,:,2][fgMask_bool] = 0
+            img_mask_frames[count] = frame
             background = backSub.getBackgroundImage()
             # background_0 = background[:, :, 0]
             # background_0 = np.expand_dims(background_0, axis=2)
