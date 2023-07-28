@@ -49,7 +49,7 @@ def configs():
     parser.add_argument('--num_save_samples', type=int, default=10)
     parser.add_argument('--n_gpu', type=int, default=1)
     # /kaggle/input/peddataset/model.ckpt-15000
-    parser.add_argument('--pretrained_model', type=str, default='/kaggle/input/peddataset/model.ckpt-20000')
+    parser.add_argument('--pretrained_model', type=str, default='/kaggle/input/peddataset/model.ckpt-24000')
     parser.add_argument('--perforamnce_dir', type=str, default='/kaggle/working/MAUSelf/results/caltech_pedestrian/')
     parser.add_argument('--save_dir', type=str, default='/kaggle/working/MAUSelf/checkpoints/caltech_pedestrian/')
     parser.add_argument('--gen_frm_dir', type=str, default='/kaggle/working/MAUSelf/results/caltech_pedestrian/')
