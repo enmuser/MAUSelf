@@ -249,6 +249,9 @@ class RNN(nn.Module):
             T_pre_level_two.append(tmp_t_level_two)
             S_pre_level_two.append(tmp_s_level_two)
 
+        list1 = [0, 1]
+        random_element_total = random.choice(list1)
+
         for t in range(self.configs.total_length - 1):
             if t < self.configs.input_length:
                 net = frames[:, t]
@@ -298,13 +301,28 @@ class RNN(nn.Module):
                     else:
                         net_mask = x_gen_mask
                         net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 260000):
+                elif itr <= (self.train_level_base_line + 255000):
                     if (t % 5) == 0:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
                     else:
                         net_mask = x_gen_mask
                         net_back = x_gen_back
+                elif itr <= (self.train_level_base_line + 300000):
+                    if random_element_total == 0:
+                        if t == 10:
+                            net_mask = frames_mask[:, t]
+                            net_back = frames_back[:, t]
+                        else:
+                            net_mask = x_gen_mask
+                            net_back = x_gen_back
+                    else:
+                        if t == 15:
+                            net_mask = frames_mask[:, t]
+                            net_back = frames_back[:, t]
+                        else:
+                            net_mask = x_gen_mask
+                            net_back = x_gen_back
                 else:
                     net_mask = x_gen_mask
                     net_back = x_gen_back
