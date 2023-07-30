@@ -167,11 +167,11 @@ class MAUCell(nn.Module):
         T_new_return = T_new + T_new_level_one + T_new_level_two
         S_new_return = S_new + S_new_level_one + S_new_level_two
 
-        T_new_level_one = T_new + T_new_level_one
-        S_new_level_one = S_new + S_new_level_one
+        T_new_level_one_return = T_new + T_new_level_one + T_new_level_two
+        S_new_level_one_return = S_new + S_new_level_one + S_new_level_two
 
-        T_new_level_two = T_new + T_new_level_two
-        S_new_level_two = S_new + S_new_level_two
+        T_new_level_two_return = T_new + T_new_level_two + T_new_level_one
+        S_new_level_two_return = S_new + S_new_level_two + S_new_level_one
 
         # version 2
         # T_new = 0.5 * T_new + 0.3 * T_concat_level_one + 0.2 * T_concat_level_two
@@ -189,4 +189,4 @@ class MAUCell(nn.Module):
 
         if self.cell_mode == 'residual':
             S_new_return = S_new_return + S_t
-        return T_new_return, T_new_level_one, T_new_level_two, S_new_return, S_new_level_one, S_new_level_two
+        return T_new_return, T_new_level_one_return, T_new_level_two_return, S_new_return, S_new_level_one_return, S_new_level_two_return
