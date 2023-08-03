@@ -82,7 +82,7 @@ class Model(object):
                                           ground_truth_mask[:, 1:])
         loss_l2_back = self.MSE_criterion(next_frames_back,
                                           ground_truth_back[:, 1:])
-        loss_gen = loss_l2 + loss_l2_mask + loss_l2_back
+        loss_gen = 2 * loss_l2 + loss_l2_mask + loss_l2_back
         print("loss_l2: ", loss_l2)
         print("loss_l2_mask: ", loss_l2_mask)
         print("loss_l2_back: ", loss_l2_back)
