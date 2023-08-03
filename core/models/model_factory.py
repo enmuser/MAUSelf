@@ -67,8 +67,10 @@ class Model(object):
         frames_back_tensor = torch.FloatTensor(frames_back).to(self.configs.device)
         mask_tensor = torch.FloatTensor(mask).to(self.configs.device)
 
-        next_frames = self.network(frames_tensor,frames_mask_tensor,frames_back_tensor, mask_tensor,itr)
+        next_frames, next_frames_mask, next_frames_back = self.network(frames_tensor,frames_mask_tensor,frames_back_tensor, mask_tensor, itr)
         ground_truth = frames_tensor
+        ground_truth_mask = frames_mask_tensor
+        ground_truth_back = frames_back_tensor
 
         batch_size = next_frames.shape[0]
         self.optimizer.zero_grad()
@@ -76,7 +78,15 @@ class Model(object):
                                ground_truth[:, 1:])
         loss_l2 = self.MSE_criterion(next_frames,
                                      ground_truth[:, 1:])
-        loss_gen = loss_l2
+        loss_l2_mask = self.MSE_criterion(next_frames_mask,
+                                          ground_truth_mask[:, 1:])
+        loss_l2_back = self.MSE_criterion(next_frames_back,
+                                          ground_truth_back[:, 1:])
+        loss_gen = loss_l2 + loss_l2_mask + loss_l2_back
+        print("loss_l2: ", loss_l2)
+        print("loss_l2_mask: ", loss_l2_mask)
+        print("loss_l2_back: ", loss_l2_back)
+        print("loss_gen: ", loss_gen)
         loss_gen.backward()
         self.optimizer.step()
 
@@ -96,5 +106,5 @@ class Model(object):
         frames_mask_tensor = torch.FloatTensor(frames_mask).to(self.configs.device)
         frames_back_tensor = torch.FloatTensor(frames_back).to(self.configs.device)
         mask_tensor = torch.FloatTensor(mask).to(self.configs.device)
-        next_frames = self.network(frames_tensor,frames_mask_tensor,frames_back_tensor,mask_tensor,itr)
+        next_frames,next_frames_mask,next_frames_back = self.network(frames_tensor,frames_mask_tensor,frames_back_tensor,mask_tensor,itr)
         return next_frames.detach().cpu().numpy()

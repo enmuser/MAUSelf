@@ -214,6 +214,8 @@ class RNN(nn.Module):
         width = frames.shape[4] // self.configs.sr_size
         frame_channels = frames.shape[2]
         next_frames = []
+        next_frames_mask = []
+        next_frames_back = []
         T_t = []
         T_t_level_one = []
         T_t_level_two = []
@@ -257,57 +259,57 @@ class RNN(nn.Module):
             else:
                 time_diff = t - self.configs.input_length
                 # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
-                # net_mask = mask_true[:, time_diff] * frames_mask[:, t] + (1 - mask_true[:, time_diff]) * x_gen_mask
-                # net_back = mask_true[:, time_diff] * frames_back[:, t] + (1 - mask_true[:, time_diff]) * x_gen_back
+                net_mask = mask_true[:, time_diff] * frames_mask[:, t] + (1 - mask_true[:, time_diff]) * x_gen_mask
+                net_back = mask_true[:, time_diff] * frames_back[:, t] + (1 - mask_true[:, time_diff]) * x_gen_back
                 # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
                 # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
                 # net_back = frames_back[:, (self.configs.input_length - 1)]
                 # print("Itr: ", itr)
-                if itr <= self.train_level_base_line:
-                    net_mask = frames_mask[:, t]
-                    net_back = frames_back[:, t]
-                elif itr <= (self.train_level_base_line + 40000):
-                    list1 = [0,1]
-                    random_element = random.choice(list1)
-                    if random_element == 0:
-                    # net_mask = net - net_back
-                        if t % 2 == 0:
-                            net_mask = frames_mask[:, t]
-                            net_back = frames_back[:, t]
-                        else:
-                            net_mask = x_gen_mask
-                            net_back = x_gen_back
-                    else:
-                        if t % 2 == 0:
-                            net_mask = x_gen_mask
-                            net_back = x_gen_back
-                        else:
-                            net_mask = frames_mask[:, t]
-                            net_back = frames_back[:, t]
-                elif itr <= (self.train_level_base_line + 100000):
-                    if ((t+2) % 3) == 0:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 180000):
-                    if ((t+2) % 4) == 0:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 260000):
-                    if (t % 5) == 0:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                else:
-                    net_mask = x_gen_mask
-                    net_back = x_gen_back
+                # if itr <= self.train_level_base_line:
+                #     net_mask = frames_mask[:, t]
+                #     net_back = frames_back[:, t]
+                # elif itr <= (self.train_level_base_line + 40000):
+                #     list1 = [0,1]
+                #     random_element = random.choice(list1)
+                #     if random_element == 0:
+                #     # net_mask = net - net_back
+                #         if t % 2 == 0:
+                #             net_mask = frames_mask[:, t]
+                #             net_back = frames_back[:, t]
+                #         else:
+                #             net_mask = x_gen_mask
+                #             net_back = x_gen_back
+                #     else:
+                #         if t % 2 == 0:
+                #             net_mask = x_gen_mask
+                #             net_back = x_gen_back
+                #         else:
+                #             net_mask = frames_mask[:, t]
+                #             net_back = frames_back[:, t]
+                # elif itr <= (self.train_level_base_line + 100000):
+                #     if ((t+2) % 3) == 0:
+                #         net_mask = frames_mask[:, t]
+                #         net_back = frames_back[:, t]
+                #     else:
+                #         net_mask = x_gen_mask
+                #         net_back = x_gen_back
+                # elif itr <= (self.train_level_base_line + 180000):
+                #     if ((t+2) % 4) == 0:
+                #         net_mask = frames_mask[:, t]
+                #         net_back = frames_back[:, t]
+                #     else:
+                #         net_mask = x_gen_mask
+                #         net_back = x_gen_back
+                # elif itr <= (self.train_level_base_line + 260000):
+                #     if (t % 5) == 0:
+                #         net_mask = frames_mask[:, t]
+                #         net_back = frames_back[:, t]
+                #     else:
+                #         net_mask = x_gen_mask
+                #         net_back = x_gen_back
+                # else:
+                #     net_mask = x_gen_mask
+                #     net_back = x_gen_back
                 net = x_gen
             # net_mask = frames_mask[:, t]
             # net_back = frames_back[:, t]
@@ -385,5 +387,9 @@ class RNN(nn.Module):
             x_gen_mask = self.srcnn_mask(out_mask)
             x_gen_back = self.srcnn_back(out_back)
             next_frames.append(x_gen)
+            next_frames_mask.append(x_gen_mask)
+            next_frames_back.append(x_gen_back)
         next_frames = torch.stack(next_frames, dim=0).permute(1, 0, 2, 3, 4).contiguous()
-        return next_frames
+        next_frames_mask = torch.stack(next_frames_mask, dim=0).permute(1, 0, 2, 3, 4).contiguous()
+        next_frames_back = torch.stack(next_frames_back, dim=0).permute(1, 0, 2, 3, 4).contiguous()
+        return next_frames,next_frames_mask,next_frames_back
