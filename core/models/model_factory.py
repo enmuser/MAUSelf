@@ -53,9 +53,6 @@ class Model(object):
         self.network.load_state_dict(stats['net_param'])
 
     def train(self, data, data_mask, data_back, mask, itr):
-        # data = imgs = 16 * 20 * 1 * 64 * 64
-        # mask = real_input_flag = 16 * 9 * 64 * 64 * 1
-        # frames = data = imgs = 16 * 20 * 1 * 64 * 64
         frames = data
         frames_mask = data_mask
         frames_back = data_back
@@ -67,8 +64,16 @@ class Model(object):
         frames_back_tensor = torch.FloatTensor(frames_back).to(self.configs.device)
         mask_tensor = torch.FloatTensor(mask).to(self.configs.device)
 
-        next_frames = self.network(frames_tensor,frames_mask_tensor,frames_back_tensor, mask_tensor,itr)
+        # 进入搭建network进行数据训练
+        # 输入的是
+        # 1.frames_tensor 图片信息 16 * 20 * 1 * 64 * 64
+        # 2. mask_tensor real_input_flag掩码信息 16 * 9 * 64 * 64 * 1
+        # 输出的是
+        # next_frames 16 * 19 * 1 * 64 * 64
+        next_frames, next_frames_mask, next_frames_back = self.network(frames_tensor,frames_mask_tensor,frames_back_tensor, mask_tensor,itr)
         ground_truth = frames_tensor
+        ground_truth_mask = frames_mask_tensor
+        ground_truth_back = frames_back_tensor
 
         batch_size = next_frames.shape[0]
         self.optimizer.zero_grad()
