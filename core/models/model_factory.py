@@ -121,5 +121,5 @@ class Model(object):
         frames_mask_tensor = torch.FloatTensor(frames_mask).to(self.configs.device)
         frames_back_tensor = torch.FloatTensor(frames_back).to(self.configs.device)
         mask_tensor = torch.FloatTensor(mask).to(self.configs.device)
-        next_frames = self.network(frames_tensor,frames_mask_tensor,frames_back_tensor,mask_tensor,itr)
+        next_frames, next_frames_mask, next_frames_back = self.network(frames_tensor, frames_mask_tensor,frames_back_tensor,mask_tensor,itr)
         return next_frames.detach().cpu().numpy()
