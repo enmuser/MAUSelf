@@ -76,7 +76,27 @@ class Model(object):
                                ground_truth[:, 1:])
         loss_l2 = self.MSE_criterion(next_frames,
                                      ground_truth[:, 1:])
-        loss_gen = loss_l2
+        loss_l2_mask = self.MSE_criterion(next_frames_mask,
+                                     ground_truth_mask[:, 1:])
+        loss_l2_back = self.MSE_criterion(next_frames_back,
+                                      ground_truth_back[:, 1:])
+
+        total = loss_l2 + loss_l2_mask + loss_l2_back
+
+        num_a = total / loss_l2
+        num_b = total / loss_l2_mask
+        num_c = total / loss_l2_back
+
+        print("num_a: ", num_a)
+        print("num_b: ", num_b)
+        print("num_c: ", num_c)
+        
+        loss_gen = 1.5 * num_a * loss_l2 + num_b * loss_l2_mask + num_c * loss_l2_back
+        
+        print("1.5 * num_a * loss_l2: ", 1.5 * num_a * loss_l2)
+        print("num_b * loss_l2_mask: ", num_b * loss_l2_mask)
+        print("num_c * loss_l2_back: ", num_c * loss_l2_back)
+        print("loss_gen: ", loss_gen)
         loss_gen.backward()
         self.optimizer.step()
 
