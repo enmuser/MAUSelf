@@ -214,6 +214,8 @@ class RNN(nn.Module):
         width = frames.shape[4] // self.configs.sr_size
         frame_channels = frames.shape[2]
         next_frames = []
+        next_frames_mask = []
+        next_frames_back = []
         T_t = []
         T_t_level_one = []
         T_t_level_two = []
@@ -385,5 +387,9 @@ class RNN(nn.Module):
             x_gen_mask = self.srcnn_mask(out_mask)
             x_gen_back = self.srcnn_back(out_back)
             next_frames.append(x_gen)
+            next_frames_mask.append(x_gen_mask)
+            next_frames_back.append(x_gen_back)
         next_frames = torch.stack(next_frames, dim=0).permute(1, 0, 2, 3, 4).contiguous()
-        return next_frames
+        next_frames_mask = torch.stack(next_frames_mask, dim=0).permute(1, 0, 2, 3, 4).contiguous()
+        next_frames_back = torch.stack(next_frames_back, dim=0).permute(1, 0, 2, 3, 4).contiguous()
+        return next_frames,next_frames_mask,next_frames_back
