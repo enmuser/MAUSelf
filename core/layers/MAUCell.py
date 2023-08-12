@@ -164,14 +164,44 @@ class MAUCell(nn.Module):
         S_new = S_gate * s_s + (1 - S_gate) * t_s
 
         # version 1
-        T_new_return = T_new + T_new_level_one + T_new_level_two
-        S_new_return = S_new + S_new_level_one + S_new_level_two
+        # T_new_return = T_new + T_new_level_one + T_new_level_two
+        # S_new_return = S_new + S_new_level_one + S_new_level_two
 
-        T_new_level_one_return = T_new + T_new_level_one + T_new_level_two
-        S_new_level_one_return = S_new + S_new_level_one + S_new_level_two
+        # T_new_level_one_return = T_new + T_new_level_one + T_new_level_two
+        # S_new_level_one_return = S_new + S_new_level_one + S_new_level_two
 
-        T_new_level_two_return = T_new + T_new_level_two + T_new_level_one
-        S_new_level_two_return = S_new + S_new_level_two + S_new_level_one
+        # T_new_level_two_return = T_new + T_new_level_two + T_new_level_one
+        # S_new_level_two_return = S_new + S_new_level_two + S_new_level_one
+
+        T_new_gate = torch.sigmoid(T_new)
+        T_new_1 =  T_new_gate * T_new + (1 - T_new_gate) * T_new_level_one
+        T_new_1_gate = torch.sigmoid(T_new_1)
+        T_new_2 = T_new_1_gate * T_new_1 + (1 - T_new_1_gate) * T_new_level_two
+
+        S_new_gate = torch.sigmoid(S_new)
+        S_new_1 = S_new_gate * S_new + (1 - S_new_gate) * S_new_level_one
+        S_new_1_gate = torch.sigmoid(S_new_1)
+        S_new_2 = S_new_1_gate * S_new_1 + (1 - S_new_1_gate) * S_new_level_two
+
+        T_new_level_one_gate = torch.sigmoid(T_new_level_one)
+        T_new_level_one_1 = T_new_level_one_gate * T_new_level_one + (1 - T_new_level_one_gate) * T_new
+        T_new_level_one_1_gate = torch.sigmoid(T_new_level_one_1)
+        T_new_level_one_2 = T_new_level_one_1_gate * T_new_level_one_1 + (1 - T_new_level_one_1_gate) * T_new_level_two
+
+        S_new_level_one_gate = torch.sigmoid(S_new_level_one)
+        S_new_level_one_1 = S_new_level_one_gate * S_new_level_one + (1 - S_new_level_one_gate) * S_new
+        S_new_level_one_1_gate = torch.sigmoid(S_new_level_one_1)
+        S_new_level_one_2 = S_new_level_one_1_gate * S_new_level_one_1 + (1 - S_new_level_one_1_gate) * S_new_level_two
+
+        T_new_level_two_gate = torch.sigmoid(T_new_level_two)
+        T_new_level_two_1 = T_new_level_two_gate * T_new_level_two + (1 - T_new_level_two_gate) * T_new
+        T_new_level_two_1_gate = torch.sigmoid(T_new_level_two_1)
+        T_new_level_two_2 = T_new_level_two_1_gate * T_new_level_two_1 + (1 - T_new_level_two_1_gate) * T_new_level_one
+
+        S_new_level_two_gate = torch.sigmoid(S_new_level_two)
+        S_new_level_two_1 = S_new_level_two_gate * S_new_level_two + (1 - S_new_level_two_gate) * S_new
+        S_new_level_two_1_gate = torch.sigmoid(S_new_level_two_1)
+        S_new_level_two_2 = S_new_level_two_1_gate * S_new_level_two_1 + (1 - S_new_level_two_1_gate) * S_new_level_one
 
         # version 2
         # T_new = 0.5 * T_new + 0.3 * T_concat_level_one + 0.2 * T_concat_level_two
@@ -188,5 +218,5 @@ class MAUCell(nn.Module):
 
 
         if self.cell_mode == 'residual':
-            S_new_return = S_new_return + S_t
-        return T_new_return, T_new_level_one_return, T_new_level_two_return, S_new_return, S_new_level_one_return, S_new_level_two_return
+            S_new_2 = S_new_2 + S_t
+        return T_new_2, T_new_level_one_2, T_new_level_two_2, S_new_2, S_new_level_one_2, S_new_level_two_2
