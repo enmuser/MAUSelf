@@ -12,8 +12,8 @@ import codecs
 import lpips
 
 
-def train(model, ims, ims_mask, ims_back, real_input_flag, configs, itr):
-    _, loss_l1, loss_l2 = model.train(ims, ims_mask, ims_back, real_input_flag, itr)
+def train(model, ims, ims_mask, ims_back, real_input_flag, configs, itr, itradd):
+    _, loss_l1, loss_l2 = model.train(ims, ims_mask, ims_back, real_input_flag, itr, itradd)
     # display_interval = 1 打印损失的频次
     if itr % configs.display_interval == 0:
         print('itr: ' + str(itr),
