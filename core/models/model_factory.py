@@ -52,7 +52,7 @@ class Model(object):
         stats = torch.load(pm_checkpoint_path, map_location=torch.device(self.configs.device))
         self.network.load_state_dict(stats['net_param'])
 
-    def train(self, data, data_mask, data_back, mask, itr):
+    def train(self, data, data_mask, data_back, mask, itr, itradd):
         # data = imgs = 16 * 20 * 1 * 64 * 64
         # mask = real_input_flag = 16 * 9 * 64 * 64 * 1
         # frames = data = imgs = 16 * 20 * 1 * 64 * 64
@@ -67,7 +67,7 @@ class Model(object):
         frames_back_tensor = torch.FloatTensor(frames_back).to(self.configs.device)
         mask_tensor = torch.FloatTensor(mask).to(self.configs.device)
 
-        next_frames, next_frames_mask, next_frames_back = self.network(frames_tensor,frames_mask_tensor,frames_back_tensor, mask_tensor, itr)
+        next_frames, next_frames_mask, next_frames_back = self.network(frames_tensor,frames_mask_tensor,frames_back_tensor, mask_tensor, itr, itradd)
         ground_truth = frames_tensor
         ground_truth_mask = frames_mask_tensor
         ground_truth_back = frames_back_tensor
@@ -78,14 +78,15 @@ class Model(object):
                                ground_truth[:, 1:])
         loss_l2 = self.MSE_criterion(next_frames,
                                      ground_truth[:, 1:])
-        loss_l2_mask = self.MSE_criterion(next_frames_mask,
-                                          ground_truth_mask[:, 1:])
-        loss_l2_back = self.MSE_criterion(next_frames_back,
-                                          ground_truth_back[:, 1:])
-        loss_gen = 2 * loss_l2 + loss_l2_mask + loss_l2_back
-        print("loss_l2: ", loss_l2)
-        print("loss_l2_mask: ", loss_l2_mask)
-        print("loss_l2_back: ", loss_l2_back)
+        # loss_l2_mask = self.MSE_criterion(next_frames_mask,
+        #                                   ground_truth_mask[:, 1:])
+        # loss_l2_back = self.MSE_criterion(next_frames_back,
+        #                                   ground_truth_back[:, 1:])
+        # loss_gen = 2 * loss_l2 + loss_l2_mask + loss_l2_back
+        # print("loss_l2: ", loss_l2)
+        # print("loss_l2_mask: ", loss_l2_mask)
+        # print("loss_l2_back: ", loss_l2_back)
+        loss_gen = loss_l2
         print("loss_gen: ", loss_gen)
         loss_gen.backward()
         self.optimizer.step()
