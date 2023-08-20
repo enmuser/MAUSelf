@@ -256,70 +256,70 @@ class RNN(nn.Module):
                 net_back = frames_back[:, t]
             else:
                 if itr % 10 == 0:
-                    if t <= 9:
+                    if t >= 10:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
                     else:
                         net_mask = x_gen_mask
                         net_back = x_gen_back
                 elif itr % 10 == 1:
-                    if t <= 10:
+                    if t >= 11:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
                     else:
                         net_mask = x_gen_mask
                         net_back = x_gen_back
                 elif itr % 10 == 2:
-                    if t <= 11:
+                    if t >= 12:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
                     else:
                         net_mask = x_gen_mask
                         net_back = x_gen_back
                 elif itr % 10 == 3:
-                    if t <= 12:
+                    if t >= 13:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
                     else:
                         net_mask = x_gen_mask
                         net_back = x_gen_back
                 elif itr % 10 == 4:
-                    if t <= 13:
+                    if t >= 14:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
                     else:
                         net_mask = x_gen_mask
                         net_back = x_gen_back
                 elif itr % 10 == 5:
-                    if t <= 14:
+                    if t >= 15:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
                     else:
                         net_mask = x_gen_mask
                         net_back = x_gen_back
                 elif itr % 10 == 6:
-                    if t <= 15:
+                    if t >= 16:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
                     else:
                         net_mask = x_gen_mask
                         net_back = x_gen_back
                 elif itr % 10 == 7:
-                    if t <= 16:
+                    if t >= 17:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
                     else:
                         net_mask = x_gen_mask
                         net_back = x_gen_back
                 elif itr % 10 == 8:
-                    if t <= 17:
+                    if t >= 18:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
                     else:
                         net_mask = x_gen_mask
                         net_back = x_gen_back
                 elif itr % 10 == 9:
-                    if t <= 18:
+                    if t >= 19:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
                     else:
