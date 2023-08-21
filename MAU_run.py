@@ -105,7 +105,10 @@ def train_wrapper(model):
             batch_size = ims.shape[0]
             eta, real_input_flag = schedule_sampling(eta, itr, args.img_channel, batch_size)
             if itr % args.test_interval == 0:
-                print('Validate:')
+                print('Validate 0:')
+                trainer.test(model, val_input_handle, args, itr)
+            if itr % args.test_interval == 9:
+                print('Validate 9:')
                 trainer.test(model, val_input_handle, args, itr)
             trainer.train(model, ims, ims_mask, ims_back, real_input_flag, args, itr)
             # snapshot_interval = 1000 每1000次保存一次
