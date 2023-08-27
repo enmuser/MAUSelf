@@ -112,10 +112,9 @@ class MovingMNIST(data.Dataset):
             images = self.dataset[:, idx, ...]
         r = 1
         w = int(64 / r)
-        # 20 * 64 * 64 * 1
         img = np.ones((64, 64, 1))
         img_mask = np.ones((20, 64, 64, 1))
-        #img_background = np.ones((20, 64, 64, 1))
+        img_background = np.ones((20, 64, 64, 1))
         for t in range(20):
             img = images[t]
             name = str(t) + '.png'
@@ -133,19 +132,32 @@ class MovingMNIST(data.Dataset):
             fgMask = backSub.apply(frame)
             fgMask = np.expand_dims(fgMask, axis=2)
             img_mask[count] = fgMask
-            #background = backSub.getBackgroundImage()
-            #background_0 = background[:, :, 0]
-            #background_0 = np.expand_dims(background_0, axis=2)
-            #img_background[count] = background_0
+            background = backSub.getBackgroundImage()
+            background_0 = background[:, :, 0]
+            background_0 = np.expand_dims(background_0, axis=2)
+            img_background[count] = background_0
             count += 1
+            #print("count=", count)
+
 
         # 20 * 1 * 64 * 64
-        #images = images.reshape((length, w, r, w, r)).transpose(0, 2, 4, 1, 3).reshape((length, r * r, w, w))
+        images = images.reshape((length, w, r, w, r)).transpose(0, 2, 4, 1, 3).reshape((length, r * r, w, w))
         images_mask = img_mask.reshape((length, w, r, w, r)).transpose(0, 2, 4, 1, 3).reshape((length, r * r, w, w))
-        #images_background = img_background.reshape((length, w, r, w, r)).transpose(0, 2, 4, 1, 3).reshape((length, r * r, w, w))
-        #output = torch.from_numpy(images / 255.0).contiguous().float()
+        images_background = img_background.reshape((length, w, r, w, r)).transpose(0, 2, 4, 1, 3).reshape((length, r * r, w, w))
+        # img = np.ones((64, 64, 1))
+        # capture = cv.VideoCapture(cv.s)
+        output = torch.from_numpy(images / 255.0).contiguous().float()
         output_mask = torch.from_numpy(images_mask / 255.0).contiguous().float()
-        #output_background = torch.from_numpy(images_background / 255.0).contiguous().float()
+        output_background = torch.from_numpy(images_background / 255.0).contiguous().float()
+        # for t in range(19):
+        #     net = images[t]
+        #
+        #     backSub = cv.createBackgroundSubtractorMOG2()
+        #     fgMask = backSub.apply(net)
+        #     background = backSub.getBackgroundImage()
+        #     cv.imshow('Frame', net)
+        #     cv.imshow('FG Background', background)
+        #     cv.imshow('FG Mask', fgMask)
         return output_mask
 
     def __len__(self):
