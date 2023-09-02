@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import math
 
+
 class MAUCell(nn.Module):
     def __init__(self, in_channel, num_hidden, height, width, filter_size, stride, tau, cell_mode):
         super(MAUCell, self).__init__()
@@ -20,6 +21,21 @@ class MAUCell(nn.Module):
         if not self.cell_mode in self.states:
             raise AssertionError
         self.conv_t = nn.Sequential(
+            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([3 * num_hidden, height, width])
+        )
+        self.conv_t_1 = nn.Sequential(
+            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([3 * num_hidden, height, width])
+        )
+        self.conv_t_2 = nn.Sequential(
+            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([3 * num_hidden, height, width])
+        )
+        self.conv_t_3 = nn.Sequential(
             nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
                       ),
             nn.LayerNorm([3 * num_hidden, height, width])
@@ -56,6 +72,24 @@ class MAUCell(nn.Module):
             nn.LayerNorm([3 * num_hidden, height, width])
         )
 
+        self.conv_s_1 = nn.Sequential(
+            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([3 * num_hidden, height, width])
+        )
+
+        self.conv_s_2 = nn.Sequential(
+            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([3 * num_hidden, height, width])
+        )
+
+        self.conv_s_3 = nn.Sequential(
+            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([3 * num_hidden, height, width])
+        )
+
         self.conv_s_level_one = nn.Sequential(
             nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
                       ),
@@ -86,6 +120,11 @@ class MAUCell(nn.Module):
             nn.LayerNorm([num_hidden, height, width])
         )
         self.softmax = nn.Softmax(dim=0)
+
+        # self.attention_s1 = AFF(channels=64)
+        # self.attention_s2 = AFF(channels=64)
+        # self.attention_t1 = AFF(channels=64)
+        # self.attention_t2 = AFF(channels=64)
 
     def forward(self, T_t, T_t_level_one, T_t_level_two, S_t, S_t_level_one, S_t_level_two, t_att, s_att, t_att_level_one, s_att_level_one, t_att_level_two, s_att_level_two):
         s_next = self.conv_s_next(S_t)
@@ -163,29 +202,41 @@ class MAUCell(nn.Module):
         T_new = T_gate * t_t + (1 - T_gate) * s_t
         S_new = S_gate * s_s + (1 - S_gate) * t_s
 
-        # version 1
-        T_new_return = T_new + T_new_level_one + T_new_level_two
-        S_new_return = S_new + S_new_level_one + S_new_level_two
+        T_new_concat = self.conv_t_1(T_new)
+        S_new_concat = self.conv_s_1(S_new)
 
-        T_new_level_one_return = T_new + T_new_level_one + T_new_level_two
-        S_new_level_one_return = S_new + S_new_level_one + S_new_level_two
+        T_new_level_one_concat = self.conv_t_2(T_new_level_one)
+        S_new_level_one_concat = self.conv_s_2(S_new_level_one)
 
-        T_new_level_two_return = T_new + T_new_level_two + T_new_level_one
-        S_new_level_two_return = S_new + S_new_level_two + S_new_level_one
+        T_new_level_two_concat = self.conv_t_3(T_new_level_two)
+        S_new_level_two_concat = self.conv_s_3(S_new_level_two)
 
-        # version 2
-        # T_new = 0.5 * T_new + 0.3 * T_concat_level_one + 0.2 * T_concat_level_two
-        # S_new = 0.5 * S_new + 0.3 * S_new_level_one + 0.2 * S_new_level_two
+        t_g_new, t_t_new, t_s_new = torch.split(T_new_concat, self.num_hidden, dim=1)
+        s_g_new, s_t_new, s_s_new = torch.split(S_new_concat, self.num_hidden, dim=1)
 
-       # version3
-       # iAFF AFF
+        t_g_one, t_t_one, t_s_one = torch.split(T_new_level_one_concat, self.num_hidden, dim=1)
+        s_g_one, s_t_one, s_s_one = torch.split(S_new_level_one_concat, self.num_hidden, dim=1)
 
-        # x,residual  [B,C,H,W]
-        # T_new_level_two_one = self.attention_t1(T_new_level_two, T_new_level_one)
-        # T_new = self.attention_t2(T_new_level_two_one, T_new)
-        # S_new_level_two_one = self.attention_s1(S_new_level_two, S_new_level_one)
-        # S_new = self.attention_s2(S_new_level_two_one, S_new)
+        t_g_two, t_t_two, t_s_two = torch.split(T_new_level_two_concat, self.num_hidden, dim=1)
+        s_g_two, s_t_two, s_s_two = torch.split(S_new_level_two_concat, self.num_hidden, dim=1)
 
+        T_gate_new = torch.sigmoid(t_g_new)
+        S_gate_new = torch.sigmoid(s_g_new)
+
+        T_gate_one = torch.sigmoid(t_g_one)
+        S_gate_one = torch.sigmoid(s_g_one)
+
+        T_gate_two = torch.sigmoid(t_g_two)
+        S_gate_two = torch.sigmoid(s_g_two)
+
+        T_new_return = T_gate_one * (T_gate_new * t_t_new + ( 1- T_gate_new) * t_t_one) + (1 - T_gate_one) * t_t_two
+        S_new_return = S_gate_one * (S_gate_new * s_t_new + ( 1- S_gate_new) * s_t_one) + (1 - S_gate_one) * s_t_two
+
+        T_new_level_one_return = T_gate_new * (T_gate_one * t_t_one + (1 - T_gate_one) * t_t_new) + (1 - T_gate_new) * t_t_two
+        S_new_level_one_return = S_gate_new * (S_gate_one * s_t_one + (1 - S_gate_one) * s_t_new) + (1 - S_gate_new) * s_t_two
+
+        T_new_level_two_return = T_gate_new * (T_gate_two * t_t_two + (1 - T_gate_two) * t_t_new) + (1 - T_gate_new) * t_t_one
+        S_new_level_two_return = S_gate_new * (S_gate_two * s_t_two + (1 - S_gate_two) * s_t_new) + (1 - S_gate_new) * s_t_one
 
         if self.cell_mode == 'residual':
             S_new_return = S_new_return + S_t
