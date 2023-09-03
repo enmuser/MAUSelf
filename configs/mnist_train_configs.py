@@ -42,8 +42,8 @@ def configs():
     parser.add_argument('--train_level_base_line', type=int, default=400000)
     parser.add_argument('--max_epoches', type=int, default=1500000)
     parser.add_argument('--display_interval', type=int, default=1)
-    parser.add_argument('--test_interval', type=int, default=100)
-    parser.add_argument('--snapshot_interval', type=int, default=1000)
+    parser.add_argument('--test_interval', type=int, default=500)
+    parser.add_argument('--snapshot_interval', type=int, default=500)
     parser.add_argument('--num_save_samples', type=int, default=10)
     parser.add_argument('--n_gpu', type=int, default=1)
     #/kaggle/input/movingmnist/model.ckpt-168000
