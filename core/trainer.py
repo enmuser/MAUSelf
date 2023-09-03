@@ -76,7 +76,7 @@ def test(model, test_input_handle, configs, itr):
                  configs.patch_size ** 2 * configs.img_channel))
             # data = 16 * 20 * 1 * 64 * 64
             # img_gen = # 16 * 19 * 1 * 64 * 64
-            img_gen = model.test(data,data_mask, data_back, real_input_flag,itr)
+            img_gen = model.test(data, data_mask, data_back, real_input_flag, itr)
             # img_gen = 16 * 19 * 1 * 64 * 64 -> 16 * 19 * 64 * 64 * 1
             img_gen = img_gen.transpose(0, 1, 3, 4, 2)  # * 0.5 + 0.5
             # data = 16 * 20 * 1 * 64 * 64 -> 16 * 20 * 64 * 64 * 1 = test_ims

@@ -3,7 +3,11 @@ import argparse
 import numpy as np
 from core.data_provider import datasets_factory
 from core.models.model_factory import Model
+from core.models.model_factory_B import Model_B
+from core.models.model_factory_F import Model_F
 import core.trainer as trainer
+import core.trainer_B as trainer_B
+import core.trainer_F as trainer_F
 import pynvml
 import cv2 as cv
 
@@ -69,7 +73,7 @@ def schedule_sampling(eta, itr, channel, batch_size):
     return eta, real_input_flag
 
 
-def train_wrapper(model):
+def train_wrapper(model,model_f,model_b):
     begin = 0
     handle = pynvml.nvmlDeviceGetHandleByIndex(0)
     meminfo_begin = pynvml.nvmlDeviceGetMemoryInfo(handle)
@@ -77,7 +81,10 @@ def train_wrapper(model):
     if args.pretrained_model:
         model.load(args.pretrained_model)
         begin = int(args.pretrained_model.split('-')[-1])
-
+    if args.pretrained_model_f:
+        model_f.load(args.pretrained_model_f)
+    if args.pretrained_model_b:
+        model_b.load(args.pretrained_model_b)
     train_input_handle = datasets_factory.data_provider(configs=args,
                                                         data_train_path=args.data_train_path,
                                                         dataset=args.dataset,
@@ -100,6 +107,30 @@ def train_wrapper(model):
         if itr > args.max_iterations:
             break
         for ims, ims_mask, ims_back in train_input_handle:
+            batch_size = ims.shape[0]
+            real_input_flag_f = np.zeros(
+                (batch_size,
+                 args.total_length - args.input_length - 1,
+                 args.img_height // args.patch_size,
+                 args.img_width // args.patch_size,
+                 args.patch_size ** 2 * args.img_channel))
+            img_gen_f = model_f.test(ims_mask, real_input_flag_f)
+            # trainer_F.test(ims_mask, img_gen_f, args, "aaaaa",itr)
+            # ims_mask_ori = ims_mask
+            ims_mask[:, -10:] = img_gen_f[:, -10:]
+            # trainer_F.test(ims_mask_ori, ims_mask, args, "bbbbb",itr)
+            real_input_flag_b = np.zeros(
+                (batch_size,
+                 args.total_length - args.input_length - 1,
+                 args.img_height // args.patch_size,
+                 args.img_width // args.patch_size,
+                 args.patch_size ** 2 * args.img_channel))
+            img_gen_b = model_b.test(ims_back, real_input_flag_b)
+            #trainer_B.test(ims_back, img_gen_b, args, "aaaaa",itr)
+            #ims_back_ori = ims_back
+            ims_back[:, -10:] = img_gen_b[:, -10:]
+            #trainer_B.test(ims_back_ori, ims_back, args, "bbbbb",itr)
+
             if itr > args.max_iterations:
                 break
             batch_size = ims.shape[0]
@@ -143,13 +174,15 @@ if __name__ == '__main__':
         args.is_training = False
 
     model = Model(args)
+    model_f = Model_F(args)
+    model_b = Model_B(args)
 
     if args.is_training:
         if not os.path.exists(args.save_dir):
             os.makedirs(args.save_dir)
         if not os.path.exists(args.gen_frm_dir):
             os.makedirs(args.gen_frm_dir)
-        train_wrapper(model)
+        train_wrapper(model, model_f, model_b)
     else:
         if not os.path.exists(args.gen_frm_dir):
             os.makedirs(args.gen_frm_dir)
