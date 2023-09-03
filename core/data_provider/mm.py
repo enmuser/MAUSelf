@@ -118,9 +118,9 @@ class MovingMNIST(data.Dataset):
         for t in range(20):
             img = images[t]
             name = str(t) + '.png'
-            file_name = os.path.join("results/mau/video/file", name)
+            file_name = os.path.join("/kaggle/working/MAUSelf/results/mau/video/file", name)
             cv2.imwrite(file_name, img.astype(np.uint8))
-        img2video(image_root="results/mau/video/file/", dst_name="results/mau/video/file/images.mp4")
+        img2video(image_root="/kaggle/working/MAUSelf/results/mau/video/file/", dst_name="/kaggle/working/MAUSelf/results/mau/video/file/images.mp4")
         backSub = cv.createBackgroundSubtractorMOG2()
         #backSub = cv.createBackgroundSubtractorKNN()
         capture = cv.VideoCapture(cv.samples.findFileOrKeep("results/mau/video/file/images.mp4"))
