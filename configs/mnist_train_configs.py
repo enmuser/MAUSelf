@@ -49,7 +49,7 @@ def configs():
     #/kaggle/input/movingmnist/model.ckpt-168000
     parser.add_argument('--pretrained_model', type=str, default='/kaggle/input/movingmnist/model.ckpt-12000')
     parser.add_argument('--pretrained_model_f', type=str, default='/kaggle/input/movingmnist/model_front.ckpt-140000')
-    parser.add_argument('--pretrained_model_b', type=str, default='/kaggle/input/movingmnist/model_back.ckpt-40000')
+    parser.add_argument('--pretrained_model_b', type=str, default='/kaggle/input/movingmnist/model_back.ckpt-60000')
     parser.add_argument('--perforamnce_dir', type=str, default='/kaggle/working/MAUSelf/results/mau/')
     parser.add_argument('--save_dir', type=str, default='/kaggle/working/MAUSelf/checkpoints/mau/')
     parser.add_argument('--gen_frm_dir', type=str, default='/kaggle/working/MAUSelf/results/mau/')
