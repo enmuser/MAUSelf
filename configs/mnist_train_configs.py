@@ -33,7 +33,7 @@ def configs():
     parser.add_argument('--tau', type=int, default=5)
     parser.add_argument('--is_training', type=str, default='True')
     parser.add_argument('--cell_mode', type=str, default='normal')
-    parser.add_argument('--model_mode', type=str, default='normal')
+    parser.add_argument('--model_mode', type=str, default='recall')
     parser.add_argument('--lr', type=float, default=1e-3)
     parser.add_argument('--lr_decay', type=float, default=0.90)
     parser.add_argument('--delay_interval', type=float, default=2000)
@@ -47,7 +47,7 @@ def configs():
     parser.add_argument('--num_save_samples', type=int, default=5)
     parser.add_argument('--n_gpu', type=int, default=1)
     #/kaggle/input/movingmnist/model.ckpt-168000
-    parser.add_argument('--pretrained_model', type=str, default='/kaggle/input/movingmnist/model.ckpt-200000')
+    parser.add_argument('--pretrained_model', type=str, default='')
     parser.add_argument('--perforamnce_dir', type=str, default='/kaggle/working/MAUSelf/results/mau/')
     parser.add_argument('--save_dir', type=str, default='/kaggle/working/MAUSelf/checkpoints/mau/')
     parser.add_argument('--gen_frm_dir', type=str, default='/kaggle/working/MAUSelf/results/mau/')

@@ -193,24 +193,10 @@ class MAUCell(nn.Module):
         T_new_3 = T_gate_3 * t_t_3 + (1 - T_gate_3) * s_t_3
         S_new_3 = S_gate_3 * s_s_3 + (1 - S_gate_3) * t_s_3
 
-        # if self.cell_mode == 'residual':
-        #     S_new = S_new + S_t
-        # T_new_gate = torch.sigmoid(T_new)
-        T_new_2_gate = torch.sigmoid(T_new_2)
-        T_new_3_gate = torch.sigmoid(T_new_3)
 
-        T_new_2 = T_new_2 * T_new_2_gate + T_new * (1 - T_new_2_gate)
-        T_new_return = T_new_3 * T_new_3_gate + T_new_2 * (1 - T_new_3_gate)
+        T_new_return = T_new_3 + T_new_2 + T_new
 
-        # T_new_return = T_new_3
+        S_new_return = S_new_3 + S_new_2 + S_new
 
-        # S_new_gate = torch.sigmoid(S_new)
-        S_new_2_gate = torch.sigmoid(S_new_2)
-        S_new_3_gate = torch.sigmoid(S_new_3)
-
-        S_new_2 = S_new_2 * S_new_2_gate + S_new * (1 - S_new_2_gate)
-        S_new_return = S_new_3 * S_new_3_gate + S_new_2 * (1 - S_new_3_gate)
-
-        # S_new_return =S_new_3
 
         return T_new_return, S_new_return
