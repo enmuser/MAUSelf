@@ -266,7 +266,7 @@ class RNN(nn.Module):
                 if itr <= self.train_level_base_line:
                     net_mask = frames_mask[:, t]
                     net_back = frames_back[:, t]
-                elif itr <= (self.train_level_base_line + 50000):
+                elif itr <= (self.train_level_base_line + 36000):
                     if t <= 17:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
