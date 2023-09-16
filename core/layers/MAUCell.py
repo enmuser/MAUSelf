@@ -31,22 +31,22 @@ class MAUCell(nn.Module):
             nn.LayerNorm([3 * num_hidden, height, width])
         )
         self.conv_t_2 = nn.Sequential(
-            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=3, stride=1, padding=1,
                       ),
             nn.LayerNorm([3 * num_hidden, height, width])
         )
         self.conv_t_3 = nn.Sequential(
-            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=7, stride=1, padding=3,
                       ),
             nn.LayerNorm([3 * num_hidden, height, width])
         )
         self.conv_t_level_one = nn.Sequential(
-            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=3, stride=1, padding=1,
                       ),
             nn.LayerNorm([3 * num_hidden, height, width])
         )
         self.conv_t_level_two = nn.Sequential(
-            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=7, stride=1, padding=3,
                       ),
             nn.LayerNorm([3 * num_hidden, height, width])
         )
@@ -56,13 +56,13 @@ class MAUCell(nn.Module):
             nn.LayerNorm([num_hidden, height, width])
         )
         self.conv_t_next_level_one = nn.Sequential(
-            nn.Conv2d(in_channel, num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(in_channel, num_hidden, kernel_size=3, stride=1, padding=1,
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
 
         self.conv_t_next_level_two = nn.Sequential(
-            nn.Conv2d(in_channel, num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(in_channel, num_hidden, kernel_size=7, stride=1, padding=3,
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
@@ -79,25 +79,25 @@ class MAUCell(nn.Module):
         )
 
         self.conv_s_2 = nn.Sequential(
-            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=3, stride=1, padding=1,
                       ),
             nn.LayerNorm([3 * num_hidden, height, width])
         )
 
         self.conv_s_3 = nn.Sequential(
-            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=7, stride=1, padding=3,
                       ),
             nn.LayerNorm([3 * num_hidden, height, width])
         )
 
         self.conv_s_level_one = nn.Sequential(
-            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=3, stride=1, padding=1,
                       ),
             nn.LayerNorm([3 * num_hidden, height, width])
         )
 
         self.conv_s_level_two = nn.Sequential(
-            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=7, stride=1, padding=3,
                       ),
             nn.LayerNorm([3 * num_hidden, height, width])
         )
@@ -109,13 +109,13 @@ class MAUCell(nn.Module):
         )
 
         self.conv_s_next_level_one = nn.Sequential(
-            nn.Conv2d(num_hidden, num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(num_hidden, num_hidden, kernel_size=3, stride=1, padding=1,
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
 
         self.conv_s_next_level_two = nn.Sequential(
-            nn.Conv2d(num_hidden, num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+            nn.Conv2d(num_hidden, num_hidden, kernel_size=7, stride=1, padding=3,
                       ),
             nn.LayerNorm([num_hidden, height, width])
         )
