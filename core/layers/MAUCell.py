@@ -78,6 +78,40 @@ class MAUCell(nn.Module):
             nn.LayerNorm([num_hidden, height, width])
         )
 
+        self.conv_t_1_concat = nn.Sequential(
+            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([3 * num_hidden, height, width])
+        )
+        self.conv_t_2_concat = nn.Sequential(
+            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([3 * num_hidden, height, width])
+        )
+        self.conv_t_3_concat = nn.Sequential(
+            nn.Conv2d(in_channel, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([3 * num_hidden, height, width])
+        )
+
+        self.conv_s_1_concat = nn.Sequential(
+            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([3 * num_hidden, height, width])
+        )
+
+        self.conv_s_2_concat = nn.Sequential(
+            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([3 * num_hidden, height, width])
+        )
+
+        self.conv_s_3_concat = nn.Sequential(
+            nn.Conv2d(num_hidden, 3 * num_hidden, kernel_size=filter_size, stride=stride, padding=self.padding,
+                      ),
+            nn.LayerNorm([3 * num_hidden, height, width])
+        )
+
         self.softmax = nn.Softmax(dim=0)
 
     def forward(self, T_t, S_t, t_att, s_att):
@@ -194,24 +228,32 @@ class MAUCell(nn.Module):
         T_new_3 = T_gate_3 * t_t_3 + (1 - T_gate_3) * s_t_3
         S_new_3 = S_gate_3 * s_s_3 + (1 - S_gate_3) * t_s_3
 
+        T_new_concat = self.conv_t_1_concat(T_new_2)
+        S_new_concat = self.conv_s_1_concat(S_new_2)
 
-        # if self.cell_mode == 'residual':
-        #     S_new = S_new + S_t
-        #T_new_gate = torch.sigmoid(T_new)
-        T_new_2_gate = torch.sigmoid(T_new_2)
-        T_new_3_gate = torch.sigmoid(T_new_3)
+        T_new_level_one_concat = self.conv_t_2_concat(T_new)
+        S_new_level_one_concat = self.conv_s_2_concat(S_new)
 
-        T_new_2 = T_new_2 * T_new_2_gate + T_new * (1 - T_new_2_gate)
-        T_new_return = T_new_3 * T_new_3_gate + T_new_2 * (1 - T_new_3_gate)
+        T_new_level_two_concat = self.conv_t_3_concat(T_new_3)
+        S_new_level_two_concat = self.conv_s_3_concat(S_new_3)
 
-        #T_new_return = T_new_3
+        t_g_new, t_t_new, t_s_new = torch.split(T_new_concat, self.num_hidden, dim=1)
+        s_g_new, s_t_new, s_s_new = torch.split(S_new_concat, self.num_hidden, dim=1)
 
-        #S_new_gate = torch.sigmoid(S_new)
-        S_new_2_gate = torch.sigmoid(S_new_2)
-        S_new_3_gate = torch.sigmoid(S_new_3)
+        t_g_one, t_t_one, t_s_one = torch.split(T_new_level_one_concat, self.num_hidden, dim=1)
+        s_g_one, s_t_one, s_s_one = torch.split(S_new_level_one_concat, self.num_hidden, dim=1)
 
-        S_new_2 = S_new_2 * S_new_2_gate + S_new * (1 - S_new_2_gate)
-        S_new_return = S_new_3 * S_new_3_gate + S_new_2 * (1 - S_new_3_gate)
+        t_g_two, t_t_two, t_s_two = torch.split(T_new_level_two_concat, self.num_hidden, dim=1)
+        s_g_two, s_t_two, s_s_two = torch.split(S_new_level_two_concat, self.num_hidden, dim=1)
+
+        T_gate_new = torch.sigmoid(t_g_new)
+        S_gate_new = torch.sigmoid(s_g_new)
+
+        T_gate_one = torch.sigmoid(t_g_one)
+        S_gate_one = torch.sigmoid(s_g_one)
+
+        T_new_return = T_gate_one * (T_gate_new * t_t_new + (1 - T_gate_new) * t_t_one) + (1 - T_gate_one) * t_t_two
+        S_new_return = S_gate_one * (S_gate_new * s_t_new + (1 - S_gate_new) * s_t_one) + (1 - S_gate_one) * s_t_two
 
         #S_new_return =S_new_3
 
