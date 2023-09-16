@@ -74,8 +74,8 @@ class RNN(nn.Module):
                                module=nn.Conv2d(in_channels=self.num_hidden[0],
                                                 out_channels=self.num_hidden[0],
                                                 stride=(2, 2),
-                                                padding=(1, 1),
-                                                kernel_size=(3, 3)
+                                                padding=(2, 2),
+                                                kernel_size=(5, 5)
                                                 ))
             encoder_mask.add_module(name='encoder_t_relu{0}'.format(i),
                                module=nn.LeakyReLU(0.2))
@@ -100,8 +100,8 @@ class RNN(nn.Module):
                                module=nn.Conv2d(in_channels=self.num_hidden[0],
                                                 out_channels=self.num_hidden[0],
                                                 stride=(2, 2),
-                                                padding=(1, 1),
-                                                kernel_size=(3, 3)
+                                                padding=(3, 3),
+                                                kernel_size=(7, 7)
                                                 ))
             encoder_back.add_module(name='encoder_t_relu{0}'.format(i),
                                module=nn.LeakyReLU(0.2))
@@ -145,8 +145,8 @@ class RNN(nn.Module):
                                module=nn.ConvTranspose2d(in_channels=self.num_hidden[-1],
                                                          out_channels=self.num_hidden[-1],
                                                          stride=(2, 2),
-                                                         padding=(1, 1),
-                                                         kernel_size=(3, 3),
+                                                         padding=(2, 2),
+                                                         kernel_size=(5, 5),
                                                          output_padding=(1, 1)
                                                          ))
             decoder_mask.add_module(name='c_decoder_relu{0}'.format(i),
@@ -159,8 +159,8 @@ class RNN(nn.Module):
                                module=nn.ConvTranspose2d(in_channels=self.num_hidden[-1],
                                                          out_channels=self.num_hidden[-1],
                                                          stride=(2, 2),
-                                                         padding=(1, 1),
-                                                         kernel_size=(3, 3),
+                                                         padding=(2, 2),
+                                                         kernel_size=(5, 5),
                                                          output_padding=(1, 1)
                                                          ))
             decoders_mask.append(decoder_mask)
@@ -173,8 +173,8 @@ class RNN(nn.Module):
                                module=nn.ConvTranspose2d(in_channels=self.num_hidden[-1],
                                                          out_channels=self.num_hidden[-1],
                                                          stride=(2, 2),
-                                                         padding=(1, 1),
-                                                         kernel_size=(3, 3),
+                                                         padding=(3, 3),
+                                                         kernel_size=(7, 7),
                                                          output_padding=(1, 1)
                                                          ))
             decoder_back.add_module(name='c_decoder_relu{0}'.format(i),
@@ -187,8 +187,8 @@ class RNN(nn.Module):
                                module=nn.ConvTranspose2d(in_channels=self.num_hidden[-1],
                                                          out_channels=self.num_hidden[-1],
                                                          stride=(2, 2),
-                                                         padding=(1, 1),
-                                                         kernel_size=(3, 3),
+                                                         padding=(3, 3),
+                                                         kernel_size=(7, 7),
                                                          output_padding=(1, 1)
                                                          ))
             decoders_back.append(decoder_back)
@@ -252,87 +252,16 @@ class RNN(nn.Module):
         for t in range(self.configs.total_length - 1):
             if t < self.configs.input_length:
                 net = frames[:, t]
-                net_mask = frames_mask[:, t]
-                net_back = frames_back[:, t]
             else:
-                # time_diff = t - self.configs.input_length
-                # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
-                # net_mask = mask_true[:, time_diff] * frames_mask[:, t] + (1 - mask_true[:, time_diff]) * x_gen_mask
-                # net_back = mask_true[:, time_diff] * frames_back[:, t] + (1 - mask_true[:, time_diff]) * x_gen_back
-                # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
-                # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
-                # net_back = frames_back[:, (self.configs.input_length - 1)]
-                # print("Itr: ", itr)
-                if itr <= self.train_level_base_line:
-                    net_mask = frames_mask[:, t]
-                    net_back = frames_back[:, t]
-                elif itr <= (self.train_level_base_line + 50000):
-                    if t <= 17:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 150000):
-                    if t <= 16:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 300000):
-                    if t <= 15:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 450000):
-                    if t <= 14:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 600000):
-                    if t <= 13:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 750000):
-                    if t <= 12:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 900000):
-                    if t <= 11:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 1050000):
-                    if t <= 10:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                else:
-                    net_mask = x_gen_mask
-                    net_back = x_gen_back
-                net = x_gen
+                time_diff = t - self.configs.input_length
+                net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
             # net_mask = frames_mask[:, t]
             # net_back = frames_back[:, t]
             frames_feature = net
             frames_feature_encoded = []
-            frames_feature_mask = net_mask
+            frames_feature_mask = net
             frames_feature_mask_encoded = []
-            frames_feature_back = net_back
+            frames_feature_back = net
             frames_feature_back_encoded = []
             for i in range(len(self.encoders)):
                 frames_feature = self.encoders[i](frames_feature)
@@ -399,8 +328,8 @@ class RNN(nn.Module):
                     out_back = out_back + frames_feature_back_encoded[-2 - i]
 
             x_gen = self.srcnn(out)
-            x_gen_mask = self.srcnn_mask(out_mask)
-            x_gen_back = self.srcnn_back(out_back)
+            # x_gen_mask = self.srcnn_mask(out_mask)
+            # x_gen_back = self.srcnn_back(out_back)
             next_frames.append(x_gen)
         next_frames = torch.stack(next_frames, dim=0).permute(1, 0, 2, 3, 4).contiguous()
         return next_frames
