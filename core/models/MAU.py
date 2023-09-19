@@ -255,79 +255,9 @@ class RNN(nn.Module):
                 net_mask = frames_mask[:, t]
                 net_back = frames_back[:, t]
             else:
-                # time_diff = t - self.configs.input_length
-                # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
-                # net_mask = mask_true[:, time_diff] * frames_mask[:, t] + (1 - mask_true[:, time_diff]) * x_gen_mask
-                # net_back = mask_true[:, time_diff] * frames_back[:, t] + (1 - mask_true[:, time_diff]) * x_gen_back
-                # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
-                # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
-                # net_back = frames_back[:, (self.configs.input_length - 1)]
-                # print("Itr: ", itr)
-                if itr <= self.train_level_base_line:
-                    net_mask = frames_mask[:, t]
-                    net_back = frames_back[:, t]
-                elif itr <= (self.train_level_base_line + 50000):
-                    if t <= 17:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 150000):
-                    if t <= 16:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 300000):
-                    if t <= 15:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 450000):
-                    if t <= 14:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 600000):
-                    if t <= 13:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 750000):
-                    if t <= 12:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 900000):
-                    if t <= 11:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 1050000):
-                    if t <= 10:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                else:
-                    net_mask = x_gen_mask
-                    net_back = x_gen_back
+                net_mask = frames_mask[:, t]
+                net_back = frames_back[:, t]
                 net = x_gen
-            # net_mask = frames_mask[:, t]
-            # net_back = frames_back[:, t]
             frames_feature = net
             frames_feature_encoded = []
             frames_feature_mask = net_mask
