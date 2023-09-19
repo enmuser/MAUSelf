@@ -206,7 +206,7 @@ class RNN(nn.Module):
         self.merge = nn.Conv2d(self.num_hidden[-1] * 2, self.num_hidden[-1], kernel_size=1, stride=1, padding=0)
         self.conv_last_sr = nn.Conv2d(self.frame_channel * 2, self.frame_channel, kernel_size=1, stride=1, padding=0)
 
-    def forward(self, frames, frames_mask, frames_back, mask_true,itr):
+    def forward(self, frames, frames_mask, frames_back, img_gen_f, img_gen_b, mask_true,itr):
         # print('ok')
         mask_true = mask_true.permute(0, 1, 4, 2, 3).contiguous()
         batch_size = frames.shape[0]
@@ -255,8 +255,8 @@ class RNN(nn.Module):
                 net_mask = frames_mask[:, t]
                 net_back = frames_back[:, t]
             else:
-                net_mask = frames_mask[:, t]
-                net_back = frames_back[:, t]
+                net_mask = img_gen_f[:, t]
+                net_back = img_gen_b[:, t]
                 net = x_gen
             frames_feature = net
             frames_feature_encoded = []

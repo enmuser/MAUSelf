@@ -117,7 +117,7 @@ def train_wrapper(model,model_f,model_b):
             img_gen_f = model_f.test(ims_mask, real_input_flag_f)
             # trainer_F.test(ims_mask, img_gen_f, args, "aaaaa",itr)
             # ims_mask_ori = ims_mask
-            ims_mask[:, -10:] = img_gen_f[:, -10:]
+            #ims_mask[:, -10:] = img_gen_f[:, -10:]
             # trainer_F.test(ims_mask_ori, ims_mask, args, "bbbbb",itr)
             real_input_flag_b = np.zeros(
                 (batch_size,
@@ -128,7 +128,7 @@ def train_wrapper(model,model_f,model_b):
             img_gen_b = model_b.test(ims_back, real_input_flag_b)
             #trainer_B.test(ims_back, img_gen_b, args, "aaaaa",itr)
             #ims_back_ori = ims_back
-            ims_back[:, -10:] = img_gen_b[:, -10:]
+            #ims_back[:, -10:] = img_gen_b[:, -10:]
             #trainer_B.test(ims_back_ori, ims_back, args, "bbbbb",itr)
 
             if itr > args.max_iterations:
@@ -137,8 +137,8 @@ def train_wrapper(model,model_f,model_b):
             eta, real_input_flag = schedule_sampling(eta, itr, args.img_channel, batch_size)
             if itr % args.test_interval == 0:
                 print('Validate:')
-                trainer.test(model, val_input_handle, args, itr)
-            trainer.train(model, ims, ims_mask, ims_back, real_input_flag, args, itr)
+                trainer.test(model, val_input_handle, args, itr, model_f, model_b)
+            trainer.train(model, ims, ims_mask, ims_back, img_gen_f, img_gen_b, real_input_flag, args, itr)
             # snapshot_interval = 1000 每1000次保存一次
             if itr % args.snapshot_interval == 0 and itr > begin:
                 model.save(itr)
@@ -148,7 +148,7 @@ def train_wrapper(model,model_f,model_b):
             print("GPU memory:%dM" % ((meminfo_end.used - meminfo_begin.used) / (1024 ** 2)))
 
 
-def test_wrapper(model):
+def test_wrapper(model, model_f, model_b):
     model.load(args.pretrained_model)
     test_input_handle = datasets_factory.data_provider(configs=args,
                                                        data_train_path=args.data_train_path,
@@ -160,7 +160,7 @@ def test_wrapper(model):
 
     itr = 1
     for i in range(itr):
-        trainer.test(model, test_input_handle, args, itr)
+        trainer.test(model, test_input_handle, args, itr, model_f, model_b)
 
 
 if __name__ == '__main__':
@@ -186,4 +186,4 @@ if __name__ == '__main__':
     else:
         if not os.path.exists(args.gen_frm_dir):
             os.makedirs(args.gen_frm_dir)
-        test_wrapper(model)
+        test_wrapper(model, model_f, model_b)
