@@ -48,8 +48,8 @@ def configs():
     parser.add_argument('--n_gpu', type=int, default=1)
     #/kaggle/input/movingmnist/model.ckpt-168000
     parser.add_argument('--pretrained_model', type=str, default='/kaggle/input/movingmnist/model.ckpt-21000')
-    parser.add_argument('--pretrained_model_f', type=str, default='/kaggle/input/movingmnist/model_front.ckpt-218000')
-    parser.add_argument('--pretrained_model_b', type=str, default='/kaggle/input/movingmnist/model_back.ckpt-120000')
+    parser.add_argument('--pretrained_model_f', type=str, default='/kaggle/input/movingmnist/model_front.ckpt-273000')
+    parser.add_argument('--pretrained_model_b', type=str, default='/kaggle/input/movingmnist/model_back.ckpt-37000')
     parser.add_argument('--perforamnce_dir', type=str, default='/kaggle/working/MAUSelf/results/mau/')
     parser.add_argument('--save_dir', type=str, default='/kaggle/working/MAUSelf/checkpoints/mau/')
     parser.add_argument('--gen_frm_dir', type=str, default='/kaggle/working/MAUSelf/results/mau/')
