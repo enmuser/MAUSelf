@@ -11,7 +11,7 @@ pynvml.nvmlInit()
 # -----------------------------------------------------------------------------
 parser = argparse.ArgumentParser(description='MAU')
 parser.add_argument('--dataset', type=str, default='mnist')
-parser.add_argument('--is_train', type=str, default='False', required=True)
+parser.add_argument('--is_train', type=str, default='True', required=False)
 args_main = parser.parse_args()
 args_main.tied = True
 
@@ -100,15 +100,16 @@ def train_wrapper(model):
     for epoch in range(0, args.max_epoches):
         if itr > args.max_iterations:
             break
-        for ims in train_input_handle:
+        for ims, ims_mask, ims_back in train_input_handle:
             if itr > args.max_iterations:
                 break
-            batch_size = ims.shape[0]
+            batch_size = ims_mask.shape[0]
             eta, real_input_flag = schedule_sampling(eta, itr, args.img_channel, batch_size)
             if itr % args.test_interval == 0:
                 print('Validate:')
                 trainer.test(model, val_input_handle, args, itr)
-            trainer.train(model, ims, real_input_flag, args, itr)
+            trainer.train(model, ims_mask, real_input_flag, args, itr)
+            # snapshot_interval = 1000 每1000次保存一次
             if itr % args.snapshot_interval == 0 and itr > begin:
                 model.save(itr)
             itr += 1
