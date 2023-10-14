@@ -97,6 +97,7 @@ def img2video(image_root, dst_name, fps=24):
     """
     img_list = os.listdir(image_root)
     img_list = sort_insert_filename(img_list)
+    cv2.waitKey(10)
     #print(img_list)
     if len(img_list) > 0:
         # 检测图片的长和宽
