@@ -1,11 +1,12 @@
-import gzip
-import math
+import cv2
 import numpy as np
 import os
-from PIL import Image
 import random
 import torch
 import torch.utils.data as data
+import cv2 as cv
+
+from core.utils.ImagesToVideo import img2video
 
 def load_mnist(root):
     path = os.path.join(root, 'train-images.idx3-ubyte')
@@ -13,7 +14,6 @@ def load_mnist(root):
         mnist = np.frombuffer(f.read(), np.uint8, offset=16)
         mnist = mnist.reshape(-1, 28, 28)
     return mnist
-
 
 
 def load_fixed_set(root, is_train):
@@ -112,9 +112,53 @@ class MovingMNIST(data.Dataset):
             images = self.dataset[:, idx, ...]
         r = 1
         w = int(64 / r)
+        img = np.ones((64, 64, 1))
+        img_mask = np.ones((20, 64, 64, 1))
+        img_background = np.ones((20, 64, 64, 1))
+        for t in range(20):
+            img = images[t]
+            name = str(t) + '.png'
+            file_name = os.path.join("results/mau/video/file", name)
+            cv2.imwrite(file_name, img.astype(np.uint8))
+        img2video(image_root="results/mau/video/file/", dst_name="results/mau/video/file/images.mp4")
+        # backSub = cv.createBackgroundSubtractorMOG2()
+        backSub = cv.createBackgroundSubtractorKNN()
+        capture = cv.VideoCapture(cv.samples.findFileOrKeep("results/mau/video/file/images.mp4"))
+        count = 0
+        while True:
+            ret, frame = capture.read()
+            if frame is None:
+                break
+            fgMask = backSub.apply(frame)
+            fgMask = np.expand_dims(fgMask, axis=2)
+            img_mask[count] = fgMask
+            background = backSub.getBackgroundImage()
+            background_0 = background[:, :, 0]
+            background_0 = np.expand_dims(background_0, axis=2)
+            img_background[count] = background_0
+            count += 1
+            #print("count=", count)
+
+
+        # 20 * 1 * 64 * 64
         images = images.reshape((length, w, r, w, r)).transpose(0, 2, 4, 1, 3).reshape((length, r * r, w, w))
+        images_mask = img_mask.reshape((length, w, r, w, r)).transpose(0, 2, 4, 1, 3).reshape((length, r * r, w, w))
+        images_background = img_background.reshape((length, w, r, w, r)).transpose(0, 2, 4, 1, 3).reshape((length, r * r, w, w))
+        # img = np.ones((64, 64, 1))
+        # capture = cv.VideoCapture(cv.s)
         output = torch.from_numpy(images / 255.0).contiguous().float()
-        return output
+        output_mask = torch.from_numpy(images_mask / 255.0).contiguous().float()
+        output_background = torch.from_numpy(images_background / 255.0).contiguous().float()
+        # for t in range(19):
+        #     net = images[t]
+        #
+        #     backSub = cv.createBackgroundSubtractorMOG2()
+        #     fgMask = backSub.apply(net)
+        #     background = backSub.getBackgroundImage()
+        #     cv.imshow('Frame', net)
+        #     cv.imshow('FG Background', background)
+        #     cv.imshow('FG Mask', fgMask)
+        return output, output_mask, output_background
 
     def __len__(self):
         return self.length
