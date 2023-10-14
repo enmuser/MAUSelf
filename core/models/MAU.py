@@ -1,14 +1,16 @@
 import torch
 import torch.nn as nn
-from core.layers.MAUCell import MAUCell
+from core.layers.MAUCell import STAUCell
 import math
-import random
+
 
 class RNN(nn.Module):
     def __init__(self, num_layers, num_hidden, configs):
         super(RNN, self).__init__()
+        # print(configs.srcnn_tf)
         self.configs = configs
-        self.frame_channel = configs.patch_size * configs.patch_size * configs.img_channel
+        self.frame_channel = configs.patch_size * \
+            configs.patch_size * configs.img_channel
         self.num_layers = num_layers
         self.num_hidden = num_hidden
         self.tau = configs.tau
@@ -16,16 +18,18 @@ class RNN(nn.Module):
         self.states = ['recall', 'normal']
         if not self.configs.model_mode in self.states:
             raise AssertionError
+        # self.time = 2
         cell_list = []
 
         width = configs.img_width // configs.patch_size // configs.sr_size
         height = configs.img_height // configs.patch_size // configs.sr_size
+        # print(width)
 
         for i in range(num_layers):
             in_channel = num_hidden[i - 1]
             cell_list.append(
-                MAUCell(in_channel, num_hidden[i], height, width, configs.filter_size,
-                        configs.stride, self.tau, self.cell_mode)
+                STAUCell(in_channel, num_hidden[i], height, width, configs.filter_size,
+                           configs.stride, self.tau, self.cell_mode)
             )
         self.cell_list = nn.ModuleList(cell_list)
 
@@ -51,6 +55,8 @@ class RNN(nn.Module):
                                                 padding=(1, 1),
                                                 kernel_size=(3, 3)
                                                 ))
+            # self.encoder_t.add_module(name='gn_t{0}'.format(i),
+            #                           module=nn.GroupNorm(4, self.frame_channel))
             encoder.add_module(name='encoder_t_relu{0}'.format(i),
                                module=nn.LeakyReLU(0.2))
             encoders.append(encoder)
@@ -69,6 +75,8 @@ class RNN(nn.Module):
                                                          kernel_size=(3, 3),
                                                          output_padding=(1, 1)
                                                          ))
+            # self.decoder_s.add_module(name='gn_decoder_s{0}'.format(i),
+            #                           module=nn.GroupNorm(4, self.frame_channel))
             decoder.add_module(name='c_decoder_relu{0}'.format(i),
                                module=nn.LeakyReLU(0.2))
             decoders.append(decoder)
@@ -87,10 +95,13 @@ class RNN(nn.Module):
         self.decoders = nn.ModuleList(decoders)
 
         self.srcnn = nn.Sequential(
-            nn.Conv2d(self.num_hidden[-1], self.frame_channel, kernel_size=1, stride=1, padding=0)
+            nn.Conv2d(self.num_hidden[-1], self.frame_channel,
+                      kernel_size=1, stride=1, padding=0)
         )
-        self.merge = nn.Conv2d(self.num_hidden[-1] * 2, self.num_hidden[-1], kernel_size=1, stride=1, padding=0)
-        self.conv_last_sr = nn.Conv2d(self.frame_channel * 2, self.frame_channel, kernel_size=1, stride=1, padding=0)
+        self.merge = nn.Conv2d(
+            self.num_hidden[-1] * 2, self.num_hidden[-1], kernel_size=1, stride=1, padding=0)
+        self.conv_last_sr = nn.Conv2d(
+            self.frame_channel * 2, self.frame_channel, kernel_size=1, stride=1, padding=0)
 
     def forward(self, frames, mask_true):
         # print('ok')
@@ -103,6 +114,8 @@ class RNN(nn.Module):
         T_t = []
         T_pre = []
         S_pre = []
+        # features = {}
+        # H_t = []
         x_gen = None
         for layer_idx in range(self.num_layers):
             tmp_t = []
@@ -112,17 +125,22 @@ class RNN(nn.Module):
             else:
                 in_channel = self.num_hidden[layer_idx - 1]
             for i in range(self.tau):
-                tmp_t.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
-                tmp_s.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
+                tmp_t.append(torch.zeros(
+                    [batch_size, in_channel, height, width]).to(self.configs.device))
+                tmp_s.append(torch.zeros(
+                    [batch_size, in_channel, height, width]).to(self.configs.device))
             T_pre.append(tmp_t)
             S_pre.append(tmp_s)
 
         for t in range(self.configs.total_length - 1):
+            S_lower = []
+            T_lower = []
             if t < self.configs.input_length:
                 net = frames[:, t]
             else:
                 time_diff = t - self.configs.input_length
-                net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
+                net = mask_true[:, time_diff] * frames[:, t] + \
+                    (1 - mask_true[:, time_diff]) * x_gen
             frames_feature = net
             frames_feature_encoded = []
             for i in range(len(self.encoders)):
@@ -130,26 +148,41 @@ class RNN(nn.Module):
                 frames_feature_encoded.append(frames_feature)
             if t == 0:
                 for i in range(self.num_layers):
-                    zeros = torch.zeros([batch_size, self.num_hidden[i], height, width]).to(self.configs.device)
+                    zeros = torch.zeros([batch_size, self.num_hidden[i], height, width]).to(
+                        self.configs.device)
                     T_t.append(zeros)
+                    # print('ok')
             S_t = frames_feature
             for i in range(self.num_layers):
+                S_lower.append(S_t)
+                T_lower.append(T_t[i])
+                s_spatial = S_lower[max(len(S_lower)-self.configs.tau,0):]
+                s_spatial = torch.stack(s_spatial, dim=0)
+                t_spatial = T_lower[max(len(T_lower)-self.configs.tau,0):]
+                t_spatial = torch.stack(t_spatial, dim=0)
                 t_att = T_pre[i][-self.tau:]
                 t_att = torch.stack(t_att, dim=0)
                 s_att = S_pre[i][-self.tau:]
                 s_att = torch.stack(s_att, dim=0)
                 S_pre[i].append(S_t)
-                T_t[i], S_t = self.cell_list[i](T_t[i], S_t, t_att, s_att)
+                T_t[i], S_t = self.cell_list[i](T_t[i], S_t, t_att, s_att, t_spatial, s_spatial)
+                # if(i==self.num_layers-1 and t>=self.configs.tau):
+                #     features[str(t)+str(i)] = features_cur_unit
                 T_pre[i].append(T_t[i])
+                # S_pre[i].append(S_t)
             out = S_t
             # out = self.merge(torch.cat([T_t[-1], S_t], dim=1))
             frames_feature_decoded = []
             for i in range(len(self.decoders)):
                 out = self.decoders[i](out)
+                # print("ok")
                 if self.configs.model_mode == 'recall':
+                    # print('unet')
                     out = out + frames_feature_encoded[-2 - i]
+            # out = self.decoder(out)
 
             x_gen = self.srcnn(out)
             next_frames.append(x_gen)
-        next_frames = torch.stack(next_frames, dim=0).permute(1, 0, 2, 3, 4).contiguous()
+        next_frames = torch.stack(next_frames, dim=0).permute(
+            1, 0, 2, 3, 4).contiguous()
         return next_frames
