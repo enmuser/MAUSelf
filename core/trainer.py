@@ -55,7 +55,7 @@ def test(model, test_input_handle, configs, itr):
         if batch_id > configs.num_save_samples:
             break
         # num_save_samples = 5
-        for data in test_input_handle:
+        for data_mask, data, data_back in test_input_handle:
             if batch_id > configs.num_save_samples:
                 break
             print(batch_id)

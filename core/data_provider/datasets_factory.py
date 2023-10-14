@@ -15,7 +15,8 @@ def data_provider(dataset, configs, data_train_path, data_test_path, batch_size,
     dataset = MovingMNIST(is_train=is_training,
                           root=root,
                           n_frames=20,
-                          num_objects=[2],in_channel=in_channel)
+                          num_objects=[2],
+                          in_channel=in_channel)
     return DataLoader(dataset,
                       pin_memory=True,
                       batch_size=batch_size,
