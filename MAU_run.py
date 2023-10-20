@@ -7,6 +7,8 @@ import core.trainer as trainer
 import pynvml
 import cv2 as cv
 
+from core.models.model_factory_B import Model_B
+from core.models.model_factory_F import Model_F
 
 pynvml.nvmlInit()
 # -----------------------------------------------------------------------------
@@ -69,7 +71,7 @@ def schedule_sampling(eta, itr, channel, batch_size):
     return eta, real_input_flag
 
 
-def train_wrapper(model):
+def train_wrapper(model, model_f, model_b):
     begin = 0
     handle = pynvml.nvmlDeviceGetHandleByIndex(0)
     meminfo_begin = pynvml.nvmlDeviceGetMemoryInfo(handle)
@@ -77,6 +79,10 @@ def train_wrapper(model):
     if args.pretrained_model:
         model.load(args.pretrained_model)
         begin = int(args.pretrained_model.split('-')[-1])
+    if args.pretrained_model_f:
+        model_f.load(args.pretrained_model_f)
+    if args.pretrained_model_b:
+        model_b.load(args.pretrained_model_b)
 
     train_input_handle = datasets_factory.data_provider(configs=args,
                                                         data_train_path=args.data_train_path,
@@ -100,14 +106,33 @@ def train_wrapper(model):
         if itr > args.max_iterations:
             break
         for ims, ims_mask, ims_back in train_input_handle:
+            batch_size = ims.shape[0]
+            real_input_flag_f = np.zeros(
+                (batch_size,
+                 args.total_length - args.input_length - 1,
+                 args.img_height // args.patch_size,
+                 args.img_width // args.patch_size,
+                 args.patch_size ** 2 * args.img_channel))
+            img_gen_f = model_f.test(ims_mask, real_input_flag_f)
+            # trainer_F.test(ims_mask, img_gen_f, args, "aaaaa",itr)
+            # ims_mask_ori = ims_mask
+            # ims_mask[:, -10:] = img_gen_f[:, -10:]
+            # trainer_F.test(ims_mask_ori, ims_mask, args, "bbbbb",itr)
+            real_input_flag_b = np.zeros(
+                (batch_size,
+                 args.total_length - args.input_length - 1,
+                 args.img_height // args.patch_size,
+                 args.img_width // args.patch_size,
+                 args.patch_size ** 2 * args.img_channel))
+            img_gen_b = model_b.test(ims_back, real_input_flag_b)
             if itr > args.max_iterations:
                 break
             batch_size = ims.shape[0]
             eta, real_input_flag = schedule_sampling(eta, itr, args.img_channel, batch_size)
             if itr % args.test_interval == 0:
                 print('Validate:')
-                trainer.test(model, val_input_handle, args, itr)
-            trainer.train(model, ims, ims_mask, ims_back, real_input_flag, args, itr)
+                trainer.test(model, val_input_handle, args, itr, model_f, model_b)
+            trainer.train(model, ims, ims_mask, ims_back, img_gen_f, img_gen_b, real_input_flag, args, itr)
             # snapshot_interval = 1000 每1000次保存一次
             if itr % args.snapshot_interval == 0 and itr > begin:
                 model.save(itr)
@@ -117,7 +142,7 @@ def train_wrapper(model):
             print("GPU memory:%dM" % ((meminfo_end.used - meminfo_begin.used) / (1024 ** 2)))
 
 
-def test_wrapper(model):
+def test_wrapper(model, model_f, model_b):
     model.load(args.pretrained_model)
     test_input_handle = datasets_factory.data_provider(configs=args,
                                                        data_train_path=args.data_train_path,
@@ -129,7 +154,7 @@ def test_wrapper(model):
 
     itr = 1
     for i in range(itr):
-        trainer.test(model, test_input_handle, args, itr)
+        trainer.test(model, test_input_handle, args, itr, model_f, model_b)
 
 
 if __name__ == '__main__':
@@ -143,14 +168,16 @@ if __name__ == '__main__':
         args.is_training = False
 
     model = Model(args)
+    model_f = Model_F(args)
+    model_b = Model_B(args)
 
     if args.is_training:
         if not os.path.exists(args.save_dir):
             os.makedirs(args.save_dir)
         if not os.path.exists(args.gen_frm_dir):
             os.makedirs(args.gen_frm_dir)
-        train_wrapper(model)
+        train_wrapper(model, model_f, model_b)
     else:
         if not os.path.exists(args.gen_frm_dir):
             os.makedirs(args.gen_frm_dir)
-        test_wrapper(model)
+        test_wrapper(model, model_f, model_b)

@@ -12,15 +12,15 @@ import codecs
 import lpips
 
 
-def train(model, ims, ims_mask, ims_back, real_input_flag, configs, itr):
-    _, loss_l1, loss_l2 = model.train(ims, ims_mask, ims_back, real_input_flag, itr)
+def train(model, ims, ims_mask, ims_back, img_gen_f,img_gen_b, real_input_flag, configs, itr):
+    _, loss_l1, loss_l2 = model.train(ims, ims_mask, ims_back, img_gen_f, img_gen_b, real_input_flag, itr)
     # display_interval = 1 打印损失的频次
     if itr % configs.display_interval == 0:
         print('itr: ' + str(itr),
               'training L1 loss: ' + str(loss_l1), 'training L2 loss: ' + str(loss_l2))
 
 
-def test(model, test_input_handle, configs, itr):
+def test(model, test_input_handle, configs, itr, model_f, model_b):
     print('test...')
     loss_fn = lpips.LPIPS(net='alex', spatial=True).to(configs.device)
     # gen_frm_dir = results/mau/
@@ -76,7 +76,7 @@ def test(model, test_input_handle, configs, itr):
                  configs.patch_size ** 2 * configs.img_channel))
             # data = 16 * 20 * 1 * 64 * 64
             # img_gen = # 16 * 19 * 1 * 64 * 64
-            img_gen = model.test(data,data_mask, data_back, real_input_flag,itr)
+            img_gen = model.test(data,data_mask, data_back, real_input_flag, itr, model_f, model_b)
             # img_gen = 16 * 19 * 1 * 64 * 64 -> 16 * 19 * 64 * 64 * 1
             img_gen = img_gen.transpose(0, 1, 3, 4, 2)  # * 0.5 + 0.5
             # data = 16 * 20 * 1 * 64 * 64 -> 16 * 20 * 64 * 64 * 1 = test_ims
