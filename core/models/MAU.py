@@ -292,39 +292,55 @@ class RNN(nn.Module):
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
                     else:
-                        net_mask = img_gen_f[:, t]
-                        net_back = img_gen_b[:, t]
+                        net_mask = x_gen_mask
+                        net_back = x_gen_back
                 elif itr <= (self.train_level_base_line + 600000):
                     if t <= 13:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
-                    else:
+                    elif t <= 14:
                         net_mask = img_gen_f[:, t]
                         net_back = img_gen_b[:, t]
+                    else:
+                        net_mask = x_gen_mask
+                        net_back = x_gen_back
                 elif itr <= (self.train_level_base_line + 750000):
                     if t <= 12:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
-                    else:
+                    elif t <= 14:
                         net_mask = img_gen_f[:, t]
                         net_back = img_gen_b[:, t]
+                    else:
+                        net_mask = x_gen_mask
+                        net_back = x_gen_back
                 elif itr <= (self.train_level_base_line + 900000):
                     if t <= 11:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
-                    else:
+                    elif t <= 14:
                         net_mask = img_gen_f[:, t]
                         net_back = img_gen_b[:, t]
+                    else:
+                        net_mask = x_gen_mask
+                        net_back = x_gen_back
                 elif itr <= (self.train_level_base_line + 1050000):
                     if t <= 10:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
-                    else:
+                    elif t <= 14:
                         net_mask = img_gen_f[:, t]
                         net_back = img_gen_b[:, t]
+                    else:
+                        net_mask = x_gen_mask
+                        net_back = x_gen_back
                 else:
-                    net_mask = img_gen_f[:, t]
-                    net_back = img_gen_b[:, t]
+                    if t <= 14:
+                        net_mask = img_gen_f[:, t]
+                        net_back = img_gen_b[:, t]
+                    else:
+                        net_mask = x_gen_mask
+                        net_back = x_gen_back
                 net = x_gen
             # net_mask = frames_mask[:, t]
             # net_back = frames_back[:, t]
