@@ -13,6 +13,7 @@ def configs():
     parser.add_argument('--input_length', type=int, default=10)
     parser.add_argument('--real_length', type=int, default=20)
     parser.add_argument('--total_length', type=int, default=20)
+    parser.add_argument('--pred_length', type=int, default=10)
     parser.add_argument('--img_height', type=int, default=64)
     parser.add_argument('--img_width', type=int, default=64)
     parser.add_argument('--sr_size', type=int, default=4)
