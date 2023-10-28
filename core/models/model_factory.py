@@ -8,6 +8,7 @@ from core.models import MAU
 # from core.models import STAUv2
 # from core.models import AAUv2
 import torch.optim.lr_scheduler as lr_scheduler
+import torch.nn.functional as F
 
 class Model(object):
     def __init__(self, configs):
@@ -39,6 +40,7 @@ class Model(object):
         self.scheduler = lr_scheduler.ExponentialLR(self.optimizer, gamma=configs.lr_decay)
 
         self.MSE_criterion = nn.MSELoss()
+        self.KLDivLoss = nn.KLDivLoss()
         self.L1_loss = nn.L1Loss()
 
     def save(self, itr):
@@ -68,7 +70,13 @@ class Model(object):
                                ground_truth[:, 1:])
         loss_l2 = self.MSE_criterion(next_frames,
                                      ground_truth[:, 1:])
-        loss_gen = loss_l2
+        input = F.log_softmax(next_frames, dim=1)
+        target = F.softmax(ground_truth[:, 1:], dim=1)
+        loss_l3 = self.KLDivLoss(input, target)
+        print('loss_l2: ', loss_l2)
+        print('loss_l3 * 100: ', loss_l3 * 100)
+        loss_gen = loss_l2 + 100 * loss_l3
+        print('loss_gen: ', loss_gen)
         loss_gen.backward()
         self.optimizer.step()
 
