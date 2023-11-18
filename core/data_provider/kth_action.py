@@ -55,8 +55,6 @@ class KTH(Dataset):
     NUM_HMAP_CHANNELS = [NUM_KPOINTS - 1, 1]
     STRUCT_TYPE = "KEYPOINT_BLOBS"
 
-    ALL_IDX = None
-    IDX_TO_CLS_VID_SEQ = None
     train_to_val_ratio = 0.98
     first_frame_rng_seed = 1234
 
@@ -87,20 +85,15 @@ class KTH(Dataset):
         print('current kth image channel ', num_channels)
         if img_size == 128:
             self._change_file_sequences()
+        self.ALL_IDX = None
+        self.IDX_TO_CLS_VID_SEQ = None
         # list of valid (cls, vid_idx, seq_idx) tuples
-        if KTH.ALL_IDX is None:
-            KTH.IDX_TO_CLS_VID_SEQ = self._find_valid_sequences()
-            KTH.ALL_IDX = list(range(0, len(KTH.IDX_TO_CLS_VID_SEQ)))
-        self.idx_list = KTH.ALL_IDX
-        train_len = int(len(KTH.ALL_IDX) * self.train_to_val_ratio)
-        if self.is_training:
-           self.idx_list = self.idx_list[:train_len]
-        else:
-           self.idx_list = self.idx_list[train_len:]
-        # if self.split != "test":
-        #     train_len = int(len(KTH.ALL_IDX) * self.train_to_val_ratio)
-        #     self.idx_list = self.idx_list[:train_len] if self.split == "train" else self.idx_list[train_len:]
-
+        if self.ALL_IDX is None:
+            self.IDX_TO_CLS_VID_SEQ = self._find_valid_sequences()
+            self.ALL_IDX = list(range(0, len(self.IDX_TO_CLS_VID_SEQ)))
+        if self.is_training :
+            random.shuffle(self.ALL_IDX)
+        self.idx_list = self.ALL_IDX
     def _is_valid_sequence(self, seq, cls):
         """ Exploit short sequences of specific classes by extending them with repeated last frame """
         extend_seq = (cls in self.SHORT_CLASSES and len(seq) >= self.MIN_SEQ_LEN)
@@ -133,7 +126,7 @@ class KTH(Dataset):
     def __getitem__(self, i):
         """ Sampling sequence from the dataset """
         i = self.idx_list[i]
-        cls, vid_idx, seq_idx = KTH.IDX_TO_CLS_VID_SEQ[i]
+        cls, vid_idx, seq_idx = self.IDX_TO_CLS_VID_SEQ[i]
         vid = self.data[cls][vid_idx]
         seq = vid[b'files'][seq_idx]
 
