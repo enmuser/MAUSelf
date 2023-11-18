@@ -9,9 +9,8 @@ import numpy as np
 import torch
 import imageio
 import torchfile
-from .CONFIG import CONFIG, METRIC_SETS
-from .base_dataset import SequenceDataset
-from .heatmaps import HeatmapGenerator
+from torch.utils.data import Dataset
+
 import cv2
 import cv2 as cv
 
@@ -30,7 +29,7 @@ def _swap(L, i1, i2):
     L[i1], L[i2] = L[i2], L[i1]
 
 
-class KTH(SequenceDataset):
+class KTH(Dataset):
     """
     KTH-Actions dataset. We obtain a sequence of frames with the corresponding body-joints in
     heatmap form, as well as the location of the person as a blob
@@ -61,10 +60,6 @@ class KTH(SequenceDataset):
     train_to_val_ratio = 0.98
     first_frame_rng_seed = 1234
 
-    METRICS_LEVEL_0 = METRIC_SETS["video_prediction"]
-    METRICS_LEVEL_1 = METRIC_SETS["keypoint"]
-    METRICS_LEVEL_2 = METRIC_SETS["single_keypoint_metric"]
-
     def __init__(self, is_training, data_root_path, num_frames=50, num_channels=3, img_size=64, horiz_flip_aug=True):
         """ Dataset initializer"""
         data_path = data_root_path
@@ -87,8 +82,6 @@ class KTH(SequenceDataset):
             kpt_fname = os.path.join(self.data_root, c, f'{dataset}_keypoints{img_size}x{img_size}.json')
             self.data[c] = torchfile.load(data_fname)
             self.keypoints[c] = _read_json(kpt_fname)
-        # 0: pose-keypoints' heatmap; 1: upper-torso keypoint heatmap
-        self.generate_hmaps = [HeatmapGenerator((img_size, img_size), self.NUM_HMAP_CHANNELS[i], 1) for i in range(2)]
 
         print('current kth image size ', img_size)
         print('current kth image channel ', num_channels)
