@@ -11,7 +11,7 @@ import cv2 as cv
 pynvml.nvmlInit()
 # -----------------------------------------------------------------------------
 parser = argparse.ArgumentParser(description='MAU')
-parser.add_argument('--dataset', type=str, default='caltech_pedestrian')
+parser.add_argument('--dataset', type=str, default='kth')
 parser.add_argument('--is_train', type=str, default='True', required=False)
 args_main = parser.parse_args()
 args_main.tied = True
