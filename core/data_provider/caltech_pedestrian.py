@@ -81,10 +81,10 @@ class PedestrianDataset(Dataset):
             sequences = json.load(frame_counts_file).items()
 
         if self.is_training:
-            sequences = [(fp, frames) for (fp, frames) in sequences if fp.split("\\")[-2] in self.TRAIN_SETS]
+            sequences = [(fp, frames) for (fp, frames) in sequences if fp.split("/")[-2] in self.TRAIN_SETS]
             random.Random(1234).shuffle(sequences)
         else :
-            sequences = [(fp, frames) for (fp, frames) in sequences if fp.split("\\")[-2] in self.TEST_SETS]
+            sequences = [(fp, frames) for (fp, frames) in sequences if fp.split("/")[-2] in self.TEST_SETS]
         self.sequences = sequences
 
         self.sequences_with_frame_index = []
