@@ -49,14 +49,14 @@ class TaxiBJDataset(Dataset):
         for t in range(frames.shape[0]):
             img = frames[t][:, :, 0].reshape((frames.shape[1], frames.shape[2], 1))
             name = str(t) + '.png'
-            file_name = os.path.join("results/taxibj/video/file0", name)
+            file_name = os.path.join("/kaggle/working/MAUSelf/results/taxibj/video/file0", name)
             cv2.imwrite(file_name, img.astype(np.uint8))
-        img2video(image_root="results/taxibj/video/file0/",
-                  dst_name="results/taxibj/video/file0/images0.mp4")
+        img2video(image_root="/kaggle/working/MAUSelf/results/taxibj/video/file0/",
+                  dst_name="/kaggle/working/MAUSelf/results/taxibj/video/file0/images0.mp4")
         backSub = cv.createBackgroundSubtractorMOG2()
         # backSub = cv.createBackgroundSubtractorKNN()
         capture = cv.VideoCapture(
-            cv.samples.findFileOrKeep("results/taxibj/video/file0/images0.mp4"))
+            cv.samples.findFileOrKeep("/kaggle/working/MAUSelf/results/taxibj/video/file0/images0.mp4"))
         count = 0
         while True:
             ret, frame = capture.read()
@@ -74,14 +74,14 @@ class TaxiBJDataset(Dataset):
         for t in range(frames.shape[0]):
             img = frames[t][:, :, 1].reshape((frames.shape[1], frames.shape[2], 1))
             name = str(t) + '.png'
-            file_name = os.path.join("results/taxibj/video/file1", name)
+            file_name = os.path.join("/kaggle/working/MAUSelf/results/taxibj/video/file1", name)
             cv2.imwrite(file_name, img.astype(np.uint8))
-        img2video(image_root="results/taxibj/video/file1/",
-                  dst_name="results/taxibj/video/file1/images1.mp4")
+        img2video(image_root="/kaggle/working/MAUSelf/results/taxibj/video/file1/",
+                  dst_name="/kaggle/working/MAUSelf/results/taxibj/video/file1/images1.mp4")
         backSub = cv.createBackgroundSubtractorMOG2()
         # backSub = cv.createBackgroundSubtractorKNN()
         capture = cv.VideoCapture(
-            cv.samples.findFileOrKeep("results/taxibj/video/file1/images1.mp4"))
+            cv.samples.findFileOrKeep("/kaggle/working/MAUSelf/results/taxibj/video/file1/images1.mp4"))
         count = 0
         while True:
             ret, frame = capture.read()
