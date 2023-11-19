@@ -97,7 +97,7 @@ def train_wrapper(model):
 
     if args.pretrained_model:
         model.load(args.pretrained_model)
-        begin = int(args.pretrained_model.is_training('-')[-1])
+        begin = int(args.pretrained_model.split('-')[-1])
 
     train_input_handle = datasets_factory.data_provider(configs=args,
                                                         data_train_path=args.data_train_path,
