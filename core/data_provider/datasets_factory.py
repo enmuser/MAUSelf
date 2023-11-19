@@ -1,9 +1,12 @@
 from torch.utils.data import DataLoader
 
 from core.data_provider.caltech_pedestrian import PedestrianDataset
+from core.data_provider.kitti import KITTIDataset
 from core.data_provider.kth_action import KTH
 from core.data_provider.mm import MovingMNIST
 import torchvision.transforms as TF
+
+from core.data_provider.taxibj import TaxiBJDataset
 
 
 def data_provider(dataset, configs, data_train_path, data_test_path, batch_size,
@@ -34,6 +37,20 @@ def data_provider(dataset, configs, data_train_path, data_test_path, batch_size,
             data_root_path=root,
             transform=TF.Resize(size=(128, 160)),
             json_path=configs.json_path,
+            context_frames=configs.input_length,
+            pred_frames=configs.pred_length,
+            seq_step=1
+        )
+    elif configs.dataset == 'taxibj':
+        if is_training :
+            dataset = TaxiBJDataset("train", data_root_path=root)
+        else :
+            dataset = TaxiBJDataset("test", data_root_path=root)
+    elif configs.dataset == 'kitti':
+        dataset = KITTIDataset(
+            dataset=is_training,
+            data_root_path=root,
+            transform=TF.Resize(size=(128, 160)),
             context_frames=configs.input_length,
             pred_frames=configs.pred_length,
             seq_step=1
