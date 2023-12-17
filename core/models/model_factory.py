@@ -87,7 +87,7 @@ class Model(object):
             print('Lr decay to:%.8f', self.optimizer.param_groups[0]['lr'])
         return next_frames, loss_l1.detach().cpu().numpy(), loss_l2.detach().cpu().numpy()
 
-    def test(self, data,data_mask, data_back, mask,itr):
+    def test(self, data, data_mask, data_back, mask, itr):
         frames = data
         frames_mask = data_mask
         frames_back = data_back
@@ -96,5 +96,5 @@ class Model(object):
         frames_mask_tensor = torch.FloatTensor(frames_mask).to(self.configs.device)
         frames_back_tensor = torch.FloatTensor(frames_back).to(self.configs.device)
         mask_tensor = torch.FloatTensor(mask).to(self.configs.device)
-        next_frames = self.network(frames_tensor,frames_mask_tensor,frames_back_tensor,mask_tensor,itr)
+        next_frames = self.network(frames_tensor, frames_mask_tensor, frames_back_tensor, mask_tensor, itr)
         return next_frames.detach().cpu().numpy()
