@@ -109,13 +109,13 @@ class MovingMNIST(data.Dataset):
             num_digits = random.choice(self.num_objects)
             images = self.generate_moving_mnist(num_digits)
         else:
-            images = self.dataset[:, idx, ...]
+            images = self.dataset[:length, idx, ...]
         r = 1
         w = int(64 / r)
         img = np.ones((64, 64, 1))
-        img_mask = np.ones((20, 64, 64, 1))
-        img_background = np.ones((20, 64, 64, 1))
-        for t in range(20):
+        img_mask = np.ones((length, 64, 64, 1))
+        img_background = np.ones((length, 64, 64, 1))
+        for t in range(length):
             img = images[t]
             name = str(t) + '.png'
             file_name = os.path.join("/kaggle/working/MAUSelf/results/mau/video/file", name)
