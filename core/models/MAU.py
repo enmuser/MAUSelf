@@ -238,11 +238,13 @@ class RNN(nn.Module):
                 in_channel = self.num_hidden[layer_idx]
             else:
                 in_channel = self.num_hidden[layer_idx - 1]
-            for i in range(self.tau):
+            for i in range(self.tau_one):
                 tmp_t.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
                 tmp_s.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
+            for i in range(self.tau_two):
                 tmp_t_level_one.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
                 tmp_s_level_one.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
+            for i in range(self.tau_three):
                 tmp_t_level_two.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
                 tmp_s_level_two.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
             T_pre.append(tmp_t)
