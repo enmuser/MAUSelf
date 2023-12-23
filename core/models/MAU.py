@@ -11,7 +11,10 @@ class RNN(nn.Module):
         self.frame_channel = configs.patch_size * configs.patch_size * configs.img_channel
         self.num_layers = num_layers
         self.num_hidden = num_hidden
-        self.tau = configs.tau
+        self.tau_one = configs.tau_one
+        self.tau_two = configs.tau_two
+        self.tau_three = configs.tau_three
+        self.tau_four = configs.tau_four
         self.cell_mode = configs.cell_mode
         self.train_level_base_line = configs.train_level_base_line
         self.states = ['recall', 'normal']
@@ -25,8 +28,8 @@ class RNN(nn.Module):
         for i in range(num_layers):
             in_channel = num_hidden[i - 1]
             cell_list.append(
-                MAUCell(in_channel, num_hidden[i], height, width, configs.filter_size,
-                        configs.stride, self.tau, self.cell_mode)
+                MAUCell(in_channel, num_hidden[i], height, width, configs.filter_size_one, configs.filter_size_two,
+                        configs.filter_size_three, configs.stride, self.tau_one, self.tau_two, self.tau_three, self.cell_mode)
             )
         self.cell_list = nn.ModuleList(cell_list)
 
@@ -297,21 +300,21 @@ class RNN(nn.Module):
             # if t % 3 == 0:
             S_t_level_two = frames_feature_back
             for i in range(self.num_layers):
-                t_att = T_pre[i][-self.tau:]
+                t_att = T_pre[i][-self.tau_one:]
                 t_att = torch.stack(t_att, dim=0)
-                s_att = S_pre[i][-self.tau:]
+                s_att = S_pre[i][-self.tau_one:]
                 s_att = torch.stack(s_att, dim=0)
                 S_pre[i].append(S_t)
 
-                t_att_level_one = T_pre_level_one[i][-self.tau:]
+                t_att_level_one = T_pre_level_one[i][-self.tau_two:]
                 t_att_level_one = torch.stack(t_att_level_one, dim=0)
-                s_att_level_one = S_pre_level_one[i][-self.tau:]
+                s_att_level_one = S_pre_level_one[i][-self.tau_two:]
                 s_att_level_one = torch.stack(s_att_level_one, dim=0)
                 S_pre_level_one[i].append(S_t_level_one)
 
-                t_att_level_two = T_pre_level_two[i][-self.tau:]
+                t_att_level_two = T_pre_level_two[i][-self.tau_three:]
                 t_att_level_two = torch.stack(t_att_level_two, dim=0)
-                s_att_level_two = S_pre_level_two[i][-self.tau:]
+                s_att_level_two = S_pre_level_two[i][-self.tau_three:]
                 s_att_level_two = torch.stack(s_att_level_two, dim=0)
                 S_pre_level_two[i].append(S_t_level_two)
 
