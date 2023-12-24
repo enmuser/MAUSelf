@@ -209,56 +209,66 @@ class RNN(nn.Module):
         self.merge = nn.Conv2d(self.num_hidden[-1] * 2, self.num_hidden[-1], kernel_size=1, stride=1, padding=0)
         self.conv_last_sr = nn.Conv2d(self.frame_channel * 2, self.frame_channel, kernel_size=1, stride=1, padding=0)
 
-    def forward(self, frames, frames_mask, frames_back, mask_true,itr):
+    def forward(self, frames_level_one, frames_level_two, frames_level_three, mask_true, itr):
         # print('ok')
         mask_true = mask_true.permute(0, 1, 4, 2, 3).contiguous()
-        batch_size = frames.shape[0]
-        height = frames.shape[3] // self.configs.sr_size
-        width = frames.shape[4] // self.configs.sr_size
-        frame_channels = frames.shape[2]
+        batch_size = frames_level_one.shape[0]
+        height = frames_level_one.shape[3] // self.configs.sr_size
+        width = frames_level_one.shape[4] // self.configs.sr_size
+        frame_channels = frames_level_one.shape[2]
         next_frames = []
-        T_t = []
         T_t_level_one = []
         T_t_level_two = []
-        T_pre = []
-        S_pre = []
+        T_t_level_three = []
         T_pre_level_one = []
         S_pre_level_one = []
         T_pre_level_two = []
         S_pre_level_two = []
-        x_gen = None
+        T_pre_level_three = []
+        S_pre_level_three = []
+        T_pre_level_four = []
+        S_pre_level_four = []
+        x_gen_level_one = None
         for layer_idx in range(self.num_layers):
-            tmp_t = []
-            tmp_s = []
             tmp_t_level_one = []
             tmp_s_level_one = []
             tmp_t_level_two = []
             tmp_s_level_two = []
+            tmp_t_level_three = []
+            tmp_s_level_three = []
+            tmp_t_level_four = []
+            tmp_s_level_four = []
             if layer_idx == 0:
                 in_channel = self.num_hidden[layer_idx]
             else:
                 in_channel = self.num_hidden[layer_idx - 1]
             for i in range(self.tau_one):
-                tmp_t.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
-                tmp_s.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
-            for i in range(self.tau_two):
                 tmp_t_level_one.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
                 tmp_s_level_one.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
-            for i in range(self.tau_three):
+            for i in range(self.tau_two):
                 tmp_t_level_two.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
                 tmp_s_level_two.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
-            T_pre.append(tmp_t)
-            S_pre.append(tmp_s)
+            for i in range(self.tau_three):
+                tmp_t_level_three.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
+                tmp_s_level_three.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
+            for i in range(self.tau_four):
+                tmp_t_level_four.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
+                tmp_s_level_four.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
             T_pre_level_one.append(tmp_t_level_one)
             S_pre_level_one.append(tmp_s_level_one)
             T_pre_level_two.append(tmp_t_level_two)
             S_pre_level_two.append(tmp_s_level_two)
+            T_pre_level_three.append(tmp_t_level_three)
+            S_pre_level_three.append(tmp_s_level_three)
+            T_pre_level_four.append(tmp_t_level_four)
+            S_pre_level_four.append(tmp_s_level_four)
+
 
         for t in range(self.configs.total_length - 1):
             if t < self.configs.input_length:
-                net = frames[:, t]
-                net_mask = frames_mask[:, t]
-                net_back = frames_back[:, t]
+                net_level_one = frames_level_one[:, t]
+                net_level_two = frames_level_two[:, t]
+                net_level_three = frames_level_three[:, t]
             else:
                 # time_diff = t - self.configs.input_length
                 # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
@@ -268,84 +278,84 @@ class RNN(nn.Module):
                 # net = mask_true[:, time_diff] * frames[:, t] + (1 - mask_true[:, time_diff]) * x_gen
                 # net_back = frames_back[:, (self.configs.input_length - 1)]
                 # print("Itr: ", itr)
-                net_mask = x_gen_mask
-                net_back = x_gen_back
-                net = x_gen
+                net_level_one = x_gen_level_one
+                net_level_two = x_gen_level_two
+                net_level_three = x_gen_level_three
             # net_mask = frames_mask[:, t]
             # net_back = frames_back[:, t]
-            frames_feature = net
-            frames_feature_encoded = []
-            frames_feature_mask = net_mask
-            frames_feature_mask_encoded = []
-            frames_feature_back = net_back
-            frames_feature_back_encoded = []
+            frames_feature_level_one = net_level_one
+            frames_feature_level_one_encoded = []
+            frames_feature_level_two = net_level_two
+            frames_feature_level_two_encoded = []
+            frames_feature_level_three = net_level_three
+            frames_feature_level_three_encoded = []
             for i in range(len(self.encoders)):
-                frames_feature = self.encoders[i](frames_feature)
-                frames_feature_encoded.append(frames_feature)
+                frames_feature_level_one = self.encoders[i](frames_feature_level_one)
+                frames_feature_level_one_encoded.append(frames_feature_level_one)
             for i in range(len(self.encoders_mask)):
-                frames_feature_mask = self.encoders_mask[i](frames_feature_mask)
-                frames_feature_mask_encoded.append(frames_feature_mask)
+                frames_feature_level_two = self.encoders_mask[i](frames_feature_level_two)
+                frames_feature_level_two_encoded.append(frames_feature_level_two)
             for i in range(len(self.encoders_back)):
-                frames_feature_back = self.encoders_back[i](frames_feature_back)
-                frames_feature_back_encoded.append(frames_feature_back)
+                frames_feature_level_three = self.encoders_back[i](frames_feature_level_three)
+                frames_feature_level_three_encoded.append(frames_feature_level_three)
             if t == 0:
                 for i in range(self.num_layers):
-                    zeros = torch.zeros([batch_size, self.num_hidden[i], height, width]).to(self.configs.device)
                     zeros_level_one = torch.zeros([batch_size, self.num_hidden[i], height, width]).to(self.configs.device)
                     zeros_level_two = torch.zeros([batch_size, self.num_hidden[i], height, width]).to(self.configs.device)
-                    T_t.append(zeros)
+                    zeros_level_three = torch.zeros([batch_size, self.num_hidden[i], height, width]).to(self.configs.device)
                     T_t_level_one.append(zeros_level_one)
                     T_t_level_two.append(zeros_level_two)
-            S_t = frames_feature
+                    T_t_level_three.append(zeros_level_three)
+            S_t_level_one = frames_feature_level_one
             # if t % 2 == 0:
-            S_t_level_one = frames_feature_mask
+            S_t_level_two = frames_feature_level_two
             # if t % 3 == 0:
-            S_t_level_two = frames_feature_back
+            S_t_level_three = frames_feature_level_three
             for i in range(self.num_layers):
-                t_att = T_pre[i][-self.tau_one:]
-                t_att = torch.stack(t_att, dim=0)
-                s_att = S_pre[i][-self.tau_one:]
-                s_att = torch.stack(s_att, dim=0)
-                S_pre[i].append(S_t)
-
-                t_att_level_one = T_pre_level_one[i][-self.tau_two:]
+                t_att_level_one = T_pre_level_one[i][-self.tau_one:]
                 t_att_level_one = torch.stack(t_att_level_one, dim=0)
-                s_att_level_one = S_pre_level_one[i][-self.tau_two:]
+                s_att_level_one = S_pre_level_one[i][-self.tau_one:]
                 s_att_level_one = torch.stack(s_att_level_one, dim=0)
                 S_pre_level_one[i].append(S_t_level_one)
 
-                t_att_level_two = T_pre_level_two[i][-self.tau_three:]
+                t_att_level_two = T_pre_level_two[i][-self.tau_two:]
                 t_att_level_two = torch.stack(t_att_level_two, dim=0)
-                s_att_level_two = S_pre_level_two[i][-self.tau_three:]
+                s_att_level_two = S_pre_level_two[i][-self.tau_two:]
                 s_att_level_two = torch.stack(s_att_level_two, dim=0)
                 S_pre_level_two[i].append(S_t_level_two)
 
-                T_t[i], T_t_level_one[i], T_t_level_two[i], S_t, S_t_level_one, S_t_level_two = \
-                    self.cell_list[i](T_t[i], T_t_level_one[i], T_t_level_two[i], S_t, S_t_level_one, S_t_level_two, t_att, s_att, t_att_level_one, s_att_level_one, t_att_level_two, s_att_level_two)
-                T_pre[i].append(T_t[i])
+                t_att_level_three = T_pre_level_three[i][-self.tau_three:]
+                t_att_level_three = torch.stack(t_att_level_three, dim=0)
+                s_att_level_three = S_pre_level_three[i][-self.tau_three:]
+                s_att_level_three = torch.stack(s_att_level_three, dim=0)
+                S_pre_level_three[i].append(S_t_level_three)
+
+                T_t_level_one[i], T_t_level_two[i], T_t_level_three[i], S_t_level_one, S_t_level_two, S_t_level_three = \
+                    self.cell_list[i](T_t_level_one[i], T_t_level_two[i], T_t_level_three[i], S_t_level_one, S_t_level_two, S_t_level_three, t_att_level_one, s_att_level_one, t_att_level_two, s_att_level_two, t_att_level_three, s_att_level_three)
                 T_pre_level_one[i].append(T_t_level_one[i])
                 T_pre_level_two[i].append(T_t_level_two[i])
-            out = S_t
-            out_mask = S_t_level_one
-            out_back = S_t_level_two
+                T_pre_level_three[i].append(T_t_level_three[i])
+            out_level_one = S_t_level_one
+            out_level_two = S_t_level_two
+            out_level_three = S_t_level_three
             # out = self.merge(torch.cat([T_t[-1], S_t], dim=1))
             frames_feature_decoded = []
             for i in range(len(self.decoders)):
-                out = self.decoders[i](out)
+                out_level_one = self.decoders[i](out_level_one)
                 if self.configs.model_mode == 'recall':
-                    out = out + frames_feature_encoded[-2 - i]
+                    out_level_one = out_level_one + frames_feature_level_one_encoded[-2 - i]
             for i in range(len(self.decoders_mask)):
-                out_mask = self.decoders_mask[i](out_mask)
+                out_level_two = self.decoders_mask[i](out_level_two)
                 if self.configs.model_mode == 'recall':
-                    out_mask = out_mask + frames_feature_mask_encoded[-2 - i]
+                    out_level_two = out_level_two + frames_feature_level_two_encoded[-2 - i]
             for i in range(len(self.decoders_back)):
-                out_back = self.decoders_back[i](out_back)
+                out_level_three = self.decoders_back[i](out_level_three)
                 if self.configs.model_mode == 'recall':
-                    out_back = out_back + frames_feature_back_encoded[-2 - i]
+                    out_level_three = out_level_three + frames_feature_level_three_encoded[-2 - i]
 
-            x_gen = self.srcnn(out)
-            x_gen_mask = self.srcnn_mask(out_mask)
-            x_gen_back = self.srcnn_back(out_back)
-            next_frames.append(x_gen)
+            x_gen_level_one = self.srcnn(out_level_one)
+            x_gen_level_two = self.srcnn_mask(out_level_two)
+            x_gen_level_three = self.srcnn_back(out_level_three)
+            next_frames.append(x_gen_level_one)
         next_frames = torch.stack(next_frames, dim=0).permute(1, 0, 2, 3, 4).contiguous()
         return next_frames
