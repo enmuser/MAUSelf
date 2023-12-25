@@ -29,6 +29,7 @@ def configs():
     parser.add_argument('--filter_size_one', type=int, default=(7, 7))
     parser.add_argument('--filter_size_two', type=int, default=(5, 5))
     parser.add_argument('--filter_size_three', type=int, default=(3, 3))
+    parser.add_argument('--filter_size_four', type=int, default=(1, 1))
     parser.add_argument('--stride', type=int, default=1)
     parser.add_argument('--time', type=int, default=2)
     parser.add_argument('--time_stride', type=int, default=1)
