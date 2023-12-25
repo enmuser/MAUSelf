@@ -448,6 +448,6 @@ class RNN(nn.Module):
             x_gen_level_two = self.srcnn_level_two(out_level_two)
             x_gen_level_three = self.srcnn_level_three(out_level_three)
             x_gen_level_four = self.srcnn_level_four(out_level_four)
-            next_frames.append(x_gen_level_three)
+            next_frames.append(x_gen_level_one)
         next_frames = torch.stack(next_frames, dim=0).permute(1, 0, 2, 3, 4).contiguous()
         return next_frames
