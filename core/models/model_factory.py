@@ -52,7 +52,7 @@ class Model(object):
         stats = torch.load(pm_checkpoint_path, map_location=torch.device(self.configs.device))
         self.network.load_state_dict(stats['net_param'])
 
-    def train(self, data, data_mask, data_back, mask, itr):
+    def train(self, data, data_mask, data_back, mask_one, mask_two, mask_three, mask_four, itr):
         # data = imgs = 16 * 20 * 1 * 64 * 64
         # mask = real_input_flag = 16 * 9 * 64 * 64 * 1
         # frames = data = imgs = 16 * 20 * 1 * 64 * 64
@@ -65,9 +65,13 @@ class Model(object):
         frames_tensor = torch.FloatTensor(frames).to(self.configs.device)
         frames_mask_tensor = torch.FloatTensor(frames_mask).to(self.configs.device)
         frames_back_tensor = torch.FloatTensor(frames_back).to(self.configs.device)
-        mask_tensor = torch.FloatTensor(mask).to(self.configs.device)
+        mask_tensor_one = torch.FloatTensor(mask_one).to(self.configs.device)
+        mask_tensor_two = torch.FloatTensor(mask_two).to(self.configs.device)
+        mask_tensor_three = torch.FloatTensor(mask_three).to(self.configs.device)
+        mask_tensor_four = torch.FloatTensor(mask_four).to(self.configs.device)
 
-        next_frames = self.network(frames_tensor,frames_mask_tensor,frames_back_tensor, mask_tensor,itr)
+        next_frames = self.network(frames_tensor, frames_mask_tensor, frames_back_tensor,
+                                   mask_tensor_one,mask_tensor_two,mask_tensor_three,mask_tensor_four,itr)
         ground_truth = frames_tensor
 
         batch_size = next_frames.shape[0]
@@ -87,7 +91,7 @@ class Model(object):
             print('Lr decay to:%.8f', self.optimizer.param_groups[0]['lr'])
         return next_frames, loss_l1.detach().cpu().numpy(), loss_l2.detach().cpu().numpy()
 
-    def test(self, data, data_mask, data_back, mask, itr):
+    def test(self, data, data_mask, data_back,mask_one, mask_two, mask_three, mask_four, itr):
         frames = data
         frames_mask = data_mask
         frames_back = data_back
@@ -95,6 +99,10 @@ class Model(object):
         frames_tensor = torch.FloatTensor(frames).to(self.configs.device)
         frames_mask_tensor = torch.FloatTensor(frames_mask).to(self.configs.device)
         frames_back_tensor = torch.FloatTensor(frames_back).to(self.configs.device)
-        mask_tensor = torch.FloatTensor(mask).to(self.configs.device)
-        next_frames = self.network(frames_tensor, frames_mask_tensor, frames_back_tensor, mask_tensor, itr)
+        mask_tensor_one = torch.FloatTensor(mask_one).to(self.configs.device)
+        mask_tensor_two = torch.FloatTensor(mask_two).to(self.configs.device)
+        mask_tensor_three = torch.FloatTensor(mask_three).to(self.configs.device)
+        mask_tensor_four = torch.FloatTensor(mask_four).to(self.configs.device)
+        next_frames = self.network(frames_tensor, frames_mask_tensor, frames_back_tensor,
+                                   mask_tensor_one,mask_tensor_two,mask_tensor_three,mask_tensor_four, itr)
         return next_frames.detach().cpu().numpy()

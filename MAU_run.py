@@ -42,7 +42,7 @@ def schedule_sampling(eta, itr, channel, batch_size):
         eta -= args.sampling_changing_rate
     else:
         eta = 0.0
-    print('eta: ', eta)
+    # print('eta: ', eta)
     random_flip = np.random.random_sample(
         (batch_size, args.total_length - args.input_length - 1))
     true_token = (random_flip < eta)
@@ -103,11 +103,15 @@ def train_wrapper(model):
             if itr > args.max_iterations:
                 break
             batch_size = ims.shape[0]
-            eta, real_input_flag = schedule_sampling(eta, itr, args.img_channel, batch_size)
+            eta, real_input_flag_one = schedule_sampling(eta, itr, args.img_channel, batch_size)
+            eta, real_input_flag_two = schedule_sampling(eta, itr, args.img_channel, batch_size)
+            eta, real_input_flag_three = schedule_sampling(eta, itr, args.img_channel, batch_size)
+            eta, real_input_flag_four = schedule_sampling(eta, itr, args.img_channel, batch_size)
             if itr % args.test_interval == 0:
                 print('Validate:')
                 trainer.test(model, val_input_handle, args, itr)
-            trainer.train(model, ims_mask, ims_mask, ims_mask, real_input_flag, args, itr)
+            trainer.train(model, ims_mask, ims_mask, ims_mask,
+                          real_input_flag_one,real_input_flag_two,real_input_flag_three,real_input_flag_four, args, itr)
             # snapshot_interval = 1000 每1000次保存一次
             if itr % args.snapshot_interval == 0 and itr > begin:
                 model.save(itr)
