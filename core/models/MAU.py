@@ -250,6 +250,34 @@ class RNN(nn.Module):
             decoders_level_four.append(decoder_level_four)
         self.decoders_level_four = nn.ModuleList(decoders_level_four)
 
+        decoders_level_merge = []
+        for i in range(n - 1):
+            decoder_level_merge = nn.Sequential()
+            decoder_level_merge.add_module(name='c_decoder{0}'.format(i),
+                                          module=nn.ConvTranspose2d(in_channels=self.num_hidden[-1],
+                                                                    out_channels=self.num_hidden[-1],
+                                                                    stride=(2, 2),
+                                                                    padding=(1, 1),
+                                                                    kernel_size=(3, 3),
+                                                                    output_padding=(1, 1)
+                                                                    ))
+            decoder_level_merge.add_module(name='c_decoder_relu{0}'.format(i),
+                                          module=nn.LeakyReLU(0.2))
+            decoders_level_merge.append(decoder_level_merge)
+
+        if n > 0:
+            decoder_level_merge = nn.Sequential()
+            decoder_level_merge.add_module(name='c_decoder{0}'.format(n - 1),
+                                          module=nn.ConvTranspose2d(in_channels=self.num_hidden[-1],
+                                                                    out_channels=self.num_hidden[-1],
+                                                                    stride=(2, 2),
+                                                                    padding=(1, 1),
+                                                                    kernel_size=(3, 3),
+                                                                    output_padding=(1, 1)
+                                                                    ))
+            decoders_level_merge.append(decoder_level_merge)
+        self.decoders_level_merge = nn.ModuleList(decoders_level_merge)
+
         self.srcnn_level_one = nn.Sequential(
             nn.Conv2d(self.num_hidden[-1], self.frame_channel, kernel_size=1, stride=1, padding=0)
         )
@@ -262,7 +290,10 @@ class RNN(nn.Module):
         self.srcnn_level_four = nn.Sequential(
             nn.Conv2d(self.num_hidden[-1], self.frame_channel, kernel_size=1, stride=1, padding=0)
         )
-        self.merge = nn.Conv2d(self.num_hidden[-1] * 2, self.num_hidden[-1], kernel_size=1, stride=1, padding=0)
+        self.srcnn_level_merge = nn.Sequential(
+            nn.Conv2d(self.num_hidden[-1], self.frame_channel, kernel_size=1, stride=1, padding=0)
+        )
+        self.merge = nn.Conv2d(self.num_hidden[-1] * 4, self.num_hidden[-1], kernel_size=1, stride=1, padding=0)
         self.conv_last_sr = nn.Conv2d(self.frame_channel * 2, self.frame_channel, kernel_size=1, stride=1, padding=0)
 
     def forward(self, frames_level_one, frames_level_two, frames_level_three,
@@ -425,6 +456,8 @@ class RNN(nn.Module):
             out_level_two = S_t_level_two
             out_level_three = S_t_level_three
             out_level_four = S_t_level_four
+            all_concat = torch.concat((out_level_one, out_level_two, out_level_three, out_level_four), dim=1)
+            all_concat_merge = self.merge(all_concat)
             # out = self.merge(torch.cat([T_t[-1], S_t], dim=1))
             frames_feature_decoded = []
             for i in range(len(self.decoders_level_one)):
@@ -443,11 +476,15 @@ class RNN(nn.Module):
                 out_level_four = self.decoders_level_four[i](out_level_four)
                 if self.configs.model_mode == 'recall':
                     out_level_four = out_level_four + frames_feature_level_four_encoded[-2 - i]
+            for i in range(len(self.decoders_level_merge)):
+                all_concat_merge = self.decoders_level_merge[i](all_concat_merge)
+
+            x_gen_level_merge = self.srcnn_level_merge(all_concat_merge)
 
             x_gen_level_one = self.srcnn_level_one(out_level_one)
             x_gen_level_two = self.srcnn_level_two(out_level_two)
             x_gen_level_three = self.srcnn_level_three(out_level_three)
             x_gen_level_four = self.srcnn_level_four(out_level_four)
-            next_frames.append(x_gen_level_one)
+            next_frames.append(x_gen_level_merge)
         next_frames = torch.stack(next_frames, dim=0).permute(1, 0, 2, 3, 4).contiguous()
         return next_frames
