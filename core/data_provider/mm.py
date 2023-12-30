@@ -158,7 +158,7 @@ class MovingMNIST(data.Dataset):
         #     cv.imshow('Frame', net)
         #     cv.imshow('FG Background', background)
         #     cv.imshow('FG Mask', fgMask)
-        return output, output_mask, output_background
+        return output, output, output
 
     def __len__(self):
         return self.length
