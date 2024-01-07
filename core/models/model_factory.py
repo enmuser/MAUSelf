@@ -57,20 +57,17 @@ class Model(object):
         self.network.train()
         frames_tensor = torch.FloatTensor(frames).to(self.configs.device)
         mask_tensor = torch.FloatTensor(mask).to(self.configs.device)
-
-        next_frames = self.network(frames_tensor, mask_tensor)
-        ground_truth = frames_tensor
-
-        batch_size = next_frames.shape[0]
-
-        self.optimizer.zero_grad()
-        loss_l1 = self.L1_loss(next_frames,
-                               ground_truth[:, 1:])
-        loss_l2 = self.MSE_criterion(next_frames,
-                                     ground_truth[:, 1:])
-        loss_gen = loss_l2
-        loss_gen.backward()
-        self.optimizer.step()
+        for index in range(self.configs.total_length - 1):
+            next_frames = self.network(frames_tensor, mask_tensor, index)
+            ground_truth = frames_tensor
+            self.optimizer.zero_grad()
+            loss_l1 = self.L1_loss(next_frames,
+                                   ground_truth[:, 1:index+2])
+            loss_l2 = self.MSE_criterion(next_frames,
+                                         ground_truth[:, 1:index+2])
+            loss_gen = loss_l2
+            loss_gen.backward()
+            self.optimizer.step()
 
         if itr >= self.configs.sampling_stop_iter and itr % self.configs.delay_interval == 0:
             self.scheduler.step()
@@ -84,5 +81,5 @@ class Model(object):
         self.network.eval()
         frames_tensor = torch.FloatTensor(frames).to(self.configs.device)
         mask_tensor = torch.FloatTensor(mask).to(self.configs.device)
-        next_frames = self.network(frames_tensor, mask_tensor)
+        next_frames = self.network(frames_tensor, mask_tensor,18)
         return next_frames.detach().cpu().numpy()

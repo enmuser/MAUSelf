@@ -1,5 +1,7 @@
 import torch
 import torch.nn as nn
+from torch.optim import Adam, lr_scheduler
+
 from core.layers.MAUCell import MAUCell
 import math
 
@@ -92,7 +94,7 @@ class RNN(nn.Module):
         self.merge = nn.Conv2d(self.num_hidden[-1] * 2, self.num_hidden[-1], kernel_size=1, stride=1, padding=0)
         self.conv_last_sr = nn.Conv2d(self.frame_channel * 2, self.frame_channel, kernel_size=1, stride=1, padding=0)
 
-    def forward(self, frames, mask_true):
+    def forward(self, frames, mask_true, index):
         # print('ok')
         mask_true = mask_true.permute(0, 1, 4, 2, 3).contiguous()
         batch_size = frames.shape[0]
@@ -151,5 +153,7 @@ class RNN(nn.Module):
 
             x_gen = self.srcnn(out)
             next_frames.append(x_gen)
+            if t == index:
+                break
         next_frames = torch.stack(next_frames, dim=0).permute(1, 0, 2, 3, 4).contiguous()
         return next_frames
