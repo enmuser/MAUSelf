@@ -57,13 +57,13 @@ class Model(object):
         self.network.train()
         frames_tensor = torch.FloatTensor(frames).to(self.configs.device)
         mask_tensor = torch.FloatTensor(mask).to(self.configs.device)
-        for index in range(10,self.configs.total_length - 1):
+        for index in range(9, self.configs.total_length - 1):
             next_frames = self.network(frames_tensor, mask_tensor, index)
             ground_truth = frames_tensor
             self.optimizer.zero_grad()
-            loss_l1 = self.L1_loss(next_frames[:, 10:index+2],
+            loss_l1 = self.L1_loss(next_frames[:, 9:index+1],
                                    ground_truth[:, 10:index+2])
-            loss_l2 = self.MSE_criterion(next_frames[:, 10:index+2],
+            loss_l2 = self.MSE_criterion(next_frames[:, 9:index+2],
                                          ground_truth[:, 10:index+2])
             loss_gen = loss_l2
             loss_gen.backward()
