@@ -57,7 +57,7 @@ class Model(object):
         self.network.train()
         frames_tensor = torch.FloatTensor(frames).to(self.configs.device)
         mask_tensor = torch.FloatTensor(mask).to(self.configs.device)
-        for index in range(self.configs.total_length - 1):
+        for index in range(10,self.configs.total_length - 1):
             next_frames = self.network(frames_tensor, mask_tensor, index)
             ground_truth = frames_tensor
             self.optimizer.zero_grad()
