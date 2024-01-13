@@ -65,7 +65,7 @@ class Model(object):
         #                            ground_truth[:, 10:index+2])
         #     loss_l2 = self.MSE_criterion(next_frames[:, 9:index+2],
         #                                  ground_truth[:, 10:index+2])
-         for index in range(9,self.configs.total_length - 1):
+        for index in range(9,self.configs.total_length - 1):
             next_frames = self.network(frames_tensor, mask_tensor, index)
             ground_truth = frames_tensor
             self.optimizer.zero_grad()
