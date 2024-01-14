@@ -94,7 +94,11 @@ class RNN(nn.Module):
         self.merge = nn.Conv2d(self.num_hidden[-1] * 2, self.num_hidden[-1], kernel_size=1, stride=1, padding=0)
         self.conv_last_sr = nn.Conv2d(self.frame_channel * 2, self.frame_channel, kernel_size=1, stride=1, padding=0)
 
-    def forward(self, frames, mask_true, index):
+        self.T_pre_input = None
+        self.S_pre_input = None
+        self.T_t_input = None
+
+    def forward(self, frames, mask_true, final_index):
         # print('ok')
         mask_true = mask_true.permute(0, 1, 4, 2, 3).contiguous()
         batch_size = frames.shape[0]
@@ -118,6 +122,16 @@ class RNN(nn.Module):
                 tmp_s.append(torch.zeros([batch_size, in_channel, height, width]).to(self.configs.device))
             T_pre.append(tmp_t)
             S_pre.append(tmp_s)
+        if self.T_pre_input is not None:
+            for layer_idx in range(self.num_layers):
+                for index_T_pre in range(self.tau):
+                    T_pre[layer_idx][index_T_pre].data = self.T_pre_input[layer_idx][-(self.tau-index_T_pre)].data
+            # T_pre.data = self.T_pre_input.data
+        if self.S_pre_input is not None:
+            for layer_idx in range(self.num_layers):
+                for index_S_pre in range(self.tau):
+                    S_pre[layer_idx][index_S_pre].data = self.S_pre_input[layer_idx][-(self.tau-index_S_pre)].data
+            # S_pre.data = self.S_pre_input.data
 
         for t in range(self.configs.total_length - 1):
             if t < self.configs.input_length:
@@ -134,6 +148,9 @@ class RNN(nn.Module):
                 for i in range(self.num_layers):
                     zeros = torch.zeros([batch_size, self.num_hidden[i], height, width]).to(self.configs.device)
                     T_t.append(zeros)
+                if self.T_t_input is not None:
+                    for index_T_t in range(self.num_layers):
+                        T_t[index_T_t].data = self.T_t_input[index_T_t].data
             S_t = frames_feature
             for i in range(self.num_layers):
                 t_att = T_pre[i][-self.tau:]
@@ -153,7 +170,10 @@ class RNN(nn.Module):
 
             x_gen = self.srcnn(out)
             next_frames.append(x_gen)
-            if t == index:
+            if t == final_index:
+                self.T_pre_input = T_pre
+                self.S_pre_input = S_pre
+                self.T_t_input = T_t
                 break
         next_frames = torch.stack(next_frames, dim=0).permute(1, 0, 2, 3, 4).contiguous()
         return next_frames
