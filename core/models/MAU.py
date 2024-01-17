@@ -179,6 +179,6 @@ class RNN(nn.Module):
                    self.T_pre_input = None
                    self.S_pre_input = None
                    self.T_t_input = None
-                break
+               break
         next_frames = torch.stack(next_frames, dim=0).permute(1, 0, 2, 3, 4).contiguous()
         return next_frames
