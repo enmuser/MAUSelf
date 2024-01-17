@@ -171,9 +171,14 @@ class RNN(nn.Module):
             x_gen = self.srcnn(out)
             next_frames.append(x_gen)
             if t == final_index:
-                self.T_pre_input = T_pre
-                self.S_pre_input = S_pre
-                self.T_t_input = T_t
+               if final_index < (self.configs.total_length - 2):
+                   self.T_pre_input = T_pre
+                   self.S_pre_input = S_pre
+                   self.T_t_input = T_t
+               else:
+                   self.T_pre_input = None
+                   self.S_pre_input = None
+                   self.T_t_input = None
                 break
         next_frames = torch.stack(next_frames, dim=0).permute(1, 0, 2, 3, 4).contiguous()
         return next_frames
