@@ -57,17 +57,17 @@ class Model(object):
         self.network.train()
         frames_tensor = torch.FloatTensor(frames).to(self.configs.device)
         mask_tensor = torch.FloatTensor(mask).to(self.configs.device)
-        for index in range(9, self.configs.total_length - 1):
-            next_frames = self.network(frames_tensor, mask_tensor, index)
-            ground_truth = frames_tensor
-            self.optimizer.zero_grad()
-            loss_l1 = self.L1_loss(next_frames[:, 9:index+1],
-                                   ground_truth[:, 10:index+2])
-            loss_l2 = self.MSE_criterion(next_frames[:, 9:index+2],
-                                         ground_truth[:, 10:index+2])
-            loss_gen = loss_l2
-            loss_gen.backward()
-            self.optimizer.step()
+        
+        next_frames = self.network(frames_tensor, mask_tensor, 18)
+        ground_truth = frames_tensor
+        self.optimizer.zero_grad()
+        loss_l1 = self.L1_loss(next_frames[:, 9:19],
+                               ground_truth[:, 10:20])
+        loss_l2 = self.MSE_criterion(next_frames[:, 9:19],
+                                     ground_truth[:, 10:20])
+        loss_gen = loss_l2
+        loss_gen.backward()
+        self.optimizer.step()
 
         if itr >= self.configs.sampling_stop_iter and itr % self.configs.delay_interval == 0:
             self.scheduler.step()
