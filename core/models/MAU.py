@@ -11,6 +11,9 @@ class RNN(nn.Module):
         self.frame_channel = configs.patch_size * configs.patch_size * configs.img_channel
         self.num_layers = num_layers
         self.num_hidden = num_hidden
+
+        self.num_encoder_hidden = [16, 32, 64]
+        self.num_decoder_hidden = [64, 32, 16]
         self.tau = configs.tau
         self.cell_mode = configs.cell_mode
         self.states = ['recall', 'normal']
@@ -30,12 +33,12 @@ class RNN(nn.Module):
         self.cell_list = nn.ModuleList(cell_list)
 
         # Encoder
-        n = int(math.log2(configs.sr_size))
+        n = int(math.log2(4))
         encoders = []
         encoder = nn.Sequential()
         encoder.add_module(name='encoder_t_conv{0}'.format(-1),
                            module=nn.Conv2d(in_channels=self.frame_channel,
-                                            out_channels=self.num_hidden[0],
+                                            out_channels=self.num_encoder_hidden[0],
                                             stride=1,
                                             padding=0,
                                             kernel_size=1))
@@ -45,11 +48,11 @@ class RNN(nn.Module):
         for i in range(n):
             encoder = nn.Sequential()
             encoder.add_module(name='encoder_t{0}'.format(i),
-                               module=nn.Conv2d(in_channels=self.num_hidden[0],
-                                                out_channels=self.num_hidden[0],
-                                                stride=(2, 2),
-                                                padding=(1, 1),
-                                                kernel_size=(3, 3)
+                               module=nn.Conv2d(in_channels=self.num_encoder_hidden[i],
+                                                out_channels=self.num_encoder_hidden[i+1],
+                                                stride=1,
+                                                padding=0,
+                                                kernel_size=1
                                                 ))
             encoder.add_module(name='encoder_t_relu{0}'.format(i),
                                module=nn.LeakyReLU(0.2))
@@ -62,12 +65,11 @@ class RNN(nn.Module):
         for i in range(n - 1):
             decoder = nn.Sequential()
             decoder.add_module(name='c_decoder{0}'.format(i),
-                               module=nn.ConvTranspose2d(in_channels=self.num_hidden[-1],
-                                                         out_channels=self.num_hidden[-1],
-                                                         stride=(2, 2),
-                                                         padding=(1, 1),
-                                                         kernel_size=(3, 3),
-                                                         output_padding=(1, 1)
+                               module=nn.ConvTranspose2d(in_channels=self.num_decoder_hidden[i],
+                                                         out_channels=self.num_decoder_hidden[i+1],
+                                                         stride=1,
+                                                         padding=0,
+                                                         kernel_size=1
                                                          ))
             decoder.add_module(name='c_decoder_relu{0}'.format(i),
                                module=nn.LeakyReLU(0.2))
@@ -76,18 +78,17 @@ class RNN(nn.Module):
         if n > 0:
             decoder = nn.Sequential()
             decoder.add_module(name='c_decoder{0}'.format(n - 1),
-                               module=nn.ConvTranspose2d(in_channels=self.num_hidden[-1],
-                                                         out_channels=self.num_hidden[-1],
-                                                         stride=(2, 2),
-                                                         padding=(1, 1),
-                                                         kernel_size=(3, 3),
-                                                         output_padding=(1, 1)
+                               module=nn.ConvTranspose2d(in_channels=self.num_decoder_hidden[-2],
+                                                         out_channels=self.num_decoder_hidden[-1],
+                                                         stride=1,
+                                                         padding=0,
+                                                         kernel_size=1
                                                          ))
             decoders.append(decoder)
         self.decoders = nn.ModuleList(decoders)
 
         self.srcnn = nn.Sequential(
-            nn.Conv2d(self.num_hidden[-1], self.frame_channel, kernel_size=1, stride=1, padding=0)
+            nn.Conv2d(self.num_decoder_hidden[-1], self.frame_channel, kernel_size=1, stride=1, padding=0)
         )
         self.merge = nn.Conv2d(self.num_hidden[-1] * 2, self.num_hidden[-1], kernel_size=1, stride=1, padding=0)
         self.conv_last_sr = nn.Conv2d(self.frame_channel * 2, self.frame_channel, kernel_size=1, stride=1, padding=0)
