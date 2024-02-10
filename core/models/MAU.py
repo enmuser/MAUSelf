@@ -12,8 +12,8 @@ class RNN(nn.Module):
         self.num_layers = num_layers
         self.num_hidden = num_hidden
 
-        self.num_encoder_hidden = [16, 32, 64]
-        self.num_decoder_hidden = [64, 32, 16]
+        self.num_encoder_hidden = [8, 16, 32]
+        self.num_decoder_hidden = [32, 16, 8]
         self.tau = configs.tau
         self.cell_mode = configs.cell_mode
         self.states = ['recall', 'normal']
