@@ -44,7 +44,7 @@ def configs():
     parser.add_argument('--display_interval', type=int, default=1)
     parser.add_argument('--test_interval', type=int, default=20)
     parser.add_argument('--snapshot_interval', type=int, default=100)
-    parser.add_argument('--num_save_samples', type=int, default=30)
+    parser.add_argument('--num_save_samples', type=int, default=10)
     parser.add_argument('--n_gpu', type=int, default=1)
     #/kaggle/input/movingmnist/model.ckpt-168000
     parser.add_argument('--pretrained_model', type=str, default='/kaggle/input/movingmnist/model.ckpt-2000')
