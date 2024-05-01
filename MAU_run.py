@@ -1,5 +1,7 @@
 import os
 import argparse
+import shutil
+
 import numpy as np
 from core.data_provider import datasets_factory
 from core.models.model_factory import Model
@@ -135,8 +137,7 @@ def train_wrapper(model):
     for epoch in range(0, args.max_epoches):
         # max_iterations = 80000
         if itr > args.max_iterations:
-            break
-        if itr > args.test_iterations:
+            shutil.make_archive(args.result_zip_file_name, 'zip', args.result_zip_dir)
             break
         for ims in train_input_handle:
             if itr > args.max_iterations:
@@ -149,10 +150,6 @@ def train_wrapper(model):
             if itr % args.test_interval == 0:
                 print('Validate:')
                 trainer.test(model, val_input_handle, args, itr)
-                print('itr: ',itr)
-                itr += 1
-                break
-            break
             trainer.train(model, ims, real_input_flag, args, itr)
             # snapshot_interval = 1000 每1000次保存一次
             if itr % args.snapshot_interval == 0 and itr > begin:
@@ -182,7 +179,6 @@ def test_wrapper(model):
 if __name__ == '__main__':
 
     print('current dataset is ',args.dataset)
-    print('batch_size=',args.batch_size)
     print('Initializing models')
     #判断是训练还是测试
     if args.is_training == 'True':
