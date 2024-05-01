@@ -5,6 +5,7 @@ from core.data_provider import datasets_factory
 from core.models.model_factory import Model
 import core.trainer as trainer
 import pynvml
+import zipfile
 import cv2 as cv
 
 
@@ -98,6 +99,7 @@ def train_wrapper(model):
     # real_input_flag = {}
     for epoch in range(0, args.max_epoches):
         if itr > args.max_iterations:
+            make_zip(args.result_zip_dir, 'mau_result.zip')
             break
         for ims, ims_mask, ims_back in train_input_handle:
             if itr > args.max_iterations:
@@ -130,6 +132,15 @@ def test_wrapper(model):
     itr = 1
     for i in range(itr):
         trainer.test(model, test_input_handle, args, itr)
+
+
+def make_zip(source_dir, output_filename):
+    zip_file = zipfile.ZipFile(output_filename, 'w')
+    # 把zfile整个目录下所有内容，压缩为new.zip文件
+    zip_file.write(source_dir, compress_type=zipfile.ZIP_DEFLATED)
+    # 把c.txt文件压缩成一个压缩文件
+    # zip_file.write('c.txt',compress_type=zipfile.ZIP_DEFLATED)
+    zip_file.close()
 
 
 if __name__ == '__main__':
