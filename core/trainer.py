@@ -29,12 +29,17 @@ def test(model, test_input_handle, configs, itr):
     res_ground_true_path = configs.gen_frm_dir + '/' + str(itr) +'/ground_true_files'
     res_pred_path = configs.gen_frm_dir + '/' + str(itr) + '/pred_files'
 
+    all_result_path = configs.gen_frm_dir + '/' + str(itr) + '/allfiles'
+
     if not os.path.exists(res_path):
         os.mkdir(res_path)
     if not os.path.exists(res_ground_true_path):
         os.mkdir(res_ground_true_path)
     if not os.path.exists(res_pred_path):
         os.mkdir(res_pred_path)
+
+    if not os.path.exists(all_result_path):
+        os.mkdir(all_result_path)
 
     f = codecs.open(res_path + '/performance.txt', 'w+')
     ft = codecs.open(configs.gen_frm_dir + '/all_performance.txt', 'a+')
@@ -253,7 +258,7 @@ def test(model, test_input_handle, configs, itr):
             img_pred_name = str(batch_id) + '_pred.png'
 
             # file_name = results/mau/1.png
-            file_name = os.path.join(res_path, name)
+            all_result_file_name = os.path.join(all_result_path, name)
 
             file_img_input_name = os.path.join(res_path, img_input_name)
             file_img_ground_true_name = os.path.join(res_path, img_ground_true_name)
@@ -382,8 +387,8 @@ def test(model, test_input_handle, configs, itr):
                     currentImage = np.maximum(currentImage, 0)
                     currentImage = np.minimum(currentImage, 1)
                     name = str(index) + '.png'
-                    file_name = os.path.join(res_ground_true_batch_Id_path, name)
-                    cv2.imwrite(file_name, (currentImage * 255).astype(np.uint8))
+                    ground_true_file_name = os.path.join(res_ground_true_batch_Id_path, name)
+                    cv2.imwrite(ground_true_file_name, (currentImage * 255).astype(np.uint8))
                 mp4_file_name = os.path.join(res_ground_true_batch_Id_path, 'ground_true_images.mp4')
                 img2video(image_root=res_ground_true_batch_Id_path, dst_name=mp4_file_name)
 
@@ -392,14 +397,14 @@ def test(model, test_input_handle, configs, itr):
                     currentImage = np.maximum(currentImage, 0)
                     currentImage = np.minimum(currentImage, 1)
                     name = str(index) + '.png'
-                    file_name = os.path.join(res_pred_batch_Id_path, name)
-                    cv2.imwrite(file_name, (currentImage * 255).astype(np.uint8))
+                    pred_file_name = os.path.join(res_pred_batch_Id_path, name)
+                    cv2.imwrite(pred_file_name, (currentImage * 255).astype(np.uint8))
                 mp4_file_name = os.path.join(res_pred_batch_Id_path, 'pred_images.mp4')
                 img2video(image_root=res_pred_batch_Id_path, dst_name=mp4_file_name)
 
 
                 # 写出对比图片
-                cv2.imwrite(file_name, (img * 255).astype(np.uint8))
+                cv2.imwrite(all_result_file_name, (img * 255).astype(np.uint8))
                 cv2.imwrite(file_img_input_name, (img_input * 255).astype(np.uint8))
                 cv2.imwrite(file_img_ground_true_name, (img_ground_true * 255).astype(np.uint8))
                 cv2.imwrite(file_img_pred_name, (img_pred * 255).astype(np.uint8))
