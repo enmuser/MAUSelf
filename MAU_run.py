@@ -135,6 +135,8 @@ def test_wrapper(model):
 
 
 def make_zip(source_dir, output_filename):
+    print('source_dir: ', source_dir)
+    print('output_filename: ', output_filename)
     zip_file = zipfile.ZipFile(output_filename, 'w')
     # 把zfile整个目录下所有内容，压缩为new.zip文件
     zip_file.write(source_dir, compress_type=zipfile.ZIP_DEFLATED)
