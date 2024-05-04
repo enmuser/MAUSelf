@@ -42,7 +42,7 @@ def configs():
     parser.add_argument('--max_iterations', type=int, default=315100)
     parser.add_argument('--max_epoches', type=int, default=315100)
     parser.add_argument('--display_interval', type=int, default=1)
-    parser.add_argument('--test_interval', type=int, default=50)
+    parser.add_argument('--test_interval', type=int, default=20)
     parser.add_argument('--snapshot_interval', type=int, default=100)
     parser.add_argument('--num_save_samples', type=int, default=100)
     parser.add_argument('--n_gpu', type=int, default=1)
