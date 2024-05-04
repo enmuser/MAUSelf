@@ -73,7 +73,7 @@ class KTH(SequenceDataset):
         self.n_frames = num_frames
         self.num_channels = num_channels
         self.img_size = img_size
-        self.horiz_flip_aug = horiz_flip_aug and self.split != "test"
+        self.horiz_flip_aug = False
 
         dataset = "train" if self.split != "test" else "test"
         self.dataset = dataset
@@ -98,9 +98,9 @@ class KTH(SequenceDataset):
             pass
             # random.shuffle(KTH.ALL_IDX)
         self.idx_list = KTH.ALL_IDX
-        if self.split != "test":
-            train_len = int(len(KTH.ALL_IDX) * self.train_to_val_ratio)
-            self.idx_list = self.idx_list[:train_len] if self.split == "train" else self.idx_list[train_len:]
+        #if self.split != "test":
+           # train_len = int(len(KTH.ALL_IDX) * self.train_to_val_ratio)
+            # self.idx_list = self.idx_list[:train_len] if self.split == "train" else self.idx_list[train_len:]
 
     def _is_valid_sequence(self, seq, cls):
         """ Exploit short sequences of specific classes by extending them with repeated last frame """
@@ -150,8 +150,8 @@ class KTH(SequenceDataset):
         # getting random starting idx, and corresponding data
         first_frame = 0
         if len(seq) > self.n_frames:
-            rand_gen = random.Random(self.first_frame_rng_seed) if self.split == "test" else random
-            first_frame = rand_gen.randint(0, len(seq) - self.n_frames)
+            # rand_gen = random.Random(self.first_frame_rng_seed) if self.split == "test" else random
+            first_frame = 0
         last_frame = (len(seq) - 1) if (len(seq) <= self.n_frames) else (first_frame + self.n_frames - 1)
         for i in range(first_frame, last_frame + 1):
             fname = os.path.join(dname, seq[i].decode('utf-8'))
