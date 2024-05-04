@@ -95,8 +95,8 @@ class KTH(SequenceDataset):
             KTH.IDX_TO_CLS_VID_SEQ = self._find_valid_sequences()
             KTH.ALL_IDX = list(range(0, len(KTH.IDX_TO_CLS_VID_SEQ)))
         if self.split == "train":
-            pass
-            # random.shuffle(KTH.ALL_IDX)
+            random.shuffle(KTH.ALL_IDX)
+            print("KTH.ALL_IDX=", KTH.ALL_IDX)
         self.idx_list = KTH.ALL_IDX
         #if self.split != "test":
            # train_len = int(len(KTH.ALL_IDX) * self.train_to_val_ratio)
