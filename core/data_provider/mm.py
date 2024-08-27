@@ -5,6 +5,7 @@ import random
 import torch
 import torch.utils.data as data
 import cv2 as cv
+from rembg import remove
 
 from core.utils.ImagesToVideo import img2video
 
@@ -104,6 +105,59 @@ class MovingMNIST(data.Dataset):
         return data
 
     def __getitem__(self, idx):
+        length = self.n_frames
+        if self.is_train or self.num_objects[0] != 2:
+            num_digits = random.choice(self.num_objects)
+            images = self.generate_moving_mnist(num_digits)
+        else:
+            images = self.dataset[:, idx, ...]
+        r = 1
+        w = int(64 / r)
+        img = np.ones((64, 64, 1))
+        img_mask = np.ones((20, 64, 64, 1))
+        img_background = np.ones((20, 64, 64, 1))
+        for t in range(20):
+            image = images[t]
+            name = str(t) + '.png'
+            file_name = os.path.join("/kaggle/working/MAUSelf/results/mau/video/file", name)
+            cv2.imwrite(file_name, img.astype(np.uint8))
+            # 读取图片
+            image = cv2.imread(file_name)
+            # 使用rembg进行前后景分离
+            mask = remove(image, output_format='rgba')
+            # 提取前景
+            foreground = cv2.bitwise_and(image, image, mask=mask[..., 3])
+            background = cv2.subtract(image, foreground)
+            foreground = foreground[:, :, 0]
+            foreground = np.expand_dims(foreground, axis=2)
+            img_mask[t] = foreground
+            background = background[:, :, 0]
+            background = np.expand_dims(background, axis=2)
+            img_background[t] = background
+            #print("count=", count)
+
+
+        # 20 * 1 * 64 * 64
+        images = images.reshape((length, w, r, w, r)).transpose(0, 2, 4, 1, 3).reshape((length, r * r, w, w))
+        images_mask = img_mask.reshape((length, w, r, w, r)).transpose(0, 2, 4, 1, 3).reshape((length, r * r, w, w))
+        images_background = img_background.reshape((length, w, r, w, r)).transpose(0, 2, 4, 1, 3).reshape((length, r * r, w, w))
+        # img = np.ones((64, 64, 1))
+        # capture = cv.VideoCapture(cv.s)
+        output = torch.from_numpy(images / 255.0).contiguous().float()
+        output_mask = torch.from_numpy(images_mask / 255.0).contiguous().float()
+        output_background = torch.from_numpy(images_background / 255.0).contiguous().float()
+        # for t in range(19):
+        #     net = images[t]
+        #
+        #     backSub = cv.createBackgroundSubtractorMOG2()
+        #     fgMask = backSub.apply(net)
+        #     background = backSub.getBackgroundImage()
+        #     cv.imshow('Frame', net)
+        #     cv.imshow('FG Background', background)
+        #     cv.imshow('FG Mask', fgMask)
+        return output, output_mask, output_background
+
+    def __getitem_bak__(self, idx):
         length = self.n_frames
         if self.is_train or self.num_objects[0] != 2:
             num_digits = random.choice(self.num_objects)
