@@ -5,7 +5,7 @@ import random
 import torch
 import torch.utils.data as data
 import cv2 as cv
-from rembg import remove
+from rembg import remove,new_session
 
 from core.utils.ImagesToVideo import img2video
 
@@ -116,15 +116,30 @@ class MovingMNIST(data.Dataset):
         img = np.ones((64, 64, 1))
         img_mask = np.ones((20, 64, 64, 1))
         img_background = np.ones((20, 64, 64, 1))
+        rembg_session = new_session()
         for t in range(20):
             image = images[t]
-            name = str(t) + '.png'
-            file_name = os.path.join("/kaggle/working/MAUSelf/results/mau/video/file", name)
-            cv2.imwrite(file_name, img.astype(np.uint8))
-            # 读取图片
-            image = cv2.imread(file_name)
+            # name = str(t) + '.png'
+            # file_name = os.path.join("/kaggle/working/MAUSelf/results/mau/video/file", name)
+            # cv2.imwrite(file_name, img.astype(np.uint8))
+            # # 读取图片
+            # image = cv2.imread(file_name)
+            # # 使用rembg进行前后景分离
+            # mask = remove(image, output_format='rgba')
+
+            image = images[t]
+            # name = str(t) + '.png'
+            # file_name = os.path.join("results/mau/video/file", name)
+            # cv2.imwrite(file_name, img.astype(np.uint8))
+            # image = np.expand_dims(image, axis=2)
+            image = np.concatenate((image, image, image), axis=-1)
+
+            # # 读取图片
+            # image = cv2.imread(file_name)
+            # start_inner = datetime.now()
+            # image = Image.fromarray(image.astype(np.uint8),mode="RGB")
             # 使用rembg进行前后景分离
-            mask = remove(image, output_format='rgba')
+            mask = remove(image.astype(np.uint8), output_format='rgba', session=rembg_session)
             # 提取前景
             foreground = cv2.bitwise_and(image, image, mask=mask[..., 3])
             background = cv2.subtract(image, foreground)
