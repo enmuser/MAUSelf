@@ -9,6 +9,8 @@ from rembg import remove,new_session
 
 from core.utils.ImagesToVideo import img2video
 
+rembg_session = new_session()
+
 def load_mnist(root):
     path = os.path.join(root, 'train-images.idx3-ubyte')
     with open(path, 'rb') as f:
@@ -116,7 +118,7 @@ class MovingMNIST(data.Dataset):
         img = np.ones((64, 64, 1))
         img_mask = np.ones((20, 64, 64, 1))
         img_background = np.ones((20, 64, 64, 1))
-        rembg_session = new_session()
+
         for t in range(20):
             image = images[t]
             # name = str(t) + '.png'
