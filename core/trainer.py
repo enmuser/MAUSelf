@@ -217,7 +217,6 @@ def test(model, test_input_handle, configs, itr):
                          'lpips_list: \n' + str(lpips_list) +'\n' + ' lpips_list_avg: '+ str(statistics.mean(lpips_list)) +'\n\n' +
                          'ssim_list: \n' + str(ssim_list) + '\n' +' ssim_list_avg: '+  str(statistics.mean(ssim_list)) +'\n\n')
             ft.writelines('**************************************************************************************************\n')
-
             # res_width = 64
             res_width = configs.img_width
             # res_height = 64

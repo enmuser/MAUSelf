@@ -266,57 +266,15 @@ class RNN(nn.Module):
                 if itr <= self.train_level_base_line:
                     net_mask = frames_mask[:, t]
                     net_back = frames_back[:, t]
+                elif itr <= (self.train_level_base_line + 30000):
+                    if t <= 5:
+                        net_mask = frames_mask[:, t]
+                        net_back = frames_back[:, t]
+                    else:
+                        net_mask = x_gen_mask
+                        net_back = x_gen_back
                 elif itr <= (self.train_level_base_line + 50000):
-                    if t <= 17:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 150000):
-                    if t <= 16:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 300000):
-                    if t <= 15:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 450000):
-                    if t <= 14:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 600000):
-                    if t <= 13:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 750000):
-                    if t <= 12:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 900000):
-                    if t <= 11:
-                        net_mask = frames_mask[:, t]
-                        net_back = frames_back[:, t]
-                    else:
-                        net_mask = x_gen_mask
-                        net_back = x_gen_back
-                elif itr <= (self.train_level_base_line + 1050000):
-                    if t <= 10:
+                    if t <= 4:
                         net_mask = frames_mask[:, t]
                         net_back = frames_back[:, t]
                     else:

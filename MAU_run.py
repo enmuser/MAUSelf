@@ -13,16 +13,37 @@ import cv2 as cv
 pynvml.nvmlInit()
 # -----------------------------------------------------------------------------
 parser = argparse.ArgumentParser(description='MAU')
-parser.add_argument('--dataset', type=str, default='mnist')
+parser.add_argument('--dataset', type=str, default='taxibj')
 parser.add_argument('--is_train', type=str, default='True', required=False)
 args_main = parser.parse_args()
 args_main.tied = True
 
 if args_main.is_train == 'True':
-    from configs.mnist_train_configs import configs
+    if args_main.dataset == 'mnist':
+       from configs.mnist_train_configs import configs
+    elif args_main.dataset == 'kth':
+       from configs.kth_train_configs import configs
+    elif args_main.dataset == 'caltech_pedestrian':
+       from configs.caltech_pedestrian_train_configs import configs
+    elif args_main.dataset == 'taxibj':
+       from configs.taxibj_train_configs import configs
+    elif args_main.dataset == 'kitti':
+       from configs.kitti_train_configs import configs
+    elif args_main.dataset == 'synpick':
+       from configs.synpick_train_configs import configs
 else:
-    from configs.mnist_configs import configs
-
+    if args_main.dataset == 'mnist':
+       from configs.mnist_configs import configs
+    elif args_main.dataset == 'kth':
+       from configs.kth_configs import configs
+    elif args_main.dataset == 'caltech_pedestrian':
+       from configs.caltech_pedestrian_configs import configs
+    elif args_main.dataset == 'taxibj':
+       from configs.taxibj_configs import configs
+    elif args_main.dataset == 'kitti':
+       from configs.kitti_configs import configs
+    elif args_main.dataset == 'synpick':
+       from configs.synpick_configs import configs
 parser = configs()
 parser.add_argument('--device', type=str, default='cuda')
 args = parser.parse_args()
@@ -150,6 +171,7 @@ if __name__ == '__main__':
 
     print('Initializing models')
     print('batch_size ', args.batch_size)
+    print('current dataset is ', args.dataset)
     #判断是训练还是测试
     if args.is_training == 'True':
         args.is_training = True
