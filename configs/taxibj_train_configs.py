@@ -11,6 +11,7 @@ def configs():
     parser.add_argument('--data_val_path', type=str, default='/kaggle/input/taxibjdataset/taxibj_dataset/')
     parser.add_argument('--data_test_path', type=str, default='/kaggle/input/taxibjdataset/taxibj_dataset/')
     parser.add_argument('--input_length', type=int, default=4)
+    parser.add_argument('--pred_length', type=int, default=4)
     parser.add_argument('--real_length', type=int, default=8)
     parser.add_argument('--total_length', type=int, default=8)
     parser.add_argument('--img_height', type=int, default=32)
