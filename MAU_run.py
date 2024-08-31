@@ -135,6 +135,7 @@ def train_wrapper(model):
             # snapshot_interval = 1000 每1000次保存一次
             if itr % args.snapshot_interval == 0 and itr > begin:
                 model.save(itr)
+                shutil.make_archive(args.result_zip_file_name+'_'+str(itr), 'zip', args.result_zip_dir)
             itr += 1
 
             meminfo_end = pynvml.nvmlDeviceGetMemoryInfo(handle)
