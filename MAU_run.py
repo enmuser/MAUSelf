@@ -6,6 +6,7 @@ from core.models.model_factory import Model
 import core.trainer as trainer
 import pynvml
 import cv2 as cv
+import shutil
 
 
 pynvml.nvmlInit()
@@ -98,9 +99,11 @@ def train_wrapper(model):
     # real_input_flag = {}
     for epoch in range(0, args.max_epoches):
         if itr > args.max_iterations:
+            shutil.make_archive(args.result_zip_file_name, 'zip', args.result_zip_dir)
             break
         for ims, ims_mask, ims_back in train_input_handle:
             if itr > args.max_iterations:
+                shutil.make_archive(args.result_zip_file_name, 'zip', args.result_zip_dir)
                 break
             batch_size = ims.shape[0]
             eta, real_input_flag = schedule_sampling(eta, itr, args.img_channel, batch_size)

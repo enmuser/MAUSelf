@@ -10,7 +10,7 @@ from core.utils import preprocess
 import torch
 import codecs
 import lpips
-
+from core.utils.ImagesToVideo import img2video
 
 def train(model, ims, ims_mask, ims_back, real_input_flag, configs, itr):
     _, loss_l1, loss_l2 = model.train(ims, ims_mask, ims_back, real_input_flag, itr)
@@ -26,8 +26,28 @@ def test(model, test_input_handle, configs, itr):
     # gen_frm_dir = results/mau/
     res_path = configs.gen_frm_dir + '/' + str(itr)
 
+    res_input_path = configs.gen_frm_dir + '/' + str(itr) + '/input_files'
+    res_ground_true_path = configs.gen_frm_dir + '/' + str(itr) +'/ground_true_files'
+    res_pred_path = configs.gen_frm_dir + '/' + str(itr) + '/pred_files'
+    res_ground_true_and_pred_diff_path = configs.gen_frm_dir + '/' + str(itr) + '/ground_true_and_pred_diff_files'
+
+
+    all_result_path = configs.gen_frm_dir + '/' + str(itr) + '/allfiles'
+
     if not os.path.exists(res_path):
         os.mkdir(res_path)
+    if not os.path.exists(res_ground_true_path):
+        os.mkdir(res_ground_true_path)
+    if not os.path.exists(res_pred_path):
+        os.mkdir(res_pred_path)
+    if not os.path.exists(res_input_path):
+        os.mkdir(res_input_path)
+    if not os.path.exists(res_ground_true_and_pred_diff_path):
+        os.mkdir(res_ground_true_and_pred_diff_path)
+
+    if not os.path.exists(all_result_path):
+        os.mkdir(all_result_path)
+
     f = codecs.open(res_path + '/performance.txt', 'w+')
     ft = codecs.open(configs.gen_frm_dir + '/all_performance.txt', 'a+')
     f.truncate()
@@ -65,6 +85,14 @@ def test(model, test_input_handle, configs, itr):
             if batch_id > configs.num_save_samples:
                 break
             print(batch_id)
+
+            res_ground_true_batch_Id_path =  res_ground_true_path + '/' + str(batch_id)
+            if not os.path.exists(res_ground_true_batch_Id_path):
+                os.mkdir(res_ground_true_batch_Id_path)
+
+            res_pred_batch_Id_path =  res_pred_path + '/' + str(batch_id)
+            if not os.path.exists(res_pred_batch_Id_path):
+                os.mkdir(res_pred_batch_Id_path)
 
             batch_size = data.shape[0]
             # real_input_flag = 16 * 19 * 64 * 64 * 1
@@ -173,7 +201,7 @@ def test(model, test_input_handle, configs, itr):
                 # batch_size = 16 | 0,1,2,3,...,13,14,15
                 for b in range(batch_size):
                     # 计算每一个批次的ssim, 并且累加
-                    score += compare_ssim(x[b, :], gx[b, :], multichannel=True)
+                    score += compare_ssim(x[b, :], gx[b, :], channel_axis=True)
                 # 除以批次大小 获得平均ssim
                 score /= batch_size
                 # ------------------------------
@@ -196,7 +224,6 @@ def test(model, test_input_handle, configs, itr):
                          'lpips_list: \n' + str(lpips_list) +'\n' + ' lpips_list_avg: '+ str(statistics.mean(lpips_list)) +'\n\n' +
                          'ssim_list: \n' + str(ssim_list) + '\n' +' ssim_list_avg: '+  str(statistics.mean(ssim_list)) +'\n\n')
             ft.writelines('**************************************************************************************************\n')
-
             # res_width = 64
             res_width = configs.img_width
             # res_height = 64
@@ -215,6 +242,9 @@ def test(model, test_input_handle, configs, itr):
             img_pred = np.ones((res_height,
                                 configs.pred_length * res_width + configs.pred_length * interval,
                                 configs.img_channel))
+
+            img_input_ground_true = []
+            img_input_pred = []
             if configs.is_training == True and configs.dataset == 'kth':
                 img_input = np.ones((res_height,
                                      (configs.input_length//2) * res_width + (configs.input_length//2) * interval,
@@ -234,11 +264,11 @@ def test(model, test_input_handle, configs, itr):
             img_pred_name = str(batch_id) + '_pred.png'
 
             # file_name = results/mau/1.png
-            file_name = os.path.join(res_path, name)
+            all_result_file_name = os.path.join(all_result_path, name)
 
-            file_img_input_name = os.path.join(res_path, img_input_name)
-            file_img_ground_true_name = os.path.join(res_path, img_ground_true_name)
-            file_img_pred_name = os.path.join(res_path, img_pred_name)
+            file_img_input_name = os.path.join(res_input_path, img_input_name)
+            file_img_ground_true_name = os.path.join(res_ground_true_batch_Id_path, img_ground_true_name)
+            file_img_pred_name = os.path.join(res_pred_batch_Id_path, img_pred_name)
 
             img_input_single = np.ones((res_height, res_width, configs.img_channel))
             img_ground_true_single = np.ones((res_height, res_width, configs.img_channel))
@@ -257,13 +287,17 @@ def test(model, test_input_handle, configs, itr):
                             continue
                         else:
                             img_input[:res_height, ((i // 2) * res_width + (i // 2) * interval):(((i // 2) + 1) * res_width + (i // 2) * interval), :] = test_ims[0, i, :]
+                            img_input_ground_true.append(test_ims[0, i, :])
+                            img_input_pred.append(test_ims[0, i, :])
                     else:
                         img_input[:res_height, (i * res_width + i * interval):((i + 1) * res_width + i * interval),:] = test_ims[0, i, :]
+                        img_input_ground_true.append(test_ims[0, i, :])
+                        img_input_pred.append(test_ims[0, i, :])
                     if configs.img_channel == 2:
                         img_input_single[:, :, :] = test_ims[0, i, :]
                         img_total_input_single = img_input_single[:, :, 0] + img_input_single[:, :, 1]
                         img_input_name_single = 'batch_' + str(batch_id) + '_input_' + str(i) + '.svg'
-                        file_img_input_name_single_svg = os.path.join(res_path, img_input_name_single)
+                        file_img_input_name_single_svg = os.path.join(res_input_path, img_input_name_single)
                         plt.imsave(file_img_input_name_single_svg,img_total_input_single.reshape(img_total_input_single.shape[0],img_total_input_single.shape[1]), vmin=0, vmax=1.0)
                 else:
                     if configs.is_training == True and configs.dataset == 'kth':
@@ -271,13 +305,15 @@ def test(model, test_input_handle, configs, itr):
                             continue
                         else:
                             img_ground_true[:res_height, (((i - configs.input_length) // 2) * res_width + ((i - configs.input_length) // 2) * interval):((((i - configs.input_length) // 2) + 1) * res_width + ((i - configs.input_length) // 2) * interval),:] = test_ims[0, i, :]
+                            img_input_ground_true.append(test_ims[0, i, :])
                     else:
                         img_ground_true[:res_height,((i - configs.input_length) * res_width + (i - configs.input_length) * interval):((i + 1 - configs.input_length) * res_width + (i - configs.input_length) * interval),:] = test_ims[0, i, :]
+                        img_input_ground_true.append(test_ims[0, i, :])
                     if configs.img_channel == 2:
                         img_ground_true_single[:, :, :] = test_ims[0, i, :]
                         img_total_ground_true_single = img_ground_true_single[:, :, 0] + img_ground_true_single[:, :, 1]
                         img_ground_true_name_single = 'batch_' + str(batch_id) + '_ground_true_' + str(i - configs.input_length) + '.svg'
-                        file_img_ground_true_name_single_svg = os.path.join(res_path, img_ground_true_name_single)
+                        file_img_ground_true_name_single_svg = os.path.join(res_ground_true_batch_Id_path, img_ground_true_name_single)
                         plt.imsave(file_img_ground_true_name_single_svg,img_total_ground_true_single.reshape(img_total_ground_true_single.shape[0],img_total_ground_true_single.shape[1]), vmin=0,vmax=1.0)
 
                         img_pred_single[:, :, :] = img_out[0, -output_length + (i - configs.input_length), :]
@@ -285,7 +321,7 @@ def test(model, test_input_handle, configs, itr):
 
                         img_total_target_pred_diff_single = img_total_ground_true_single[:, :] - img_total_pred_single[:, :]
                         img_target_pred_diff_name_single = 'batch_' + str(batch_id) + '_target_pred_diff_' + str(i - configs.input_length) + '.svg'
-                        file_img_target_pred_diff_name_single_svg = os.path.join(res_path,img_target_pred_diff_name_single)
+                        file_img_target_pred_diff_name_single_svg = os.path.join(res_ground_true_and_pred_diff_path,img_target_pred_diff_name_single)
                         plt.imsave(file_img_target_pred_diff_name_single_svg,img_total_target_pred_diff_single.reshape(img_total_target_pred_diff_single.shape[0],img_total_target_pred_diff_single.shape[1]),vmin=0, vmax=1.0)
             # total_length = 10 | 0,1,2,3,...,7,8,9
             for i in range(output_length):
@@ -298,13 +334,15 @@ def test(model, test_input_handle, configs, itr):
                         continue
                     else:
                         img_pred[:res_height,((i // 2) * res_width + (i // 2) * interval):(((i // 2) + 1) * res_width + (i // 2) * interval),:] = img_out[0, -output_length + i, :]
+                        img_input_pred.append(img_out[0, -output_length + i, :])
                 else:
                     img_pred[:res_height, (i * res_width + i * interval):((i + 1) * res_width + i * interval),:] = img_out[0, -output_length + i, :]
+                    img_input_pred.append(img_out[0, -output_length + i, :])
                 if configs.img_channel == 2:
                     img_pred_single[:, :, :] = img_out[0, -output_length + i, :]
                     img_total_pred_single = img_pred_single[:, :, 0] + img_pred_single[:, :, 1]
                     img_pred_name_single = 'batch_' + str(batch_id) + '_pred_' + str(i) + '.svg'
-                    file_img_pred_name_single_svg = os.path.join(res_path, img_pred_name_single)
+                    file_img_pred_name_single_svg = os.path.join(res_pred_batch_Id_path, img_pred_name_single)
                     plt.imsave(file_img_pred_name_single_svg, img_total_pred_single.reshape(img_total_pred_single.shape[0],img_total_pred_single.shape[1]),vmin=0, vmax=1.0)
 
             # 将小于0的变成0, 将大于1的变成1
@@ -325,11 +363,11 @@ def test(model, test_input_handle, configs, itr):
                 img_pred_name = str(batch_id) + '_pred.svg'
 
                 # file_name = results/mau/1.png
-                file_name_svg = os.path.join(res_path, name_svg)
+                file_name_svg = os.path.join(all_result_path, name_svg)
 
-                file_img_input_nam_svg = os.path.join(res_path, img_input_name)
-                file_img_ground_true_name_svg = os.path.join(res_path, img_ground_true_name)
-                file_img_pred_name_svg = os.path.join(res_path, img_pred_name)
+                file_img_input_nam_svg = os.path.join(res_input_path, img_input_name)
+                file_img_ground_true_name_svg = os.path.join(res_ground_true_batch_Id_path, img_ground_true_name)
+                file_img_pred_name_svg = os.path.join(res_pred_batch_Id_path, img_pred_name)
 
                 plt.imsave(file_name_svg, img_total.reshape(img_total.shape[0], img_total.shape[1]), vmin=0, vmax=1.0)
 
@@ -349,8 +387,30 @@ def test(model, test_input_handle, configs, itr):
                 img_pred = np.maximum(img_pred, 0)
                 img_pred = np.minimum(img_pred, 1)
 
+
+                for index in range(configs.total_length):
+                    currentImage = img_input_ground_true[index]
+                    currentImage = np.maximum(currentImage, 0)
+                    currentImage = np.minimum(currentImage, 1)
+                    name = str(index) + '.png'
+                    ground_true_file_name = os.path.join(res_ground_true_batch_Id_path, name)
+                    cv2.imwrite(ground_true_file_name, (currentImage * 255).astype(np.uint8))
+                #mp4_file_name = os.path.join(res_ground_true_batch_Id_path, 'ground_true_images.mp4')
+                #img2video(image_root=res_ground_true_batch_Id_path, dst_name=mp4_file_name)
+
+                for index in range(configs.total_length):
+                    currentImage = img_input_pred[index]
+                    currentImage = np.maximum(currentImage, 0)
+                    currentImage = np.minimum(currentImage, 1)
+                    name = str(index) + '.png'
+                    pred_file_name = os.path.join(res_pred_batch_Id_path, name)
+                    cv2.imwrite(pred_file_name, (currentImage * 255).astype(np.uint8))
+                #mp4_file_name = os.path.join(res_pred_batch_Id_path, 'pred_images.mp4')
+                #img2video(image_root=res_pred_batch_Id_path, dst_name=mp4_file_name)
+
+
                 # 写出对比图片
-                cv2.imwrite(file_name, (img * 255).astype(np.uint8))
+                cv2.imwrite(all_result_file_name, (img * 255).astype(np.uint8))
                 cv2.imwrite(file_img_input_name, (img_input * 255).astype(np.uint8))
                 cv2.imwrite(file_img_ground_true_name, (img_ground_true * 255).astype(np.uint8))
                 cv2.imwrite(file_img_pred_name, (img_pred * 255).astype(np.uint8))
