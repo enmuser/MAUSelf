@@ -201,7 +201,7 @@ def test(model, test_input_handle, configs, itr):
                 # batch_size = 16 | 0,1,2,3,...,13,14,15
                 for b in range(batch_size):
                     # 计算每一个批次的ssim, 并且累加
-                    score += compare_ssim(x[b, :], gx[b, :], channel_axis=True)
+                    score += compare_ssim(x[b, :], gx[b, :], multichannel=True)
                 # 除以批次大小 获得平均ssim
                 score /= batch_size
                 # ------------------------------
