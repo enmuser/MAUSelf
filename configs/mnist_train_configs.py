@@ -53,6 +53,7 @@ def configs():
     parser.add_argument('--save_dir', type=str, default='/kaggle/working/MAUSelf/checkpoints/mau/')
     parser.add_argument('--gen_frm_dir', type=str, default='/kaggle/working/MAUSelf/results/mau/')
     parser.add_argument('--result_zip_dir', type=str, default='/kaggle/working/MAUSelf/results/mau/')
+    parser.add_argument('--result_feature_dir', type=str, default='/kaggle/working/MAUSelf/results/mau/feature_files')
     parser.add_argument('--result_zip_file_name', type=str, default='/kaggle/working/MAUSelf/mau_result_zip')
     parser.add_argument('--scheduled_sampling', type=bool, default=True)
     parser.add_argument('--sampling_stop_iter', type=int, default=50000)

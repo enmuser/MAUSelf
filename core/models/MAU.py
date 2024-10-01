@@ -1,3 +1,7 @@
+import os
+
+import cv2
+import numpy as np
 import torch
 import torch.nn as nn
 from core.layers.MAUCell import MAUCell
@@ -374,6 +378,33 @@ class RNN(nn.Module):
                 s_att_level_two = S_pre_level_two[i][-self.tau:]
                 s_att_level_two = torch.stack(s_att_level_two, dim=0)
                 S_pre_level_two[i].append(S_t_level_two)
+
+                if(itr % 100 == 0 and t % 5 == 0 and i % 3 == 0):
+                    res_height = 16
+                    res_width = 16
+                    interval = 4
+                    img_input_feature = np.ones((res_height, 3 * res_width + 3 * interval,1))
+                    res_feature_path = self.configs.result_feature_dir
+                    if not os.path.exists(res_feature_path):
+                        os.mkdir(res_feature_path)
+                    img_feature_name = 'itr_all_' + str(itr) + '_time_'+str(t)+'_layer_'+str(i)+'.png'
+                    S_t_feature = S_t[0, 32, ::]
+                    S_t_feature_tem = S_t_feature.detach().cpu().numpy()
+                    S_t_feature_result = np.expand_dims(S_t_feature_tem, axis=2)
+                    img_input_feature[:res_height,((3 - 3) * res_width + (3 - 3) * interval):((3 + 1 - 3) * res_width + (3 - 3) * interval),:] = S_t_feature_result[:,:,:]
+
+                    S_t_level_one_feature = S_t_level_one[0, 32, ::]
+                    S_t_level_one_feature_tem = S_t_level_one_feature.detach().cpu().numpy()
+                    S_t_level_one_feature_result = np.expand_dims(S_t_level_one_feature_tem, axis=2)
+                    img_input_feature[:res_height,((4 - 3) * res_width + (4 - 3) * interval):((4 + 1 - 3) * res_width + (4 - 3) * interval),:] = S_t_level_one_feature_result[:, :, :]
+
+                    S_t_level_two_feature = S_t_level_two[0, 32, ::]
+                    S_t_level_two_feature_tem = S_t_level_two_feature.detach().cpu().numpy()
+                    S_t_level_two_feature_result = np.expand_dims(S_t_level_two_feature_tem, axis=2)
+                    img_input_feature[:res_height,((5 - 3) * res_width + (5 - 3) * interval):((5 + 1 - 3) * res_width + (5 - 3) * interval),:] = S_t_level_two_feature_result[:, :, :]
+
+                    file_feature_name = os.path.join(res_feature_path, img_feature_name)
+                    cv2.imwrite(file_feature_name, (img_input_feature * 255).astype(np.uint8))
 
                 T_t[i], T_t_level_one[i], T_t_level_two[i], S_t, S_t_level_one, S_t_level_two = \
                     self.cell_list[i](T_t[i], T_t_level_one[i], T_t_level_two[i], S_t, S_t_level_one, S_t_level_two, t_att, s_att, t_att_level_one, s_att_level_one, t_att_level_two, s_att_level_two)
