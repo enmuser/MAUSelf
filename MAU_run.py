@@ -10,15 +10,21 @@ import pynvml
 pynvml.nvmlInit()
 # -----------------------------------------------------------------------------
 parser = argparse.ArgumentParser(description='MAU')
-parser.add_argument('--dataset', type=str, default='mnist')
-parser.add_argument('--is_train', type=str, default='False', required=True)
+parser.add_argument('--dataset', type=str, default='radar')
+parser.add_argument('--is_train', type=str, default='True', required=False)
 args_main = parser.parse_args()
 args_main.tied = True
 
 if args_main.is_train == 'True':
-    from configs.mnist_train_configs import configs
+    if args_main.dataset == 'mnist':
+        from configs.mnist_train_configs import configs
+    elif args_main.dataset == 'radar':
+        from configs.radar_train_configs import configs
 else:
-    from configs.mnist_configs import configs
+    if args_main.dataset == 'mnist':
+        from configs.mnist_configs import configs
+    elif args_main.dataset == 'radar':
+        from configs.radar_configs import configs
 
 parser = configs()
 parser.add_argument('--device', type=str, default='cuda')
@@ -82,6 +88,7 @@ def train_wrapper(model):
                                                         dataset=args.dataset,
                                                         data_test_path=args.data_val_path,
                                                         batch_size=args.batch_size,
+                                                        split="train",
                                                         is_training=True,
                                                         is_shuffle=True)
     val_input_handle = datasets_factory.data_provider(configs=args,
@@ -89,6 +96,7 @@ def train_wrapper(model):
                                                       dataset=args.dataset,
                                                       data_test_path=args.data_val_path,
                                                       batch_size=args.batch_size,
+                                                      split="test",
                                                       is_training=False,
                                                       is_shuffle=False)
     eta = args.sampling_start_value
