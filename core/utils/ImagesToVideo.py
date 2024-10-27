@@ -123,10 +123,14 @@ def img2video(image_root, dst_name, fps=24):
 
 
 if __name__ == '__main__':
-    image_root = './test_img/'
-    dst_name = './test_img.mp4'
     fps = 24
-    img2video(image_root, dst_name, fps=fps)
+    idx_list = list(range(0, 3150))
+    for index in idx_list:
+        fileIndex = index + 1
+        fileDirectoryName = os.path.join('E:\\paperwithcode\\MAUSelf\\data\\radar_dataset\\test', f'sample_{fileIndex}')
+        print(fileDirectoryName)
+        fileDirectoryVideoName = os.path.join(fileDirectoryName, f'sample_{fileIndex}.mp4')
+        img2video(fileDirectoryName, fileDirectoryVideoName, fps=fps)
     print('finished')
 
     # 测试文件列表排序
