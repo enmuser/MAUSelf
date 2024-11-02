@@ -5,6 +5,9 @@ from core.data_provider import datasets_factory
 from core.models.model_factory import Model
 import core.trainer as trainer
 import pynvml
+import zipfile
+import shutil
+import cv2 as cv
 
 
 pynvml.nvmlInit()
@@ -105,6 +108,7 @@ def train_wrapper(model):
     # real_input_flag = {}
     for epoch in range(0, args.max_epoches):
         if itr > args.max_iterations:
+            shutil.make_archive(args.result_zip_file_name, 'zip', args.result_zip_dir)
             break
         for ims in train_input_handle:
             if itr > args.max_iterations:
@@ -138,9 +142,22 @@ def test_wrapper(model):
         trainer.test(model, test_input_handle, args, itr)
 
 
+def make_zip(source_dir, output_filename):
+    print('source_dir: ', source_dir)
+    print('output_filename: ', output_filename)
+    zip_file = zipfile.ZipFile(output_filename, 'w')
+    # 把zfile整个目录下所有内容，压缩为new.zip文件
+    zip_file.write(source_dir, compress_type=zipfile.ZIP_DEFLATED)
+    # 把c.txt文件压缩成一个压缩文件
+    # zip_file.write('c.txt',compress_type=zipfile.ZIP_DEFLATED)
+    zip_file.close()
+
+
 if __name__ == '__main__':
 
     print('Initializing models')
+    print('batch_size ', args.batch_size)
+    #判断是训练还是测试
     if args.is_training == 'True':
         args.is_training = True
     else:
