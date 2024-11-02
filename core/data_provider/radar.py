@@ -36,7 +36,7 @@ class RadarDataset(data.Dataset):
             else:
                frames[i] = np.expand_dims(im, axis=-1)
 
-        frames = torch.from_numpy(frames / 70.0).contiguous().float().permute(0, 3, 1, 2)
+        frames = torch.from_numpy(frames / 255.0).contiguous().float().permute(0, 3, 1, 2)
         if self.horiz_flip_aug:
             frames = torch.flip(frames, dims=[3])
         return frames
