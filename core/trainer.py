@@ -12,6 +12,7 @@ import codecs
 import lpips
 
 from core.utils.ImagesToVideo import img2video
+from core.utils.grey2Color import grey2Color
 
 
 def train(model, ims, real_input_flag, configs, itr):
@@ -384,32 +385,39 @@ def test(model, test_input_handle, configs, itr):
                 img_pred = np.minimum(img_pred, 1)
 
 
-                for index in range(configs.total_length):
-                    currentImage = img_input_ground_true[index]
-                    currentImage = np.maximum(currentImage, 0)
-                    currentImage = np.minimum(currentImage, 1)
-                    name = str(index) + '.png'
-                    ground_true_file_name = os.path.join(res_ground_true_batch_Id_path, name)
-                    cv2.imwrite(ground_true_file_name, (currentImage * 255).astype(np.uint8))
-                mp4_file_name = os.path.join(res_ground_true_batch_Id_path, 'ground_true_images.mp4')
+                # for index in range(configs.total_length):
+                #     currentImage = img_input_ground_true[index]
+                #     currentImage = np.maximum(currentImage, 0)
+                #     currentImage = np.minimum(currentImage, 1)
+                #     name = str(index) + '.png'
+                #     ground_true_file_name = os.path.join(res_ground_true_batch_Id_path, name)
+                #     cv2.imwrite(ground_true_file_name, (currentImage * 255).astype(np.uint8))
+                # mp4_file_name = os.path.join(res_ground_true_batch_Id_path, 'ground_true_images.mp4')
                 #img2video(image_root=res_ground_true_batch_Id_path, dst_name=mp4_file_name)
 
-                for index in range(configs.total_length):
-                    currentImage = img_input_pred[index]
-                    currentImage = np.maximum(currentImage, 0)
-                    currentImage = np.minimum(currentImage, 1)
-                    name = str(index) + '.png'
-                    pred_file_name = os.path.join(res_pred_batch_Id_path, name)
-                    cv2.imwrite(pred_file_name, (currentImage * 255).astype(np.uint8))
-                mp4_file_name = os.path.join(res_pred_batch_Id_path, 'pred_images.mp4')
+                # for index in range(configs.total_length):
+                #     currentImage = img_input_pred[index]
+                #     currentImage = np.maximum(currentImage, 0)
+                #     currentImage = np.minimum(currentImage, 1)
+                #     name = str(index) + '.png'
+                #     pred_file_name = os.path.join(res_pred_batch_Id_path, name)
+                #     cv2.imwrite(pred_file_name, (currentImage * 255).astype(np.uint8))
+                # mp4_file_name = os.path.join(res_pred_batch_Id_path, 'pred_images.mp4')
                 #img2video(image_root=res_pred_batch_Id_path, dst_name=mp4_file_name)
 
 
                 # 写出对比图片
-                cv2.imwrite(all_result_file_name, (img * 255).astype(np.uint8))
-                cv2.imwrite(file_img_input_name, (img_input * 255).astype(np.uint8))
-                cv2.imwrite(file_img_ground_true_name, (img_ground_true * 255).astype(np.uint8))
-                cv2.imwrite(file_img_pred_name, (img_pred * 255).astype(np.uint8))
+                # cv2.imwrite(all_result_file_name, grey2Color(img * 255).astype(np.uint8))
+                # cv2.imwrite(file_img_input_name, grey2Color(img_input * 255).astype(np.uint8))
+                # cv2.imwrite(file_img_ground_true_name, grey2Color(img_ground_true * 255).astype(np.uint8))
+                # cv2.imwrite(file_img_pred_name, grey2Color(img_pred * 255).astype(np.uint8))
+
+                cv2.imwrite(all_result_file_name, grey2Color(np.squeeze(img * 70)).astype(np.uint8))
+                cv2.imwrite(file_img_input_name, grey2Color(np.squeeze(img_input * 70)).astype(np.uint8))
+                cv2.imwrite(file_img_ground_true_name, grey2Color(np.squeeze(img_ground_true * 70)).astype(np.uint8))
+                cv2.imwrite(file_img_pred_name, grey2Color(np.squeeze(img_pred * 70)).astype(np.uint8))
+
+
             batch_id = batch_id + 1
     ft.writelines('====================================end=====' + str(itr) + '=====end=============================================\n')
     f.close()
