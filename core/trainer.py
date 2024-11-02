@@ -412,10 +412,10 @@ def test(model, test_input_handle, configs, itr):
                 # cv2.imwrite(file_img_ground_true_name, grey2Color(img_ground_true * 255).astype(np.uint8))
                 # cv2.imwrite(file_img_pred_name, grey2Color(img_pred * 255).astype(np.uint8))
 
-                cv2.imwrite(all_result_file_name, grey2Color(np.squeeze(img * 70)).astype(np.uint8))
-                cv2.imwrite(file_img_input_name, grey2Color(np.squeeze(img_input * 70)).astype(np.uint8))
-                cv2.imwrite(file_img_ground_true_name, grey2Color(np.squeeze(img_ground_true * 70)).astype(np.uint8))
-                cv2.imwrite(file_img_pred_name, grey2Color(np.squeeze(img_pred * 70)).astype(np.uint8))
+                cv2.imwrite(all_result_file_name, grey2Color(np.squeeze(img * 255)).astype(np.uint8))
+                cv2.imwrite(file_img_input_name, grey2Color(np.squeeze(img_input * 255)).astype(np.uint8))
+                cv2.imwrite(file_img_ground_true_name, grey2Color(np.squeeze(img_ground_true * 255)).astype(np.uint8))
+                cv2.imwrite(file_img_pred_name, grey2Color(np.squeeze(img_pred * 255)).astype(np.uint8))
 
 
             batch_id = batch_id + 1
