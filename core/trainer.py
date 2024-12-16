@@ -21,10 +21,12 @@ def train(model, ims, real_input_flag, configs, itr):
 
 
 def test(model, test_input_handle, configs, itr):
-    print('test...')
+    print('test...itr=',itr)
     loss_fn = lpips.LPIPS(net='alex', spatial=True).to(configs.device)
     # gen_frm_dir = results/mau/
     res_path = configs.gen_frm_dir + '/' + str(itr)
+
+    print("res_path=",res_path)
 
     res_ground_true_path = configs.gen_frm_dir + '/' + str(itr) +'/ground_true_files'
     res_pred_path = configs.gen_frm_dir + '/' + str(itr) + '/pred_files'
