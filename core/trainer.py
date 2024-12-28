@@ -390,7 +390,8 @@ def test(model, test_input_handle, configs, itr):
                     currentImage = np.minimum(currentImage, 1)
                     name = str(index) + '.png'
                     ground_true_file_name = os.path.join(res_ground_true_batch_Id_path, name)
-                    cv2.imwrite(ground_true_file_name, (currentImage * 255).astype(np.uint8))
+                    currentImage = cv2.cvtColor((currentImage * 255).astype(np.uint8), cv2.COLOR_RGB2BGR)
+                    cv2.imwrite(ground_true_file_name, currentImage)
 
                 for index in range(configs.total_length):
                     currentImage = img_input_pred[index]
@@ -398,14 +399,18 @@ def test(model, test_input_handle, configs, itr):
                     currentImage = np.minimum(currentImage, 1)
                     name = str(index) + '.png'
                     pred_file_name = os.path.join(res_pred_batch_Id_path, name)
-                    cv2.imwrite(pred_file_name, (currentImage * 255).astype(np.uint8))
-
+                    currentImage = cv2.cvtColor((currentImage * 255).astype(np.uint8), cv2.COLOR_RGB2BGR)
+                    cv2.imwrite(pred_file_name, currentImage)
 
                 # 写出对比图片
-                cv2.imwrite(all_result_file_name, (img * 255).astype(np.uint8))
-                cv2.imwrite(file_img_input_name, (img_input * 255).astype(np.uint8))
-                cv2.imwrite(file_img_ground_true_name, (img_ground_true * 255).astype(np.uint8))
-                cv2.imwrite(file_img_pred_name, (img_pred * 255).astype(np.uint8))
+                img = cv2.cvtColor((img * 255).astype(np.uint8), cv2.COLOR_RGB2BGR)
+                cv2.imwrite(all_result_file_name, img)
+                img_input = cv2.cvtColor((img_input * 255).astype(np.uint8), cv2.COLOR_RGB2BGR)
+                cv2.imwrite(file_img_input_name, img_input)
+                img_ground_true = cv2.cvtColor((img_ground_true * 255).astype(np.uint8), cv2.COLOR_RGB2BGR)
+                cv2.imwrite(file_img_ground_true_name, img_ground_true)
+                img_pred = cv2.cvtColor((img_pred * 255).astype(np.uint8), cv2.COLOR_RGB2BGR)
+                cv2.imwrite(file_img_pred_name, img_pred)
             batch_id = batch_id + 1
     ft.writelines('====================================end=====' + str(itr) + '=====end=============================================\n')
     f.close()
