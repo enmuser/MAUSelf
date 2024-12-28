@@ -54,7 +54,7 @@ def configs():
     parser.add_argument('--save_dir', type=str, default='/kaggle/working/MAUSelf/checkpoints/caltech_pedestrian/')
     parser.add_argument('--gen_frm_dir', type=str, default='/kaggle/working/MAUSelf/results/caltech_pedestrian/')
     parser.add_argument('--result_zip_dir', type=str, default='/kaggle/working/MAUSelf/results/caltech_pedestrian/')
-    parser.add_argument('--result_zip_file_name', type=str, default='/kaggle/working/MAUSelf/caltech_pedestrian_new_4100')
+    parser.add_argument('--result_zip_file_name', type=str, default='/kaggle/working/MAUSelf/caltech_pedestrian_new2_4100')
     parser.add_argument('--scheduled_sampling', type=bool, default=True)
     parser.add_argument('--sampling_stop_iter', type=int, default=50000)
     parser.add_argument('--sampling_start_value', type=float, default=1.0)
