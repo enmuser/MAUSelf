@@ -22,7 +22,7 @@ if args_main.is_train == 'True':
     if args_main.dataset == 'mnist':
         from configs.mnist_train_configs import configs
     elif args_main.dataset == 'radar':
-        from configs.radar_train_configs import configs
+        from configs.radar_train_configs_dev import configs
 else:
     if args_main.dataset == 'mnist':
         from configs.mnist_configs import configs

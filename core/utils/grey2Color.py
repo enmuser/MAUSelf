@@ -87,3 +87,69 @@ def grey2Color(image):
     b[np.where((image >= 65))] = 255
 
     return np.stack((r, g, b), axis=-1)
+
+
+# 定义颜色映射
+def grey2ColorSimple(image):
+    # 将灰度值映射到RGB颜色空间
+    r = np.zeros_like(image)
+    g = np.zeros_like(image)
+    b = np.zeros_like(image)
+
+    # 示例：简单的颜色映射
+    # 小于 淡灰色	 非常弱的回波，几乎无降水或云层
+    r[np.where((image < 5))] = 211
+    g[np.where((image < 5))] = 211
+    b[np.where((image < 5))] = 211
+
+    # 5-10 淡绿色 微弱降水，轻微的毛毛雨
+    r[np.where((image >= 5) & (image < 10))] = 144
+    g[np.where((image >= 5) & (image < 10))] = 238
+    b[np.where((image >= 5) & (image < 10))] = 144
+
+    # 10-20 浅绿色 轻度降水
+    r[np.where((image >= 10) & (image < 20))] = 0
+    g[np.where((image >= 10) & (image < 20))] = 255
+    b[np.where((image >= 10) & (image < 20))] = 0
+
+    # 20-30 绿色 中等降水，小雨
+    r[np.where((image >= 20) & (image < 30))] = 0
+    g[np.where((image >= 20) & (image < 30))] = 200
+    b[np.where((image >= 20) & (image < 30))] = 0
+
+    # 30-40 浅黄色 中等降水，普通的雨
+    r[np.where((image >= 30) & (image < 40))] = 255
+    g[np.where((image >= 30) & (image < 40))] = 255
+    b[np.where((image >= 30) & (image < 40))] = 0
+
+    # 40-45 黄色 强降水，普通大雨
+    r[np.where((image >= 40) & (image < 45))] = 255
+    g[np.where((image >= 40) & (image < 45))] = 200
+    b[np.where((image >= 40) & (image < 45))] = 0
+
+    # 45-50 橙色 很强的降水，大雷雨
+    r[np.where((image >= 45) & (image < 50))] = 255
+    g[np.where((image >= 45) & (image < 50))] = 165
+    b[np.where((image >= 45) & (image < 50))] = 0
+
+    # 50-55 红色 暴雨，可能伴有雷暴和冰雹
+    r[np.where((image >= 50) & (image < 55))] = 255
+    g[np.where((image >= 50) & (image < 55))] = 0
+    b[np.where((image >= 50) & (image < 55))] = 0
+
+    # 55-60 深红色 强烈暴雨，可能伴有冰雹
+    r[np.where((image >= 55) & (image < 60))] = 200
+    g[np.where((image >= 55) & (image < 60))] = 0
+    b[np.where((image >= 55) & (image < 60))] = 0
+
+    # 60-65 紫色	严重雷暴，通常伴随大冰雹
+    r[np.where((image >= 60) & (image < 65))] = 148
+    g[np.where((image >= 60) & (image < 65))] = 0
+    b[np.where((image >= 60) & (image < 65))] = 211
+
+    # 65- 白色 极端雷暴，非常强烈的降水或冰雹
+    r[np.where((image >= 65))] = 255
+    g[np.where((image >= 65))] = 255
+    b[np.where((image >= 65))] = 255
+
+    return np.stack((r, g, b), axis=-1)

@@ -5,6 +5,7 @@ import statistics
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
+from numpy.distutils.system_info import show_all
 from skimage.metrics import structural_similarity as compare_ssim
 from core.utils import preprocess
 import torch
@@ -12,7 +13,7 @@ import codecs
 import lpips
 
 from core.utils.ImagesToVideo import img2video
-from core.utils.grey2Color import grey2Color
+from core.utils.grey2Color import grey2Color, grey2ColorSimple
 
 
 def train(model, ims, real_input_flag, configs, itr):
@@ -34,15 +35,23 @@ def test(model, test_input_handle, configs, itr):
 
     all_result_path = configs.gen_frm_dir + '/' + str(itr) + '/allfiles'
 
+    show_result_path = configs.show_file_dir
+
+    show_origin_result_path = configs.show_origin_file_dir
+
     if not os.path.exists(res_path):
         os.mkdir(res_path)
     if not os.path.exists(res_ground_true_path):
         os.mkdir(res_ground_true_path)
     if not os.path.exists(res_pred_path):
         os.mkdir(res_pred_path)
-
     if not os.path.exists(all_result_path):
         os.mkdir(all_result_path)
+    if not os.path.exists(show_result_path):
+        os.mkdir(show_result_path)
+
+    if not os.path.exists(show_origin_result_path):
+        os.mkdir(show_origin_result_path)
 
     f = codecs.open(res_path + '/performance.txt', 'w+')
     ft = codecs.open(configs.gen_frm_dir + '/all_performance.txt', 'a+')
@@ -405,6 +414,43 @@ def test(model, test_input_handle, configs, itr):
                 # mp4_file_name = os.path.join(res_pred_batch_Id_path, 'pred_images.mp4')
                 #img2video(image_root=res_pred_batch_Id_path, dst_name=mp4_file_name)
 
+               # 展示app用的
+               #  for index in range(configs.total_length):
+               #      currentImage = img_input_pred[index]
+               #      currentImage = np.maximum(currentImage, 0)
+               #      currentImage = np.minimum(currentImage, 1)
+               #      name = str(index) + '.png'
+               #      pred_file_name = os.path.join(show_result_path, name)
+               #      cv2.imwrite(pred_file_name, grey2ColorSimple(np.squeeze(currentImage * 255)).astype(np.uint8))
+               #
+               #  for index in range(configs.total_length):
+               #      currentImage = img_input_pred[index]
+               #      currentImage = np.maximum(currentImage, 0)
+               #      currentImage = np.minimum(currentImage, 1)
+               #      name = str(index) + '.png'
+               #      pred_file_name = os.path.join(show_origin_result_path, name)
+               #      cv2.imwrite(pred_file_name, (currentImage * 255).astype(np.uint8))
+
+                for index in range(configs.total_length):
+                    currentImage = img_input_pred[index]
+                    currentImage = np.maximum(currentImage, 0)
+                    currentImage = np.minimum(currentImage, 1)
+                    name = str(index) + '.png'
+                    pred_file_name = os.path.join(res_ground_true_batch_Id_path, name)
+                    cv2.imwrite(pred_file_name, grey2ColorSimple(np.squeeze(currentImage * 255)).astype(np.uint8))
+
+                for index in range(configs.total_length):
+                    currentImage = img_input_pred[index]
+                    currentImage = np.maximum(currentImage, 0)
+                    currentImage = np.minimum(currentImage, 1)
+                    name = str(index) + '.png'
+                    pred_file_name = os.path.join(res_pred_batch_Id_path, name)
+                    cv2.imwrite(pred_file_name, grey2ColorSimple(np.squeeze(currentImage * 255)).astype(np.uint8))
+
+
+                # mp4_file_name = os.path.join(res_pred_batch_Id_path, 'pred_images.mp4')
+                #img2video(image_root=res_pred_batch_Id_path, dst_name=mp4_file_name)
+
 
                 # 写出对比图片
                 # cv2.imwrite(all_result_file_name, grey2Color(img * 255).astype(np.uint8))
@@ -412,10 +458,10 @@ def test(model, test_input_handle, configs, itr):
                 # cv2.imwrite(file_img_ground_true_name, grey2Color(img_ground_true * 255).astype(np.uint8))
                 # cv2.imwrite(file_img_pred_name, grey2Color(img_pred * 255).astype(np.uint8))
 
-                cv2.imwrite(all_result_file_name, grey2Color(np.squeeze(img * 255)).astype(np.uint8))
-                cv2.imwrite(file_img_input_name, grey2Color(np.squeeze(img_input * 255)).astype(np.uint8))
-                cv2.imwrite(file_img_ground_true_name, grey2Color(np.squeeze(img_ground_true * 255)).astype(np.uint8))
-                cv2.imwrite(file_img_pred_name, grey2Color(np.squeeze(img_pred * 255)).astype(np.uint8))
+                cv2.imwrite(all_result_file_name, grey2ColorSimple(np.squeeze(img * 255)).astype(np.uint8))
+                cv2.imwrite(file_img_input_name, grey2ColorSimple(np.squeeze(img_input * 255)).astype(np.uint8))
+                cv2.imwrite(file_img_ground_true_name, grey2ColorSimple(np.squeeze(img_ground_true * 255)).astype(np.uint8))
+                cv2.imwrite(file_img_pred_name, grey2ColorSimple(np.squeeze(img_pred * 255)).astype(np.uint8))
 
 
             batch_id = batch_id + 1

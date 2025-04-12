@@ -6,7 +6,7 @@ from core.data_provider.radar import RadarDataset
 
 def data_provider(dataset, configs, data_train_path, data_test_path, batch_size, split,
                   is_training=True,
-                  is_shuffle=True):
+                  is_shuffle=True, isShow=False):
     if is_training:
         num_workers = configs.num_workers
         root = data_train_path
@@ -24,7 +24,8 @@ def data_provider(dataset, configs, data_train_path, data_test_path, batch_size,
                 data_root_path=root,
                 num_frames=configs.total_length,
                 num_channels=configs.img_channel,
-                img_size=configs.img_height
+                img_size=configs.img_height,
+                isShow=isShow
             )
     return DataLoader(dataset,
                       pin_memory=True,
