@@ -35,9 +35,9 @@ def test(model, test_input_handle, configs, itr):
 
     all_result_path = configs.gen_frm_dir + '/' + str(itr) + '/allfiles'
 
-    show_result_path = configs.show_file_dir
+    #show_result_path = configs.show_file_dir
 
-    show_origin_result_path = configs.show_origin_file_dir
+    #show_origin_result_path = configs.show_origin_file_dir
 
     if not os.path.exists(res_path):
         os.mkdir(res_path)
@@ -47,11 +47,11 @@ def test(model, test_input_handle, configs, itr):
         os.mkdir(res_pred_path)
     if not os.path.exists(all_result_path):
         os.mkdir(all_result_path)
-    if not os.path.exists(show_result_path):
-        os.mkdir(show_result_path)
+    #if not os.path.exists(show_result_path):
+    #    os.mkdir(show_result_path)
 
-    if not os.path.exists(show_origin_result_path):
-        os.mkdir(show_origin_result_path)
+    #if not os.path.exists(show_origin_result_path):
+    #    os.mkdir(show_origin_result_path)
 
     f = codecs.open(res_path + '/performance.txt', 'w+')
     ft = codecs.open(configs.gen_frm_dir + '/all_performance.txt', 'a+')
